@@ -1343,13 +1343,13 @@
 
             <!-- Tabs - inventory tab removed -->
             <div class="tabs" id="tabContainer">
-                <button class="tab" onclick="switchTab('profile')">profile</button>
-                <button class="tab" onclick="switchTab('employees')">employees</button>
-                <button class="tab" onclick="switchTab('orders')">orders</button>
-                <button class="tab" onclick="switchTab('lookup')">lookup</button>
-                <button class="tab" onclick="switchTab('verification')">verify</button>
-                <button class="tab" onclick="switchTab('notifications')">alerts</button>
-                <button class="tab" onclick="switchTab('data')">data</button>
+                <button class="tab" data-tab="profile">profile</button>
+                <button class="tab" data-tab="employees">employees</button>
+                <button class="tab" data-tab="orders">orders</button>
+                <button class="tab" data-tab="lookup">lookup</button>
+                <button class="tab" data-tab="verification">verify</button>
+                <button class="tab" data-tab="notifications">alerts</button>
+                <button class="tab" data-tab="data">data</button>
             </div>
 
             <!-- Profile Tab -->
@@ -1534,10 +1534,10 @@
 
         <!-- Bottom Nav -->
         <div class="bottom-nav">
-            <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
-            <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
-            <a href="inventory.html" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
-            <a href="business-profile.html?tab=profile" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
+            <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
+            <a href="advertise.html" id="navAds" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="inventory.html" id="navInventory" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="business-profile.html?tab=profile" id="navSettings" class="nav-item active"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
 
@@ -1645,6 +1645,24 @@
                 document.getElementById('backLink').href = 'index.html';
             }
 
+            // --- Adjust bottom nav for employees ---
+            const navHome = document.getElementById('navHome');
+            const navAds = document.getElementById('navAds');
+            const navInventory = document.getElementById('navInventory');
+            const navSettings = document.getElementById('navSettings');
+
+            if (isEmployee) {
+                navHome.href = 'index-employee.html';
+                navSettings.href = 'business-profile.html';
+                navAds.style.display = 'none';
+                navInventory.style.display = 'none';
+            } else {
+                navHome.href = 'index.html';
+                navSettings.href = 'business-profile.html?tab=profile';
+                navAds.style.display = 'block';
+                navInventory.style.display = 'block';
+            }
+
             // --- Hide elements for employees ---
             if (isEmployee) {
                 // Hide verification banner
@@ -1654,10 +1672,7 @@
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.getElementById('dataTab').style.display = 'none';
-                // Hide tab buttons (indices: 0:profile,1:employees,2:orders,3:lookup,4:verify,5:alerts,6:data)
-                document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[4].style.display = 'none';
-                document.querySelectorAll('.tab')[6].style.display = 'none';
+                document.getElementById('notificationsTab').style.display = 'none'; // Hide alerts
                 document.getElementById('walletCard').style.display = 'none';
                 document.querySelector('.stats-grid').style.display = 'none';
                 document.getElementById('roleBanner').style.display = 'none';
@@ -1666,12 +1681,69 @@
                     input.disabled = true;
                 });
             }
-            if (isManager && !isOwner) {
-                document.getElementById('employeesTab').style.display = 'none';
-                document.getElementById('verificationTab').style.display = 'none';
-                document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[4].style.display = 'none';
+
+            // --- Permission-based tab visibility ---
+            const tabButtons = document.querySelectorAll('.tab');
+            
+            // profile: always visible (index 0)
+            // employees: owner only
+            if (!isOwner) {
+                tabButtons[1].style.display = 'none';
+            } else {
+                tabButtons[1].style.display = 'block';
             }
+            
+            // orders + lookup: visible if can_view_orders or owner
+            const canViewOrders = isOwner || currentPermissions.can_view_orders;
+            if (!canViewOrders) {
+                tabButtons[2].style.display = 'none';
+                tabButtons[3].style.display = 'none';
+                document.getElementById('ordersTab').style.display = 'none';
+                document.getElementById('lookupTab').style.display = 'none';
+            } else {
+                tabButtons[2].style.display = 'block';
+                tabButtons[3].style.display = 'block';
+                document.getElementById('ordersTab').style.display = 'block';
+                document.getElementById('lookupTab').style.display = 'block';
+            }
+            
+            // verification: owner only
+            if (!isOwner) {
+                tabButtons[4].style.display = 'none';
+                document.getElementById('verificationTab').style.display = 'none';
+            } else {
+                tabButtons[4].style.display = 'block';
+                document.getElementById('verificationTab').style.display = 'block';
+            }
+            
+            // notifications: owner only (hidden for employees)
+            if (!isOwner) {
+                tabButtons[5].style.display = 'none';
+                document.getElementById('notificationsTab').style.display = 'none';
+            } else {
+                tabButtons[5].style.display = 'block';
+                document.getElementById('notificationsTab').style.display = 'block';
+            }
+            
+            // data: owner only
+            if (!isOwner) {
+                tabButtons[6].style.display = 'none';
+                document.getElementById('dataTab').style.display = 'none';
+            } else {
+                tabButtons[6].style.display = 'block';
+                document.getElementById('dataTab').style.display = 'block';
+            }
+
+            // --- Handle tab click via data-tab attribute (event delegation) ---
+            document.getElementById('tabContainer').addEventListener('click', function(e) {
+                const tab = e.target.closest('.tab');
+                if (tab) {
+                    const tabName = tab.getAttribute('data-tab');
+                    if (tabName) {
+                        switchTab(tabName);
+                    }
+                }
+            });
 
             // --- Set UI ---
             businessRole = localStorage.getItem('businessRole') || 'owner';
@@ -1679,7 +1751,7 @@
             updateRoleUI();
             updateVerificationUI();
 
-            // --- Load all data (businessId is now guaranteed) ---
+            // --- Load all data ---
             await loadBusinessData();
             await loadEmployeesAndRoles();
             await loadOrders();
@@ -1762,8 +1834,8 @@
         }
 
         async function saveProfile() {
-            if (isEmployee) {
-                showStatus('Employees cannot edit profile', 'error');
+            if (isEmployee || !currentPermissions.can_edit_profile) {
+                showStatus('You do not have permission to edit the profile', 'error');
                 return;
             }
             const updates = {
@@ -2183,6 +2255,7 @@
 
         // ===== NOTIFICATIONS =====
         async function loadNotifications() {
+            // Only called if notifications tab is visible (owner only)
             const container = document.getElementById('notificationsList');
             try {
                 const notifications = await Backend.getNotifications(currentUser.id);
@@ -2228,7 +2301,7 @@
             else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING (inventory removed) =====
+        // ===== TAB SWITCHING =====
         function switchTab(tabName) {
             activeTab = tabName;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
