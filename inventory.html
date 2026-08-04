@@ -81,8 +81,28 @@
         .ad-option-box input { margin-right: 8px; }
         .ad-option-box label { font-weight: 600; cursor: pointer; }
         
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 400px; margin: 0 auto; background: white; border-top: 1px solid #f0f0f0; padding: 8px 20px; display: flex; justify-content: space-around; z-index: 50; }
-        .nav-item { text-decoration: none; color: #999; font-size: 12px; text-align: center; flex: 1; }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 50;
+        }
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+            padding: 4px 0;
+        }
         .nav-item.active { color: #667eea; }
         .nav-emoji { font-size: 20px; display: block; margin-bottom: 2px; }
         
@@ -138,10 +158,11 @@
             </div>
         </div>
 
-        <div class="bottom-nav">
+        <!-- Bottom Nav -->
+        <div class="bottom-nav" id="bottomNav">
             <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
-            <a href="#" id="navAds" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
-            <a href="inventory.html" class="nav-item active"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="#" id="navAds" class="nav-item" style="display:none;"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="inventory.html" id="navInventory" class="nav-item active"><span class="nav-emoji">📦</span><span>inventory</span></a>
             <a href="#" id="navSettings" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
@@ -260,18 +281,20 @@
                 backLink.href = 'business-profile.html?tab=profile';
             }
 
-            // Bottom nav
+            // Bottom nav links
             const navHome = document.getElementById('navHome');
             const navAds = document.getElementById('navAds');
             const navSettings = document.getElementById('navSettings');
             
             if (isEmployee) {
                 navHome.href = 'index-employee.html';
-                navAds.href = 'advertise.html';
                 navSettings.href = 'business-profile.html';
+                // Hide Ads tab for employees
+                navAds.style.display = 'none';
             } else {
                 navHome.href = 'index.html';
                 navAds.href = 'advertise.html';
+                navAds.style.display = 'block';
                 navSettings.href = 'business-profile.html?tab=profile';
             }
 
@@ -291,7 +314,6 @@
         async function loadInventory() {
             const tbody = document.getElementById('inventoryTableBody');
             try {
-                // Use the businessId (owner's ID for employees, own ID for owners)
                 currentItems = await Backend.loadInventoryItems(businessId);
                 
                 if (currentItems.length === 0) {
@@ -310,7 +332,6 @@
                         priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
                     }
 
-                    // Show action buttons only if user can edit
                     let actionsHtml = '';
                     if (canEdit || isOwner) {
                         actionsHtml = `
@@ -319,7 +340,6 @@
                             <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
                         `;
                     } else {
-                        // Read-only: only show the ad button (posting ad doesn't edit inventory)
                         actionsHtml = `
                             <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
                         `;
@@ -392,11 +412,9 @@
             if (!data.name) { showToast('Item name is required', 'error'); return; }
 
             if (id) {
-                // Update existing
                 const result = await Backend.updateInventoryItem(id, data);
                 if (result.success) { showToast('Item updated!', 'success'); } else { showToast('Update failed', 'error'); }
             } else {
-                // Create new - ensure businessId is passed
                 let items = await Backend.loadInventoryItems(businessId);
                 items.push({
                     ...data,
@@ -417,7 +435,7 @@
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Ad Export Logic (available to all with inventory view) ---
+        // --- Ad Export Logic ---
         function openAdModal(id) {
             const item = currentItems.find(i => i.id === id);
             if (!item) { showToast('Item not found', 'error'); return; }
