@@ -7,22 +7,18 @@
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="shortcut icon" type="image/png" href="assets/icon.png">
     <!-- HTML5 QR Code Library -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js">
-    </script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW registered:', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('SW registration failed:', err);
-                    });
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
             });
         }
     </script>
     <style>
+        /* ─── styles unchanged ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -85,7 +81,6 @@
             padding-bottom: 80px;
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 8px;
@@ -118,12 +113,10 @@
         .tab-content {
             display: none;
         }
-
         .tab-content.active {
             display: block;
         }
 
-        /* Barcode Scanner Section */
         .scanner-section {
             background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 16px;
@@ -138,7 +131,6 @@
             gap: 10px;
             margin-bottom: 12px;
         }
-
         .scanner-header h3 {
             font-size: 16px;
         }
@@ -158,7 +150,6 @@
             justify-content: center;
             gap: 8px;
         }
-
         .scan-btn:active {
             background: rgba(255, 255, 255, 0.3);
             transform: scale(0.98);
@@ -171,7 +162,6 @@
             display: none;
             margin-bottom: 12px;
         }
-
         .scanner-container.active {
             display: block;
         }
@@ -204,7 +194,6 @@
             width: 100%;
         }
 
-        /* Image Upload Section */
         .image-upload-section {
             background: #f8f9fa;
             border-radius: 16px;
@@ -225,13 +214,11 @@
             overflow: hidden;
             position: relative;
         }
-
         .image-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .image-preview .placeholder {
             text-align: center;
             color: #999;
@@ -250,7 +237,6 @@
             align-items: center;
             gap: 8px;
         }
-
         .upload-btn:active {
             background: #005bbf;
             transform: scale(0.98);
@@ -305,13 +291,11 @@
             transition: all 0.2s;
             font-family: inherit;
         }
-
         .input-field:focus {
             outline: none;
             border-color: #007aff;
             background: white;
         }
-
         .input-field.filled-by-scanner {
             background: #e8f5e8;
             border-color: #34c759;
@@ -319,18 +303,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-                background: #e8f5e8;
-            }
-            50% {
-                transform: scale(1.02);
-                background: #d4edda;
-            }
-            100% {
-                transform: scale(1);
-                background: #e8f5e8;
-            }
+            0% { transform: scale(1); background: #e8f5e8; }
+            50% { transform: scale(1.02); background: #d4edda; }
+            100% { transform: scale(1); background: #e8f5e8; }
         }
 
         .row-2 {
@@ -350,18 +325,15 @@
             font-weight: 600;
             cursor: pointer;
         }
-
         .submit-btn:active {
             background: #2db14e;
             transform: scale(0.98);
         }
-
         .submit-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
 
-        /* My Ads List */
         .my-ads-list {
             margin-top: 16px;
         }
@@ -389,7 +361,6 @@
             font-size: 28px;
             overflow: hidden;
         }
-
         .my-ad-image img {
             width: 100%;
             height: 100%;
@@ -400,7 +371,6 @@
             flex: 1;
             min-width: 0;
         }
-
         .my-ad-name {
             font-weight: 600;
             font-size: 15px;
@@ -409,7 +379,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .my-ad-meta {
             font-size: 11px;
             color: #666;
@@ -419,7 +388,6 @@
             margin-top: 4px;
             align-items: center;
         }
-
         .my-ad-meta span {
             display: inline-flex;
             align-items: center;
@@ -431,12 +399,10 @@
             border-radius: 10px;
             white-space: nowrap;
         }
-
         .status-active {
             background: #e8f5e8;
             color: #34c759;
         }
-
         .status-expired {
             background: #ffebee;
             color: #ff3b30;
@@ -447,7 +413,6 @@
             gap: 6px;
             flex-shrink: 0;
         }
-
         .my-ad-actions button {
             background: none;
             border: none;
@@ -461,14 +426,12 @@
             align-items: center;
             justify-content: center;
         }
-
         .edit-ad-btn {
             color: #007aff;
         }
         .edit-ad-btn:hover {
             background: #e3f2fd;
         }
-
         .delete-ad-btn {
             color: #ff3b30;
         }
@@ -509,19 +472,15 @@
             text-align: center;
             max-width: 90%;
         }
-
         .notification.show {
             transform: translateX(-50%) translateY(0);
         }
-
         .notification.success {
             background: #34c759;
         }
-
         .notification.error {
             background: #ff3b30;
         }
-
         .notification.info {
             background: #007aff;
         }
@@ -539,7 +498,6 @@
             z-index: 2000;
             display: none;
         }
-
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -548,14 +506,11 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
-        /* ─── BOTTOM NAV: Home, Ads, Inventory, Settings ─── */
+        /* ─── BOTTOM NAV: conditional ─── */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -595,7 +550,6 @@
             line-height: 24px;
         }
 
-        /* Discount type row */
         .discount-type-row {
             display: flex;
             gap: 12px;
@@ -649,7 +603,7 @@
 <body>
     <div class="app">
         <div class="header">
-            <a href="index.html" class="back-link">←</a>
+            <a href="#" id="backLink" class="back-link">←</a>
             <h1 id="pageTitle">ads</h1>
         </div>
 
@@ -721,7 +675,7 @@
                         </div>
                     </div>
 
-                    <!-- ─── DISCOUNT TYPE + VALUE ─── -->
+                    <!-- Discount Type + Value -->
                     <div class="discount-type-row">
                         <div class="input-group">
                             <label class="input-label">🎯 Discount Type</label>
@@ -790,24 +744,12 @@
             </div>
         </div>
 
-        <!-- ─── BOTTOM NAV: Home, Ads, Inventory, Settings ─── -->
-        <div class="bottom-nav">
-            <a href="index.html" class="nav-item">
-                <span class="nav-emoji">🏠</span>
-                <span>home</span>
-            </a>
-            <a href="#" class="nav-item active">
-                <span class="nav-emoji">📢</span>
-                <span>ads</span>
-            </a>
-            <a href="inventory.html" class="nav-item">
-                <span class="nav-emoji">📦</span>
-                <span>inventory</span>
-            </a>
-            <a href="business-profile.html?tab=profile" class="nav-item">
-                <span class="nav-emoji">⚙️</span>
-                <span>settings</span>
-            </a>
+        <!-- ─── BOTTOM NAV: conditional based on role ─── -->
+        <div class="bottom-nav" id="bottomNav">
+            <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
+            <a href="#" id="navAds" class="nav-item active"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="inventory.html" id="navInventory" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="business-profile.html?tab=profile" id="navSettings" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
 
@@ -816,10 +758,8 @@
         <div class="loading-spinner"></div>
     </div>
 
-    <script src="https://npmcdn.com/parse/dist/parse.min.js">
-    </script>
-    <script src="backend.js">
-    </script>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
 
     <script>
         // ============================================================
@@ -832,6 +772,8 @@
         let editAdId = null;
         let fromInventory = false;
         let inventoryData = null;
+        let isEmployee = false;          // flag for employee role
+        let canPostAds = false;          // permission
 
         // Product database for barcode lookup
         const productDatabase = {
@@ -889,14 +831,60 @@
                 input.max = null;
                 input.step = 0.01;
             }
-            // Clear any previous value so user re-enters with correct context
             input.value = '';
         }
 
         // ============================================================
-        //  INIT
+        //  INIT – with role & permission checks
         // ============================================================
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check if employee (not owner)
+            const perms = await Backend.getEmployeePermissions(user.id);
+            if (perms.isOwner) {
+                isEmployee = false;
+                canPostAds = true;
+            } else {
+                isEmployee = true;
+                // Check permission to post ads
+                canPostAds = perms.can_post_ads || false;
+                if (!canPostAds) {
+                    showNotification('You do not have permission to post ads', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index-employee.html';
+                    }, 1500);
+                    return;
+                }
+            }
+
+            // ---- Set up navigation based on role ----
+            const backLink = document.getElementById('backLink');
+            if (isEmployee) {
+                backLink.href = 'index-employee.html';
+                // Hide Ads and Inventory nav items for employees
+                document.getElementById('navAds').style.display = 'none';
+                document.getElementById('navInventory').style.display = 'none';
+                // Home and Settings remain
+                document.getElementById('navHome').href = 'index-employee.html';
+                document.getElementById('navSettings').href = 'business-profile.html';
+            } else {
+                backLink.href = 'index.html';
+                document.getElementById('navHome').href = 'index.html';
+                document.getElementById('navSettings').href = 'business-profile.html?tab=profile';
+                // Show all nav items
+                document.getElementById('navAds').style.display = 'block';
+                document.getElementById('navInventory').style.display = 'block';
+            }
+            // Ensure the ads nav item is active (if visible)
+            // For employees it's hidden, but we still keep the page active.
+
+            // ---- Default dates ----
             const today = new Date();
             const nextWeek = new Date();
             nextWeek.setDate(today.getDate() + 7);
@@ -910,7 +898,7 @@
             // Set default discount type
             onDiscountTypeChange();
 
-            // URL params
+            // ---- URL params ----
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             const fromInv = urlParams.get('fromInventory');
@@ -992,6 +980,7 @@
                         document.getElementById('discount').value = data.discount;
                     }
                 } else {
+                    // auto-detect
                     if (data.discount > 100) {
                         document.getElementById('discountType').value = 'fixed';
                         onDiscountTypeChange();
