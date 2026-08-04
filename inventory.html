@@ -10,6 +10,7 @@
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script src="backend.js"></script>
     <style>
+        /* ... (styles unchanged, except .refresh-all-btn added) ... */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -21,10 +22,48 @@
         
         .app { width: 100%; max-width: 400px; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.03); position: relative; padding-bottom: 80px; }
         
-        .header { padding: 20px 16px; background: white; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
-        .back-link { width: 40px; height: 40px; border-radius: 12px; background: #f5f7fa; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #007aff; font-size: 20px; }
+        .header {
+            padding: 20px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .back-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #667eea;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+        .back-link:active {
+            background: #e8ecf0;
+            transform: scale(0.95);
+        }
         .header h1 { flex: 1; font-size: 20px; font-weight: 600; }
-        .refresh-btn { width: 40px; height: 40px; border-radius: 12px; background: #f5f7fa; border: none; font-size: 18px; cursor: pointer; }
+        .refresh-all-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .refresh-all-btn:active {
+            transform: rotate(180deg);
+        }
         
         .content { padding: 16px; }
         
@@ -120,7 +159,7 @@
         <div class="header">
             <a href="#" id="backLink" class="back-link">←</a>
             <h1>inventory manager</h1>
-            <button class="refresh-btn" onclick="loadInventory()">↻</button>
+            <button class="refresh-all-btn" onclick="loadInventory()">↻</button>
         </div>
 
         <div class="content">
@@ -273,7 +312,7 @@
         });
 
         function setupUI() {
-            // Back link: employees go to index-employee.html, owners go to business-profile.html
+            // Back link: matches business-profile logic
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'index-employee.html';
@@ -281,7 +320,7 @@
                 backLink.href = 'business-profile.html?tab=profile';
             }
 
-            // Bottom nav links
+            // Bottom nav
             const navHome = document.getElementById('navHome');
             const navAds = document.getElementById('navAds');
             const navSettings = document.getElementById('navSettings');
@@ -289,7 +328,6 @@
             if (isEmployee) {
                 navHome.href = 'index-employee.html';
                 navSettings.href = 'business-profile.html';
-                // Hide Ads tab for employees
                 navAds.style.display = 'none';
             } else {
                 navHome.href = 'index.html';
@@ -362,7 +400,7 @@
             }
         }
 
-        // --- CRUD Operations (only available if canEdit or isOwner) ---
+        // --- CRUD Operations ---
         function openCreateModal() {
             if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             document.getElementById('modalTitle').textContent = 'Add New Item';
@@ -526,7 +564,7 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import (only if canEdit) ---
+        // --- Excel Import ---
         async function importExcel(event) {
             if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
             const file = event.target.files[0];
