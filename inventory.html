@@ -10,6 +10,7 @@
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script src="backend.js"></script>
     <style>
+        /* ... (same styles as before) ... */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -66,7 +67,6 @@
         
         .content { padding: 16px; }
         
-        /* Controls */
         .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .control-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; flex: 1; text-align: center; min-width: 60px; }
@@ -76,7 +76,6 @@
         .btn-secondary { background: #f0f0f0; color: #333; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* Table */
         .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e0e0e0; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
         th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; }
@@ -89,10 +88,9 @@
         
         .action-btn { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; margin: 2px; }
         .action-edit { background: #e3f2fd; color: #0d47a1; }
-        .action-ad { background: #ff9800; color: white; }  /* Export to Ads */
+        .action-ad { background: #ff9800; color: white; }
         .action-del { background: #ffebee; color: #c62828; }
         
-        /* Read-only indicator */
         .readonly-badge {
             background: #f0f0f0;
             color: #666;
@@ -103,13 +101,13 @@
             display: inline-block;
         }
         
-        /* Modal for Add/Edit only */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; max-height: 90vh; overflow-y: auto; }
         .modal-content h3 { margin-bottom: 16px; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .form-group input[readonly] { background: #f5f5f5; color: #999; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
         .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
@@ -209,7 +207,20 @@
             <div class="form-group"><label>Batch Number</label><input type="text" id="fBatch" placeholder="BATCH-001"></div>
             <div class="form-group"><label>Quantity *</label><input type="number" id="fQty" value="1" min="0"></div>
             <div class="form-group"><label>Original Price ($)</label><input type="number" id="fPrice" step="0.01" placeholder="0.00"></div>
-            <div class="form-group"><label>Sale Price ($)</label><input type="number" id="fSale" step="0.01" placeholder="0.00"></div>
+            
+            <!-- Discount percentage toggle -->
+            <div class="form-group">
+                <label><input type="checkbox" id="fUseDiscount"> Apply discount %</label>
+            </div>
+            <div class="form-group" id="discountPctGroup" style="display:none;">
+                <label>Discount %</label>
+                <input type="number" id="fDiscountPct" step="0.1" min="0" max="100" placeholder="e.g. 20">
+            </div>
+            <div class="form-group">
+                <label>Sale Price ($) <span id="salePriceNote" style="font-weight:400;color:#999;">(auto-calculated if using %)</span></label>
+                <input type="number" id="fSale" step="0.01" placeholder="0.00">
+            </div>
+            
             <div class="form-group"><label>Category</label>
                 <select id="fCat">
                     <option value="dairy">🥛 Dairy</option><option value="produce">🥬 Produce</option>
@@ -237,7 +248,8 @@
         let businessId = null;
         let canEdit = false;
         let canRead = false;
-        let canPostAds = false;   // for ad export
+        let canPostAds = false;
+        let editingItemId = null;
         
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -247,10 +259,7 @@
                 return;
             }
 
-            // --- Resolve business ID ---
             businessId = user.get('businessId') || user.id;
-            
-            // --- Check permissions ---
             currentPermissions = await Backend.getEmployeePermissions(user.id);
             
             if (currentPermissions.isOwner) {
@@ -265,7 +274,6 @@
                 canPostAds = currentPermissions.can_post_ads || false;
             }
 
-            // --- If no read permission, redirect ---
             if (!canRead && !isOwner) {
                 showToast('You do not have permission to view inventory', 'error');
                 setTimeout(() => {
@@ -274,15 +282,55 @@
                 return;
             }
 
-            // --- Setup UI based on permissions ---
             setupUI();
-
-            // --- Load inventory ---
             await loadInventory();
+
+            // --- Discount percentage logic ---
+            const useDiscountCheckbox = document.getElementById('fUseDiscount');
+            const discountPctInput = document.getElementById('fDiscountPct');
+            const salePriceInput = document.getElementById('fSale');
+            const originalPriceInput = document.getElementById('fPrice');
+
+            function updateSalePrice() {
+                if (useDiscountCheckbox.checked) {
+                    const orig = parseFloat(originalPriceInput.value) || 0;
+                    const pct = parseFloat(discountPctInput.value) || 0;
+                    if (orig > 0 && pct > 0) {
+                        const sale = orig * (1 - pct / 100);
+                        salePriceInput.value = sale.toFixed(2);
+                    } else {
+                        salePriceInput.value = '';
+                    }
+                    salePriceInput.readOnly = true;
+                    salePriceInput.style.background = '#f5f5f5';
+                } else {
+                    salePriceInput.readOnly = false;
+                    salePriceInput.style.background = 'white';
+                }
+            }
+
+            useDiscountCheckbox.addEventListener('change', function() {
+                const group = document.getElementById('discountPctGroup');
+                if (this.checked) {
+                    group.style.display = 'block';
+                    // If original price exists, recalc
+                    updateSalePrice();
+                } else {
+                    group.style.display = 'none';
+                    salePriceInput.readOnly = false;
+                    salePriceInput.style.background = 'white';
+                }
+            });
+
+            discountPctInput.addEventListener('input', updateSalePrice);
+            originalPriceInput.addEventListener('input', function() {
+                if (useDiscountCheckbox.checked) updateSalePrice();
+            });
+
+            // Also when manually entering sale price, we could auto-calc discount? We'll keep it simple.
         });
 
         function setupUI() {
-            // Back link: matches business-profile exactly
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'employee-settings.html';
@@ -290,7 +338,6 @@
                 backLink.href = 'index.html';
             }
 
-            // Bottom nav
             const navHome = document.getElementById('navHome');
             const navAds = document.getElementById('navAds');
             const navSettings = document.getElementById('navSettings');
@@ -306,7 +353,6 @@
                 navSettings.href = 'business-profile.html?tab=profile';
             }
 
-            // Show/hide controls based on edit permission
             const controlsSection = document.getElementById('controlsSection');
             const readonlyBadge = document.getElementById('readonlyBadge');
             
@@ -329,7 +375,6 @@
                     return;
                 }
 
-                // Determine if we show the "Export to Ads" button for any item
                 const showAdExport = (canEdit || isOwner) && canPostAds;
 
                 tbody.innerHTML = currentItems.map(item => {
@@ -343,7 +388,6 @@
                         priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
                     }
 
-                    // Actions: Edit, Delete, and Export to Ads (if conditions met)
                     let actionsHtml = '';
                     if (canEdit || isOwner) {
                         actionsHtml = `
@@ -372,10 +416,8 @@
             }
         }
 
-        // --- CRUD Operations (only if canEdit) ---
-        function openCreateModal() {
-            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
-            document.getElementById('modalTitle').textContent = 'Add New Item';
+        // --- Modal helpers ---
+        function resetModal() {
             document.getElementById('editId').value = '';
             document.getElementById('fName').value = '';
             document.getElementById('fBatch').value = '';
@@ -384,6 +426,18 @@
             document.getElementById('fSale').value = '';
             document.getElementById('fCat').value = 'other';
             document.getElementById('fOnSale').checked = false;
+            document.getElementById('fUseDiscount').checked = false;
+            document.getElementById('fDiscountPct').value = '';
+            document.getElementById('discountPctGroup').style.display = 'none';
+            document.getElementById('fSale').readOnly = false;
+            document.getElementById('fSale').style.background = 'white';
+            editingItemId = null;
+        }
+
+        function openCreateModal() {
+            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
+            document.getElementById('modalTitle').textContent = 'Add New Item';
+            resetModal();
             document.getElementById('itemModal').style.display = 'flex';
         }
 
@@ -397,44 +451,98 @@
             document.getElementById('fBatch').value = item.batchNumber || '';
             document.getElementById('fQty').value = item.quantity;
             document.getElementById('fPrice').value = item.originalPrice;
-            document.getElementById('fSale').value = item.salePrice || '';
             document.getElementById('fCat').value = item.category || 'other';
             document.getElementById('fOnSale').checked = item.onSale || false;
+            editingItemId = id;
+
+            // Handle discount percentage pre-fill
+            if (item.onSale && item.salePrice > 0 && item.originalPrice > 0) {
+                const discount = ((item.originalPrice - item.salePrice) / item.originalPrice) * 100;
+                if (discount > 0 && discount < 100) {
+                    document.getElementById('fUseDiscount').checked = true;
+                    document.getElementById('fDiscountPct').value = discount.toFixed(1);
+                    document.getElementById('discountPctGroup').style.display = 'block';
+                    document.getElementById('fSale').value = item.salePrice;
+                    document.getElementById('fSale').readOnly = true;
+                    document.getElementById('fSale').style.background = '#f5f5f5';
+                } else {
+                    // Sale price not a discount, or edge case
+                    document.getElementById('fUseDiscount').checked = false;
+                    document.getElementById('discountPctGroup').style.display = 'none';
+                    document.getElementById('fSale').value = item.salePrice;
+                    document.getElementById('fSale').readOnly = false;
+                    document.getElementById('fSale').style.background = 'white';
+                }
+            } else {
+                // No sale price or not on sale
+                document.getElementById('fUseDiscount').checked = false;
+                document.getElementById('discountPctGroup').style.display = 'none';
+                document.getElementById('fSale').value = item.salePrice || '';
+                document.getElementById('fSale').readOnly = false;
+                document.getElementById('fSale').style.background = 'white';
+            }
+
             document.getElementById('itemModal').style.display = 'flex';
         }
 
         function closeModal() {
             document.getElementById('itemModal').style.display = 'none';
+            resetModal();
         }
 
         async function saveItem() {
             if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             const id = document.getElementById('editId').value;
-            const data = {
-                name: document.getElementById('fName').value.trim(),
-                batchNumber: document.getElementById('fBatch').value.trim(),
-                quantity: parseInt(document.getElementById('fQty').value) || 0,
-                originalPrice: parseFloat(document.getElementById('fPrice').value) || 0,
-                salePrice: parseFloat(document.getElementById('fSale').value) || 0,
-                category: document.getElementById('fCat').value,
-                onSale: document.getElementById('fOnSale').checked
-            };
-            if (!data.name) { showToast('Item name is required', 'error'); return; }
+            const name = document.getElementById('fName').value.trim();
+            const batch = document.getElementById('fBatch').value.trim();
+            const qty = parseInt(document.getElementById('fQty').value) || 0;
+            const origPrice = parseFloat(document.getElementById('fPrice').value) || 0;
+            const onSale = document.getElementById('fOnSale').checked;
+            const useDiscount = document.getElementById('fUseDiscount').checked;
+            let salePrice = parseFloat(document.getElementById('fSale').value) || 0;
 
-            if (id) {
-                const result = await Backend.updateInventoryItem(id, data);
-                if (result.success) { showToast('Item updated!', 'success'); } else { showToast('Update failed', 'error'); }
-            } else {
-                let items = await Backend.loadInventoryItems(businessId);
-                items.push({
-                    ...data,
-                    businessId: businessId
-                });
-                const result = await Backend.saveInventoryItems(items);
-                if (result.success) { showToast('Item added!', 'success'); } else { showToast('Add failed', 'error'); }
+            if (!name) { showToast('Item name is required', 'error'); return; }
+
+            // If using discount, recalc sale price
+            if (useDiscount) {
+                const pct = parseFloat(document.getElementById('fDiscountPct').value) || 0;
+                if (origPrice > 0 && pct > 0) {
+                    salePrice = origPrice * (1 - pct / 100);
+                } else {
+                    showToast('Invalid discount percentage or original price', 'error');
+                    return;
+                }
             }
-            closeModal();
-            await loadInventory();
+
+            const data = {
+                name: name,
+                batchNumber: batch,
+                quantity: qty,
+                originalPrice: origPrice,
+                salePrice: salePrice,
+                category: document.getElementById('fCat').value,
+                onSale: onSale
+            };
+
+            try {
+                if (id) {
+                    const result = await Backend.updateInventoryItem(id, data);
+                    if (result.success) { showToast('Item updated!', 'success'); } else { showToast('Update failed', 'error'); }
+                } else {
+                    let items = await Backend.loadInventoryItems(businessId);
+                    items.push({
+                        ...data,
+                        businessId: businessId
+                    });
+                    const result = await Backend.saveInventoryItems(items);
+                    if (result.success) { showToast('Item added!', 'success'); } else { showToast('Add failed', 'error'); }
+                }
+                closeModal();
+                await loadInventory();
+            } catch (e) {
+                showToast('Error saving item', 'error');
+                console.error(e);
+            }
         }
 
         async function deleteItem(id) {
@@ -445,7 +553,7 @@
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Export to Ads (only if canEdit AND canPostAds, and item is onSale with salePrice) ---
+        // --- Export to Ads (only if canEdit AND canPostAds AND item is onSale with salePrice) ---
         function exportToAds(id) {
             if (!canEdit || !canPostAds) {
                 showToast('You do not have permission to export to ads', 'error');
@@ -457,7 +565,6 @@
                 showToast('This item is not on sale – cannot export to ads.', 'error');
                 return;
             }
-            // Calculate discount percentage from original price to sale price
             let discount = 0;
             if (item.originalPrice > 0 && item.salePrice < item.originalPrice) {
                 discount = Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100);
@@ -466,7 +573,6 @@
                 return;
             }
 
-            // Prepare data for Ad page
             const exportData = {
                 name: item.name,
                 price: item.originalPrice || 0,
@@ -486,7 +592,7 @@
             }, 500);
         }
 
-        // --- Excel Export (available to everyone) ---
+        // --- Excel Export ---
         function exportExcel() {
             if (currentItems.length === 0) { showToast('No data to export', 'error'); return; }
             const exportData = currentItems.map(item => ({
@@ -512,7 +618,7 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import (only if canEdit) ---
+        // --- Excel Import ---
         async function importExcel(event) {
             if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
             const file = event.target.files[0];
