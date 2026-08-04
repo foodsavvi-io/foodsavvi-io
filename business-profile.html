@@ -243,6 +243,7 @@
             flex: 1;
         }
 
+        /* ─── TABS ─── */
         .tabs {
             display: flex;
             gap: 6px;
@@ -466,6 +467,7 @@
             color: #999;
         }
 
+        /* ─── BOTTOM NAV ─── */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -478,6 +480,7 @@
             padding: 8px 20px;
             display: flex;
             justify-content: space-around;
+            z-index: 100;
         }
 
         .nav-item {
@@ -486,20 +489,21 @@
             font-size: 12px;
             text-align: center;
             flex: 1;
+            padding: 4px 0;
+            transition: color 0.2s;
         }
-
-        .nav-item.active .nav-emoji {
-            color: #999;
-        }
-
-        .nav-item.active span:last-child {
+        .nav-item:hover {
             color: #667eea;
         }
-
+        .nav-item.active {
+            color: #667eea;
+        }
         .nav-emoji {
             font-size: 20px;
             margin-bottom: 2px;
             display: block;
+            height: 24px;
+            line-height: 24px;
         }
 
         .loading {
@@ -574,7 +578,7 @@
             border-radius: 20px;
         }
 
-        /* ========== ORDER STYLES ========== */
+        /* ─── ORDER STYLES ─── */
         .order-item {
             background: #f8f9fa;
             border-radius: 12px;
@@ -586,27 +590,12 @@
             align-items: center;
             gap: 10px;
         }
-        .order-item.pending {
-            border-left-color: #ff9500;
-        }
-        .order-item.waiting {
-            border-left-color: #f57c00;
-        }
-        .order-item.picked-up {
-            border-left-color: #e65100;
-        }
-        .order-item.completed {
-            border-left-color: #34c759;
-        }
-        .order-item.cancelled {
-            border-left-color: #ff3b30;
-            background: #fff5f5;
-            opacity: 1;
-        }
-        .order-item:hover {
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
+        .order-item.pending { border-left-color: #ff9500; }
+        .order-item.waiting { border-left-color: #f57c00; }
+        .order-item.picked-up { border-left-color: #e65100; }
+        .order-item.completed { border-left-color: #34c759; }
+        .order-item.cancelled { border-left-color: #ff3b30; background: #fff5f5; opacity: 1; }
+        .order-item:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
         .order-checkbox {
             width: 20px;
@@ -614,99 +603,20 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-
-        .order-content {
-            flex: 1;
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-            flex-wrap: nowrap;
-            gap: 6px;
-        }
-
-        .order-id {
-            font-weight: 600;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .order-status {
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 10px;
-            white-space: normal;
-            word-break: break-word;
-            max-width: 100px;
-            text-align: center;
-            line-height: 1.2;
-            flex-shrink: 0;
-        }
-
-        .status-pending {
-            background: #fff3e0;
-            color: #ff9500;
-        }
-        .status-waiting {
-            background: #fff8e1;
-            color: #f57c00;
-        }
-        .status-picked-up {
-            background: #ffcc80;
-            color: #e65100;
-        }
-        .status-completed {
-            background: #e8f5e8;
-            color: #34c759;
-        }
-        .status-cancelled {
-            background: #ff3b30;
-            color: white;
-            font-weight: 600;
-        }
-
-        .order-details {
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .order-total {
-            font-size: 14px;
-            font-weight: 600;
-            color: #34c759;
-        }
-
-        .order-date {
-            font-size: 10px;
-            color: #999;
-        }
-
-        .action-btn {
-            background: #34c759;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: inherit;
-            white-space: nowrap;
-            flex-shrink: 0;
-            transition: background 0.2s;
-        }
-        .action-btn:hover {
-            background: #2db14e;
-        }
-
-        .waiting-text {
-            font-size: 11px;
-            white-space: nowrap;
-            color: #34c759;
-        }
+        .order-content { flex: 1; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 6px; }
+        .order-id { font-weight: 600; font-size: 12px; color: #666; }
+        .order-status { font-size: 10px; padding: 4px 8px; border-radius: 10px; max-width: 100px; text-align: center; line-height: 1.2; flex-shrink: 0; }
+        .status-pending { background: #fff3e0; color: #ff9500; }
+        .status-waiting { background: #fff8e1; color: #f57c00; }
+        .status-picked-up { background: #ffcc80; color: #e65100; }
+        .status-completed { background: #e8f5e8; color: #34c759; }
+        .status-cancelled { background: #ff3b30; color: white; font-weight: 600; }
+        .order-details { font-size: 13px; color: #333; margin-bottom: 4px; }
+        .order-total { font-size: 14px; font-weight: 600; color: #34c759; }
+        .order-date { font-size: 10px; color: #999; }
+        .action-btn { background: #34c759; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .action-btn:hover { background: #2db14e; }
 
         .bulk-actions {
             display: flex;
@@ -717,45 +627,12 @@
             padding: 12px;
             border-radius: 12px;
         }
+        .select-all-btn { background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+        .bulk-confirm-btn { background: #34c759; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .bulk-confirm-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .selected-count { font-size: 12px; color: #667eea; font-weight: 600; white-space: nowrap; }
 
-        .select-all-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .bulk-confirm-btn {
-            background: #34c759;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-
-        .bulk-confirm-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .selected-count {
-            font-size: 12px;
-            color: #667eea;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        /* ========== LOOKUP STYLES ========== */
+        /* ─── LOOKUP ─── */
         .search-box {
             display: flex;
             gap: 8px;
@@ -767,14 +644,9 @@
             border: 2px solid #f0f0f0;
             border-radius: 12px;
             font-size: 15px;
-            font-family: inherit;
             background: #fafafa;
         }
-        .search-box input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
+        .search-box input:focus { outline: none; border-color: #667eea; background: white; }
         .search-box button {
             padding: 12px 20px;
             background: #667eea;
@@ -784,12 +656,9 @@
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            font-family: inherit;
             white-space: nowrap;
         }
-        .search-box button:active {
-            transform: scale(0.97);
-        }
+        .search-box button:active { transform: scale(0.97); }
 
         .lookup-result-item {
             background: #f8f9fa;
@@ -800,93 +669,25 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .lookup-result-item:hover {
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            background: #f0f4ff;
-        }
-        .lookup-result-item:active {
-            transform: scale(0.98);
-        }
-        .lookup-result-item.pending {
-            border-left-color: #ff9500;
-        }
-        .lookup-result-item.waiting {
-            border-left-color: #f57c00;
-        }
-        .lookup-result-item.picked-up {
-            border-left-color: #e65100;
-        }
-        .lookup-result-item.completed {
-            border-left-color: #34c759;
-        }
-        .lookup-result-item.cancelled {
-            border-left-color: #ff3b30;
-            background: #fff5f5;
-        }
+        .lookup-result-item:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); background: #f0f4ff; }
+        .lookup-result-item.pending { border-left-color: #ff9500; }
+        .lookup-result-item.waiting { border-left-color: #f57c00; }
+        .lookup-result-item.picked-up { border-left-color: #e65100; }
+        .lookup-result-item.completed { border-left-color: #34c759; }
+        .lookup-result-item.cancelled { border-left-color: #ff3b30; background: #fff5f5; }
+        .lookup-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
+        .lookup-customer { font-weight: 600; font-size: 14px; }
+        .lookup-status { font-size: 10px; padding: 4px 8px; border-radius: 10px; max-width: 100px; text-align: center; line-height: 1.2; flex-shrink: 0; }
+        .lookup-status.pending { background: #fff3e0; color: #ff9500; }
+        .lookup-status.waiting { background: #fff8e1; color: #f57c00; }
+        .lookup-status.picked-up { background: #ffcc80; color: #e65100; }
+        .lookup-status.completed { background: #e8f5e8; color: #34c759; }
+        .lookup-status.cancelled { background: #ff3b30; color: white; font-weight: 600; }
+        .lookup-detail { font-size: 13px; color: #333; margin-bottom: 2px; }
+        .lookup-meta { font-size: 11px; color: #999; }
+        .click-hint { font-size: 10px; color: #667eea; margin-top: 4px; opacity: 0.7; }
 
-        .lookup-result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-            gap: 8px;
-        }
-        .lookup-customer {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .lookup-status {
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 10px;
-            white-space: normal;
-            word-break: break-word;
-            max-width: 100px;
-            text-align: center;
-            line-height: 1.2;
-            flex-shrink: 0;
-        }
-        .lookup-status.pending {
-            background: #fff3e0;
-            color: #ff9500;
-        }
-        .lookup-status.waiting {
-            background: #fff8e1;
-            color: #f57c00;
-        }
-        .lookup-status.picked-up {
-            background: #ffcc80;
-            color: #e65100;
-        }
-        .lookup-status.completed {
-            background: #e8f5e8;
-            color: #34c759;
-        }
-        .lookup-status.cancelled {
-            background: #ff3b30;
-            color: white;
-            font-weight: 600;
-        }
-
-        .lookup-detail {
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 2px;
-        }
-        .lookup-meta {
-            font-size: 11px;
-            color: #999;
-        }
-
-        .click-hint {
-            font-size: 10px;
-            color: #667eea;
-            margin-top: 4px;
-            opacity: 0.7;
-        }
-
-        /* ========== ORDER DETAIL MODAL ========== */
+        /* ─── ORDER DETAIL MODAL ─── */
         .order-detail-modal {
             position: fixed;
             top: 0;
@@ -894,18 +695,13 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.6);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
-            display: none;
             padding: 20px;
         }
-
-        .order-detail-modal.show {
-            display: flex;
-        }
-
+        .order-detail-modal.show { display: flex; }
         .order-detail-content {
             background: white;
             border-radius: 20px;
@@ -916,224 +712,39 @@
             padding: 24px;
             animation: fadeInScale 0.3s ease;
         }
+        @keyframes fadeInScale { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+        .order-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+        .order-detail-title { font-size: 18px; font-weight: 600; }
+        .order-detail-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .order-detail-close:hover { color: #333; }
+        .detail-field { margin-bottom: 12px; }
+        .detail-field-label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
+        .detail-field-value { font-size: 15px; font-weight: 500; color: #1a1a1a; }
+        .detail-field-value .batch-tag { font-family: monospace; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-badge.pending { background: #fff3e0; color: #ff9500; }
+        .status-badge.waiting { background: #fff8e1; color: #f57c00; }
+        .status-badge.picked-up { background: #ffcc80; color: #e65100; }
+        .status-badge.completed { background: #e8f5e8; color: #34c759; }
+        .status-badge.cancelled { background: #ff3b30; color: white; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+        .order-detail-actions { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
+        .order-detail-actions .modal-action-btn { flex: 0 1 auto; min-width: 100px; padding: 10px 18px; border: none; border-radius: 30px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-align: center; }
+        .order-detail-actions .modal-action-btn:active { transform: scale(0.97); }
+        .modal-action-btn.pickup-btn { background: #007aff; color: white; }
+        .modal-action-btn.pickup-btn:hover { background: #005bbf; }
+        .modal-action-btn.cancel-btn { background: #ff3b30; color: white; }
+        .modal-action-btn.cancel-btn:hover { background: #d63031; }
+        .modal-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
+        .pending-message { background: #fff3e0; padding: 12px 16px; border-radius: 12px; color: #e65100; font-size: 14px; text-align: center; margin: 8px 0; }
+        .waiting-message { background: #fff8e1; padding: 12px 16px; border-radius: 12px; color: #f57c00; font-size: 14px; text-align: center; margin: 8px 0; }
+        .picked-up-message { background: #ffcc80; padding: 12px 16px; border-radius: 12px; color: #e65100; font-size: 14px; text-align: center; margin: 8px 0; }
+        .completed-message { background: #e8f5e8; padding: 12px 16px; border-radius: 12px; color: #2e7d32; font-size: 14px; text-align: center; margin: 8px 0; }
+        .cancelled-message { background: #ff3b30; padding: 16px; border-radius: 12px; color: white; font-size: 16px; font-weight: 700; text-align: center; margin: 8px 0; box-shadow: 0 2px 8px rgba(255,59,48,0.3); }
+        .collect-time-input { width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 12px; font-family: inherit; font-size: 14px; margin-top: 4px; background: #fafafa; }
+        .collect-time-input:focus { outline: none; border-color: #667eea; background: white; }
 
-        .order-detail-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .order-detail-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .order-detail-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-            padding: 0 4px;
-        }
-        .order-detail-close:hover {
-            color: #333;
-        }
-
-        .detail-field {
-            margin-bottom: 12px;
-        }
-
-        .detail-field-label {
-            font-size: 11px;
-            color: #999;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 2px;
-        }
-
-        .detail-field-value {
-            font-size: 15px;
-            font-weight: 500;
-            color: #1a1a1a;
-        }
-
-        .detail-field-value .batch-tag {
-            font-family: monospace;
-            background: #f0f0f0;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        .detail-field-value .status-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: normal;
-            word-break: break-word;
-        }
-
-        .status-badge.pending {
-            background: #fff3e0;
-            color: #ff9500;
-        }
-        .status-badge.waiting {
-            background: #fff8e1;
-            color: #f57c00;
-        }
-        .status-badge.picked-up {
-            background: #ffcc80;
-            color: #e65100;
-        }
-        .status-badge.completed {
-            background: #e8f5e8;
-            color: #34c759;
-        }
-        .status-badge.cancelled {
-            background: #ff3b30;
-            color: white;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        .order-detail-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid #f0f0f0;
-            flex-wrap: wrap;
-        }
-
-        .order-detail-actions .modal-action-btn {
-            flex: 0 1 auto;
-            min-width: 100px;
-            padding: 10px 18px;
-            border: none;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .order-detail-actions .modal-action-btn:active {
-            transform: scale(0.97);
-        }
-
-        .modal-action-btn.pickup-btn {
-            background: #007aff;
-            color: white;
-        }
-        .modal-action-btn.pickup-btn:hover {
-            background: #005bbf;
-        }
-
-        .modal-action-btn.cancel-btn {
-            background: #ff3b30;
-            color: white;
-        }
-        .modal-action-btn.cancel-btn:hover {
-            background: #d63031;
-        }
-
-        .modal-action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .pending-message {
-            background: #fff3e0;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #e65100;
-            font-size: 14px;
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .waiting-message {
-            background: #fff8e1;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #f57c00;
-            font-size: 14px;
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .picked-up-message {
-            background: #ffcc80;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #e65100;
-            font-size: 14px;
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .completed-message {
-            background: #e8f5e8;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #2e7d32;
-            font-size: 14px;
-            text-align: center;
-            margin: 8px 0;
-        }
-
-        .cancelled-message {
-            background: #ff3b30;
-            padding: 16px;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            text-align: center;
-            margin: 8px 0;
-            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
-        }
-
-        .collect-time-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 14px;
-            margin-top: 4px;
-            background: #fafafa;
-        }
-        .collect-time-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-
-        /* ========== INVITATION CODE CARD ========== */
+        /* ─── INVITATION CODE CARD ─── */
         .invite-code-card {
             background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
             border: 2px solid #34c759;
@@ -1141,64 +752,19 @@
             padding: 20px;
             text-align: center;
             margin-top: 20px;
-            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.15);
+            box-shadow: 0 2px 8px rgba(52,199,89,0.15);
         }
-        .invite-code-card h4 {
-            color: #2e7d32;
-            margin-bottom: 4px;
-            font-size: 16px;
-        }
-        .invite-code-card .sub {
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 12px;
-        }
-        .invite-code-display {
-            font-size: 36px;
-            font-weight: 800;
-            letter-spacing: 8px;
-            color: #1a1a1a;
-            font-family: monospace;
-            background: white;
-            padding: 12px;
-            border-radius: 12px;
-            display: inline-block;
-            border: 1px solid #a5d6a7;
-            min-width: 180px;
-        }
-        .invite-code-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        .invite-code-actions button {
-            background: #34c759;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .invite-code-actions button:hover {
-            background: #2db14e;
-        }
-        .invite-code-actions button.secondary {
-            background: #667eea;
-        }
-        .invite-code-actions button.secondary:hover {
-            background: #5a6fd6;
-        }
-        .invite-code-actions button:active {
-            transform: scale(0.97);
-        }
+        .invite-code-card h4 { color: #2e7d32; margin-bottom: 4px; font-size: 16px; }
+        .invite-code-card .sub { font-size: 13px; color: #555; margin-bottom: 12px; }
+        .invite-code-display { font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #1a1a1a; font-family: monospace; background: white; padding: 12px; border-radius: 12px; display: inline-block; border: 1px solid #a5d6a7; min-width: 180px; }
+        .invite-code-actions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .invite-code-actions button { background: #34c759; color: white; border: none; padding: 8px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .invite-code-actions button:hover { background: #2db14e; }
+        .invite-code-actions button.secondary { background: #667eea; }
+        .invite-code-actions button.secondary:hover { background: #5a6fd6; }
+        .invite-code-actions button:active { transform: scale(0.97); }
 
-        /* ========== ROLE PERMISSIONS STYLES ========== */
+        /* ─── ROLE PERMISSIONS ─── */
         .role-box {
             background: #f8f9fa;
             border: 1px solid #e0e0e0;
@@ -1226,7 +792,7 @@
             height: 16px;
         }
 
-        /* ========== DATA IMPORT/EXPORT STYLES ========== */
+        /* ─── DATA IMPORT/EXPORT ─── */
         .data-section {
             background: #f8f9fa;
             border-radius: 16px;
@@ -1234,53 +800,14 @@
             margin-bottom: 20px;
             border: 1px solid #e0e0e0;
         }
-        .data-section h4 {
-            margin-bottom: 12px;
-            font-size: 16px;
-            color: #1a1a1a;
-        }
-        .data-section p {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 16px;
-        }
-        .file-input-wrapper {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .file-input-wrapper input[type="file"] {
-            flex: 1;
-            min-width: 150px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 13px;
-            background: white;
-        }
-        .template-btn {
-            background: #34c759;
-            color: white;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 12px;
-        }
-        .template-btn:hover {
-            background: #2db14e;
-        }
-        .import-help {
-            margin-top: 4px;
-            font-size: 11px;
-            color: #999;
-        }
-        .import-help strong {
-            color: #666;
-        }
+        .data-section h4 { margin-bottom: 12px; font-size: 16px; color: #1a1a1a; }
+        .data-section p { font-size: 13px; color: #666; margin-bottom: 16px; }
+        .file-input-wrapper { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .file-input-wrapper input[type="file"] { flex: 1; min-width: 150px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; background: white; }
+        .template-btn { background: #34c759; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 12px; }
+        .template-btn:hover { background: #2db14e; }
+        .import-help { margin-top: 4px; font-size: 11px; color: #999; }
+        .import-help strong { color: #666; }
     </style>
 </head>
 <body>
@@ -1292,7 +819,7 @@
         </div>
 
         <div class="content">
-            <!-- Verification Banner – will be hidden for employees -->
+            <!-- Verification Banner – hidden for employees -->
             <div class="verification-banner" id="verificationBanner">
                 <div class="banner-icon" id="bannerIcon">⏳</div>
                 <div class="banner-content">
@@ -1341,15 +868,15 @@
                 </div>
             </div>
 
-            <!-- Tabs - inventory tab removed -->
+            <!-- ─── TABS ─── -->
             <div class="tabs" id="tabContainer">
-                <button class="tab" onclick="switchTab('profile')">profile</button>
-                <button class="tab" onclick="switchTab('employees')">employees</button>
-                <button class="tab" onclick="switchTab('orders')">orders</button>
-                <button class="tab" onclick="switchTab('lookup')">lookup</button>
-                <button class="tab" onclick="switchTab('verification')">verify</button>
-                <button class="tab" onclick="switchTab('notifications')">alerts</button>
-                <button class="tab" onclick="switchTab('data')">data</button>
+                <button class="tab" data-tab="profile">profile</button>
+                <button class="tab" data-tab="employees">employees</button>
+                <button class="tab" data-tab="orders">orders</button>
+                <button class="tab" data-tab="lookup">lookup</button>
+                <button class="tab" data-tab="verification">verify</button>
+                <button class="tab" data-tab="notifications">alerts</button>
+                <button class="tab" data-tab="data">data</button>
             </div>
 
             <!-- Profile Tab -->
@@ -1383,10 +910,8 @@
                 <button class="save-btn" id="saveProfileBtn" onclick="saveProfile()">save changes</button>
             </div>
 
-            <!-- ========== EMPLOYEES & ROLES TAB ========== -->
+            <!-- Employees Tab -->
             <div class="tab-content" id="employeesTab">
-                
-                <!-- Invitation Code Card (TOP) -->
                 <div id="inviteCodeSection">
                     <div class="invite-code-card">
                         <h4>🔑 Business Invitation Code</h4>
@@ -1398,44 +923,28 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Pending Approvals -->
                 <div style="margin-top: 20px;">
                     <h4 style="font-size: 14px; color: #e65100; margin-bottom: 12px;">⏳ Pending Approvals</h4>
-                    <div id="pendingEmployeesList">
-                        <div class="empty-state" style="padding: 20px;">No pending requests</div>
-                    </div>
+                    <div id="pendingEmployeesList"><div class="empty-state" style="padding:20px;">No pending requests</div></div>
                 </div>
-
-                <!-- Active Employees -->
                 <div style="margin-top: 20px;">
                     <h4 style="font-size: 14px; color: #1a1a1a; margin-bottom: 12px;">✅ Active Employees</h4>
-                    <div id="activeEmployeesList">
-                        <div class="empty-state" style="padding: 20px;">No active employees</div>
-                    </div>
+                    <div id="activeEmployeesList"><div class="empty-state" style="padding:20px;">No active employees</div></div>
                 </div>
-
-                <!-- Role Management -->
                 <div style="border-top: 2px solid #f0f0f0; padding-top: 20px; margin-top: 20px;">
                     <h4 style="font-size: 14px; color: #1a1a1a; margin-bottom: 12px;">⚙️ Manage Custom Roles</h4>
-                    
                     <div style="background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                         <input type="text" class="form-input" id="newRoleName" placeholder="e.g. Floor Manager" style="margin-bottom: 12px;">
-                        <!-- ========== REMOVED can_manage_employees & can_approve_members ========== -->
                         <div class="role-permission-grid" id="rolePermissionsGrid">
                             <label><input type="checkbox" value="can_post_ads"> 📢 Post Ads</label>
                             <label><input type="checkbox" value="can_edit_inventory"> 📦 Edit Inventory</label>
                             <label><input type="checkbox" value="can_read_inventory"> 👀 Read Inventory</label>
                             <label><input type="checkbox" value="can_edit_profile"> ✏️ Edit Profile</label>
                             <label><input type="checkbox" value="can_view_orders"> 📦 View Orders</label>
-                            <!-- can_manage_employees and can_approve_members are removed -->
                         </div>
                         <button class="save-btn" onclick="createRole()" style="margin-top: 12px; padding: 12px;">➕ Create New Role</button>
                     </div>
-
-                    <div id="existingRolesList">
-                        <!-- Existing roles loaded here -->
-                    </div>
+                    <div id="existingRolesList"></div>
                 </div>
             </div>
 
@@ -1498,11 +1007,9 @@
                 <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <span>📊 Data Import / Export</span>
                 </div>
-                
                 <div class="data-section">
                     <h4>📤 Export Data</h4>
                     <p>Download your data as Excel (.xlsx) files for analysis or backup.</p>
-                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <button class="save-btn" onclick="exportOrders()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Orders</button>
                         <button class="save-btn" onclick="exportInventory()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Inventory</button>
@@ -1512,11 +1019,9 @@
                         <button class="save-btn" onclick="exportAllData()" style="padding: 12px; font-size: 14px; margin-top: 0; background: #667eea;">📊 Export All</button>
                     </div>
                 </div>
-                
                 <div class="data-section">
                     <h4>📥 Import Data</h4>
                     <p>Upload Excel (.xlsx) files to import data into your database.</p>
-                    
                     <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0;">
                         <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Import Inventory (Excel)</label>
                         <div class="file-input-wrapper">
@@ -1532,34 +1037,30 @@
             </div>
         </div>
 
-        <!-- Bottom Nav -->
-        <div class="bottom-nav">
-            <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
-            <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
-            <a href="inventory.html" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
-            <a href="business-profile.html?tab=profile" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
+        <!-- ─── BOTTOM NAV ─── -->
+        <div class="bottom-nav" id="bottomNav">
+            <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
+            <a href="advertise.html" id="navAds" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="inventory.html" id="navInventory" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="business-profile.html?tab=profile" id="navSettings" class="nav-item active"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
 
-    <!-- ========== ORDER DETAIL MODAL ========== -->
+    <!-- ORDER DETAIL MODAL -->
     <div class="order-detail-modal" id="orderDetailModal">
         <div class="order-detail-content">
             <div class="order-detail-header">
                 <span class="order-detail-title">📋 Order Details</span>
                 <button class="order-detail-close" onclick="closeOrderDetailModal()">✕</button>
             </div>
-            <div id="orderDetailBody">
-                <!-- populated by JS -->
-            </div>
+            <div id="orderDetailBody"></div>
         </div>
     </div>
 
     <div class="status-message" id="statusMessage"></div>
 
-    <script src="https://npmcdn.com/parse/dist/parse.min.js">
-    </script>
-    <script src="backend.js">
-    </script>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
 
     <script>
         // ===== GLOBAL VARIABLES =====
@@ -1624,11 +1125,11 @@
             }
             currentUser = user;
 
-            // --- Resolve business ID ---
+            // Resolve business ID
             businessId = user.get('businessId') || user.id;
             console.log('🔍 Business ID resolved to:', businessId);
 
-            // --- Check permissions ---
+            // Check permissions
             currentPermissions = await Backend.getEmployeePermissions(user.id);
             if (currentPermissions.isOwner) {
                 isOwner = true;
@@ -1645,19 +1146,30 @@
                 document.getElementById('backLink').href = 'index.html';
             }
 
+            // --- Adjust bottom nav for employees ---
+            const navHome = document.getElementById('navHome');
+            const navAds = document.getElementById('navAds');
+            const navInventory = document.getElementById('navInventory');
+            const navSettings = document.getElementById('navSettings');
+
+            if (isEmployee) {
+                navHome.href = 'index-employee.html';
+                navSettings.href = 'business-profile.html';
+                navAds.style.display = 'none';
+                navInventory.style.display = 'none';
+            } else {
+                navHome.href = 'index.html';
+                navSettings.href = 'business-profile.html?tab=profile';
+                navAds.style.display = 'block';
+                navInventory.style.display = 'block';
+            }
+
             // --- Hide elements for employees ---
             if (isEmployee) {
-                // Hide verification banner
                 document.getElementById('verificationBanner').style.display = 'none';
-                
-                // Hide tabs and features
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.getElementById('dataTab').style.display = 'none';
-                // Hide tab buttons (indices: 0:profile,1:employees,2:orders,3:lookup,4:verify,5:alerts,6:data)
-                document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[4].style.display = 'none';
-                document.querySelectorAll('.tab')[6].style.display = 'none';
                 document.getElementById('walletCard').style.display = 'none';
                 document.querySelector('.stats-grid').style.display = 'none';
                 document.getElementById('roleBanner').style.display = 'none';
@@ -1666,11 +1178,63 @@
                     input.disabled = true;
                 });
             }
-            if (isManager && !isOwner) {
-                document.getElementById('employeesTab').style.display = 'none';
+
+            // --- Permission-based tab visibility ---
+            const tabButtons = document.querySelectorAll('.tab');
+            // profile: always visible
+            // employees: owner only
+            if (!isOwner) {
+                tabButtons[1].style.display = 'none';
+            } else {
+                tabButtons[1].style.display = 'block';
+            }
+            // orders + lookup: visible if can_view_orders or owner
+            const canViewOrders = isOwner || currentPermissions.can_view_orders;
+            if (!canViewOrders) {
+                tabButtons[2].style.display = 'none';
+                tabButtons[3].style.display = 'none';
+                document.getElementById('ordersTab').style.display = 'none';
+                document.getElementById('lookupTab').style.display = 'none';
+            } else {
+                tabButtons[2].style.display = 'block';
+                tabButtons[3].style.display = 'block';
+                document.getElementById('ordersTab').style.display = 'block';
+                document.getElementById('lookupTab').style.display = 'block';
+            }
+            // verification: owner only
+            if (!isOwner) {
+                tabButtons[4].style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
-                document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[4].style.display = 'none';
+            } else {
+                tabButtons[4].style.display = 'block';
+                document.getElementById('verificationTab').style.display = 'block';
+            }
+            // notifications: always visible
+            tabButtons[5].style.display = 'block';
+            document.getElementById('notificationsTab').style.display = 'block';
+            // data: owner only
+            if (!isOwner) {
+                tabButtons[6].style.display = 'none';
+                document.getElementById('dataTab').style.display = 'none';
+            } else {
+                tabButtons[6].style.display = 'block';
+                document.getElementById('dataTab').style.display = 'block';
+            }
+
+            // --- Tab click handlers (fixes the glitch) ---
+            tabButtons.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    if (tabName) {
+                        switchTab(tabName);
+                    }
+                });
+            });
+
+            // If the active tab was hidden, fall back to profile
+            const activeTabBtn = document.querySelector('.tab.active');
+            if (activeTabBtn && activeTabBtn.style.display === 'none') {
+                switchTab('profile');
             }
 
             // --- Set UI ---
@@ -1679,7 +1243,7 @@
             updateRoleUI();
             updateVerificationUI();
 
-            // --- Load all data (businessId is now guaranteed) ---
+            // --- Load all data ---
             await loadBusinessData();
             await loadEmployeesAndRoles();
             await loadOrders();
@@ -1690,7 +1254,7 @@
             // --- Handle tab from URL ---
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
-            if (tabParam && ['profile','employees','orders','lookup','verification','notifications','data'].includes(tabParam)) {
+            if (tabParam && ['profile', 'employees', 'orders', 'lookup', 'verification', 'notifications', 'data'].includes(tabParam)) {
                 switchTab(tabParam);
             } else {
                 switchTab('profile');
@@ -1716,7 +1280,6 @@
 
         function updateVerificationUI() {
             const banner = document.getElementById('verificationBanner');
-            // Only update if visible (not hidden for employees)
             if (banner.style.display !== 'none') {
                 if (isVerified) {
                     banner.className = 'verification-banner banner-verified';
@@ -1762,8 +1325,8 @@
         }
 
         async function saveProfile() {
-            if (isEmployee) {
-                showStatus('Employees cannot edit profile', 'error');
+            if (isEmployee || !currentPermissions.can_edit_profile) {
+                showStatus('You do not have permission to edit the profile', 'error');
                 return;
             }
             const updates = {
@@ -2228,7 +1791,7 @@
             else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING (inventory removed) =====
+        // ===== TAB SWITCHING =====
         function switchTab(tabName) {
             activeTab = tabName;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2239,9 +1802,6 @@
             document.getElementById(`${tabName}Tab`).classList.add('active');
             updateNavActive(tabName);
         }
-
-        // ===== INVENTORY FUNCTIONS (kept for data export) =====
-        // (loadInventory, addInventoryItem, etc. are kept but not used in this UI)
 
         // ===== LOOKUP =====
         function performLookup() {
