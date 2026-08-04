@@ -6,7 +6,6 @@
     <title>foodsavvi • business settings</title>
     <link rel="icon" type="image/png" href="assets/icon.png" />
     <link rel="shortcut icon" type="image/png" href="assets/icon.png" />
-    <!-- SheetJS Library for Excel import/export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -279,7 +278,6 @@
         .tab-content {
             display: none;
         }
-
         .tab-content.active {
             display: block;
         }
@@ -868,7 +866,7 @@
                 </div>
             </div>
 
-            <!-- ─── TABS ─── -->
+            <!-- ─── TABS (no inline onclick) ─── -->
             <div class="tabs" id="tabContainer">
                 <button class="tab" data-tab="profile">profile</button>
                 <button class="tab" data-tab="employees">employees</button>
@@ -1221,14 +1219,15 @@
                 document.getElementById('dataTab').style.display = 'block';
             }
 
-            // --- Tab click handlers (fixes the glitch) ---
-            tabButtons.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
+            // ─── FIX: Use event delegation for all tab clicks ───
+            document.getElementById('tabContainer').addEventListener('click', function(e) {
+                const tab = e.target.closest('.tab');
+                if (tab) {
+                    const tabName = tab.getAttribute('data-tab');
                     if (tabName) {
                         switchTab(tabName);
                     }
-                });
+                }
             });
 
             // If the active tab was hidden, fall back to profile
@@ -1791,15 +1790,22 @@
             else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING =====
+        // ===== TAB SWITCHING (FIXED via event delegation) =====
         function switchTab(tabName) {
             activeTab = tabName;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
             const tabs = document.querySelectorAll('.tab');
             const tabMap = { profile: 0, employees: 1, orders: 2, lookup: 3, verification: 4, notifications: 5, data: 6 };
-            if (tabs[tabMap[tabName]]) tabs[tabMap[tabName]].classList.add('active');
-            document.getElementById(`${tabName}Tab`).classList.add('active');
+            const idx = tabMap[tabName];
+            if (idx !== undefined && tabs[idx]) {
+                tabs[idx].classList.add('active');
+            }
+            const content = document.getElementById(`${tabName}Tab`);
+            if (content) {
+                content.classList.add('active');
+            }
             updateNavActive(tabName);
         }
 
@@ -1922,7 +1928,7 @@
             return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
 
-        // ===== EXCEL IMPORT/EXPORT =====
+        // ===== EXCEL IMPORT/EXPORT (unchanged) =====
         function parseExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
