@@ -351,15 +351,7 @@
                 `;
             }
 
-            if (perms.can_manage_employees) {
-                html += `
-                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=employees'">
-                        <div class="card-emoji">👥</div>
-                        <div class="card-title">staff</div>
-                        <div class="card-desc">manage team</div>
-                    </div>
-                `;
-            }
+            // Removed can_manage_employees – staff management is not available to employees
 
             if (html === '') {
                 html = `
@@ -425,18 +417,7 @@
                     hasData = true;
                 }
 
-                // Staff count – pass ownerId
-                if (currentPermissions.can_manage_employees) {
-                    const staff = await Backend.getStaffList(ownerId);
-                    const activeStaff = staff.filter(e => e.role !== 'pending' && e.role !== 'owner');
-                    statsHtml += `
-                        <div class="stat-item">
-                            <div class="stat-number">${activeStaff.length}</div>
-                            <div class="stat-label">Team Members</div>
-                        </div>
-                    `;
-                    hasData = true;
-                }
+                // Staff count removed (can_manage_employees is not used)
 
                 if (!hasData) {
                     panel.innerHTML = `
