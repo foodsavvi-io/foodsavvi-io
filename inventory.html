@@ -392,7 +392,7 @@
                     if (canEdit || isOwner) {
                         actionsHtml = `
                             <button class="action-btn action-edit" onclick="openEditModal('${item.id}')">✏️</button>
-                            ${showAdExport && item.onSale && item.salePrice > 0 ? `<button class="action-btn action-ad" onclick="exportToAds('${item.id}')">📤</button>` : ''}
+                            ${showAdExport && item.onSale && item.salePrice > 0 ? `<button class="action-btn action-ad" onclick="exportToAds('${item.id}')">📢</button>` : ''}
                             <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
                         `;
                     } else {
