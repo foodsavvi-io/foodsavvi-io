@@ -89,7 +89,7 @@
         
         .action-btn { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; margin: 2px; }
         .action-edit { background: #e3f2fd; color: #0d47a1; }
-        .action-ad { background: #ff9800; color: white; }
+        .action-ad { background: #ff9800; color: white; }  /* Export to Ads */
         .action-del { background: #ffebee; color: #c62828; }
         
         /* Read-only indicator */
@@ -103,7 +103,7 @@
             display: inline-block;
         }
         
-        /* Modal */
+        /* Modal for Add/Edit only */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; max-height: 90vh; overflow-y: auto; }
         .modal-content h3 { margin-bottom: 16px; }
@@ -112,12 +112,6 @@
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
         .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        
-        /* Ad Popup (only shown when user can edit) */
-        .ad-option-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-        .ad-option-box:hover { border-color: #667eea; }
-        .ad-option-box input { margin-right: 8px; }
-        .ad-option-box label { font-weight: 600; cursor: pointer; }
         
         .bottom-nav {
             position: fixed;
@@ -162,7 +156,7 @@
         </div>
 
         <div class="content">
-            <!-- Controls - hidden for read-only users -->
+            <!-- Controls – hidden for read-only users -->
             <div class="controls" id="controlsSection">
                 <div class="control-row">
                     <button class="btn btn-success" id="addBtn" onclick="openCreateModal()">+ Add Item</button>
@@ -233,42 +227,17 @@
         </div>
     </div>
 
-    <!-- Modal for Ad Export (only displayed when user can edit) -->
-    <div class="modal" id="adModal">
-        <div class="modal-content">
-            <h3>📢 Post to Ads</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:12px;">Select discount type for <strong id="adItemName">-</strong></p>
-            
-            <div class="ad-option-box" onclick="selectAdType('percent')">
-                <input type="radio" name="adType" value="percent" id="adPercent" checked> 
-                <label for="adPercent">% Discount</label>
-                <input type="number" id="adPercentVal" value="20" min="0" max="100" style="width:60px; padding:4px; margin-left:8px; border:1px solid #ddd; border-radius:4px;">
-            </div>
-            
-            <div class="ad-option-box" onclick="selectAdType('fixed')">
-                <input type="radio" name="adType" value="fixed" id="adFixed"> 
-                <label for="adFixed">Fixed $ Discount</label>
-                <input type="number" id="adFixedVal" value="2.00" step="0.01" min="0" style="width:60px; padding:4px; margin-left:8px; border:1px solid #ddd; border-radius:4px;">
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeAdModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmAdExport()">Post Ad</button>
-            </div>
-        </div>
-    </div>
-
     <div class="toast" id="toast"></div>
 
     <script>
         let currentItems = [];
-        let adExportTargetId = null;
         let currentPermissions = {};
         let isOwner = false;
         let isEmployee = false;
         let businessId = null;
         let canEdit = false;
         let canRead = false;
+        let canPostAds = false;   // for ad export
         
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -288,17 +257,19 @@
                 isOwner = true;
                 canEdit = true;
                 canRead = true;
+                canPostAds = true;
             } else {
                 isEmployee = true;
                 canEdit = currentPermissions.can_edit_inventory || false;
                 canRead = currentPermissions.can_read_inventory || false;
+                canPostAds = currentPermissions.can_post_ads || false;
             }
 
             // --- If no read permission, redirect ---
             if (!canRead && !isOwner) {
                 showToast('You do not have permission to view inventory', 'error');
                 setTimeout(() => {
-                    window.location.href = isEmployee ? 'index-employee.html' : 'index.html';
+                    window.location.href = isEmployee ? 'employee-settings.html' : 'index.html';
                 }, 1500);
                 return;
             }
@@ -311,12 +282,12 @@
         });
 
         function setupUI() {
-            // Back link
+            // Back link: matches business-profile exactly
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
-                backLink.href = 'index-employee.html';
+                backLink.href = 'employee-settings.html';
             } else {
-                backLink.href = 'business-profile.html?tab=profile';
+                backLink.href = 'index.html';
             }
 
             // Bottom nav
@@ -358,6 +329,9 @@
                     return;
                 }
 
+                // Determine if we show the "Export to Ads" button for any item
+                const showAdExport = (canEdit || isOwner) && canPostAds;
+
                 tbody.innerHTML = currentItems.map(item => {
                     const qty = item.quantity || 0;
                     let statusHtml = `<span class="status-badge status-instock">In Stock</span>`;
@@ -369,16 +343,15 @@
                         priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
                     }
 
-                    // Actions: only show if user can edit (or is owner)
+                    // Actions: Edit, Delete, and Export to Ads (if conditions met)
                     let actionsHtml = '';
                     if (canEdit || isOwner) {
                         actionsHtml = `
                             <button class="action-btn action-edit" onclick="openEditModal('${item.id}')">✏️</button>
-                            <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
+                            ${showAdExport && item.onSale && item.salePrice > 0 ? `<button class="action-btn action-ad" onclick="exportToAds('${item.id}')">📤</button>` : ''}
                             <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
                         `;
                     } else {
-                        // Read‑only: no buttons at all (including Post Ad)
                         actionsHtml = `<span style="color:#999; font-size:11px;">—</span>`;
                     }
 
@@ -399,7 +372,7 @@
             }
         }
 
-        // --- CRUD Operations (only available if canEdit or isOwner) ---
+        // --- CRUD Operations (only if canEdit) ---
         function openCreateModal() {
             if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             document.getElementById('modalTitle').textContent = 'Add New Item';
@@ -472,56 +445,32 @@
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Ad Export Logic (only available when canEdit) ---
-        function openAdModal(id) {
-            // This function is only called from the button, which is only shown when canEdit.
+        // --- Export to Ads (only if canEdit AND canPostAds, and item is onSale with salePrice) ---
+        function exportToAds(id) {
+            if (!canEdit || !canPostAds) {
+                showToast('You do not have permission to export to ads', 'error');
+                return;
+            }
             const item = currentItems.find(i => i.id === id);
             if (!item) { showToast('Item not found', 'error'); return; }
-            adExportTargetId = id;
-            document.getElementById('adItemName').textContent = item.name;
-            
-            document.getElementById('adPercent').checked = true;
-            document.getElementById('adFixed').checked = false;
-            document.getElementById('adModal').style.display = 'flex';
-        }
-
-        function selectAdType(type) {
-            if (type === 'percent') {
-                document.getElementById('adPercent').checked = true;
-            } else {
-                document.getElementById('adFixed').checked = true;
+            if (!item.onSale || item.salePrice <= 0) {
+                showToast('This item is not on sale – cannot export to ads.', 'error');
+                return;
             }
-        }
-
-        function closeAdModal() {
-            document.getElementById('adModal').style.display = 'none';
-            adExportTargetId = null;
-        }
-
-        async function confirmAdExport() {
-            if (!adExportTargetId) return;
-            const item = currentItems.find(i => i.id === adExportTargetId);
-            if (!item) { showToast('Item not found', 'error'); return; }
-            
+            // Calculate discount percentage from original price to sale price
             let discount = 0;
-            const isPercent = document.getElementById('adPercent').checked;
-            
-            if (isPercent) {
-                discount = parseFloat(document.getElementById('adPercentVal').value) || 0;
+            if (item.originalPrice > 0 && item.salePrice < item.originalPrice) {
+                discount = Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100);
             } else {
-                const fixedAmt = parseFloat(document.getElementById('adFixedVal').value) || 0;
-                if (item.originalPrice > 0) {
-                    discount = (fixedAmt / item.originalPrice) * 100;
-                } else {
-                    showToast('Cannot calculate discount for $0 item', 'error');
-                    return;
-                }
+                showToast('Sale price must be lower than original price to create a discount.', 'error');
+                return;
             }
 
+            // Prepare data for Ad page
             const exportData = {
                 name: item.name,
                 price: item.originalPrice || 0,
-                discount: Math.round(discount),
+                discount: discount,
                 batch: item.batchNumber || '',
                 category: item.category || 'other',
                 inventoryId: item.id,
@@ -531,8 +480,7 @@
             };
             
             localStorage.setItem('inventoryExportData', JSON.stringify(exportData));
-            closeAdModal();
-            showToast('Redirecting to Ads...', 'success');
+            showToast('Exporting to Ads...', 'success');
             setTimeout(() => {
                 window.location.href = 'advertise.html?fromInventory=true';
             }, 500);
