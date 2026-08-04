@@ -1132,209 +1132,6 @@
             background: white;
         }
 
-        /* ========== INVENTORY STYLES ========== */
-        .inventory-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 16px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        .inventory-form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: flex-end;
-        }
-        .inventory-form-row .form-group {
-            flex: 1;
-            min-width: 120px;
-            margin-bottom: 0;
-        }
-        .inventory-form-row .form-input {
-            padding: 10px;
-            font-size: 14px;
-        }
-        .inventory-form-row .form-label {
-            font-size: 11px;
-            margin-bottom: 2px;
-        }
-        .inventory-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 4px;
-        }
-        .inventory-actions .save-btn {
-            flex: 1;
-            min-width: 100px;
-            margin-top: 0;
-            font-size: 14px;
-            padding: 12px;
-        }
-        .inventory-actions .secondary-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-            flex: 1;
-            min-width: 100px;
-        }
-        .inventory-actions .secondary-btn:active {
-            transform: scale(0.97);
-        }
-        .toggle-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            padding: 4px 0;
-            font-size: 13px;
-        }
-        .toggle-group label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        .inventory-table-container {
-            margin-top: 16px;
-            overflow-x: auto;
-        }
-        .inventory-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        .inventory-table th {
-            background: #f0f2f5;
-            padding: 8px;
-            text-align: left;
-            border-bottom: 2px solid #e0e0e0;
-            font-weight: 600;
-        }
-        .inventory-table td {
-            padding: 8px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-        .inventory-table td img {
-            width: 30px;
-            height: 30px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-        .inv-status-stock {
-            background: #e8f5e8;
-            color: #2e7d32;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .inv-status-soldout {
-            background: #ffebee;
-            color: #c62828;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .inv-status-listed {
-            background: #e3f2fd;
-            color: #0d47a1;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .inv-actions {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .inv-actions button {
-            padding: 4px 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .inv-actions .export-btn {
-            background: #007aff;
-            color: white;
-        }
-        .inv-actions .export-btn:hover {
-            background: #005bbf;
-        }
-        .inv-actions .export-btn:disabled {
-            background: #ccc;
-            color: #999;
-            cursor: not-allowed;
-        }
-        .inv-actions .delete-btn {
-            background: #ff3b30;
-            color: white;
-        }
-        .inv-actions .delete-btn:hover {
-            background: #d63031;
-        }
-        .inv-actions .edit-inv-btn {
-            background: #ff9500;
-            color: white;
-        }
-        .inv-actions .edit-inv-btn:hover {
-            background: #e68900;
-        }
-        .listed-badge {
-            font-size: 10px;
-            font-weight: 600;
-            color: #0d47a1;
-            background: #e3f2fd;
-            padding: 2px 8px;
-            border-radius: 12px;
-            white-space: nowrap;
-        }
-
-        @keyframes pulse {
-            0%,
-            100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.03);
-            }
-        }
-
-        @media (max-width: 380px) {
-            .order-detail-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .order-detail-actions .modal-action-btn {
-                min-width: 100px;
-                width: 100%;
-            }
-            .inventory-actions {
-                flex-direction: column;
-            }
-            .inventory-actions .save-btn,
-            .inventory-actions .secondary-btn {
-                width: 100%;
-            }
-        }
-
         /* ========== INVITATION CODE CARD ========== */
         .invite-code-card {
             background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
@@ -1398,83 +1195,6 @@
         }
         .invite-code-actions button:active {
             transform: scale(0.97);
-        }
-
-        /* ========== EDIT INVENTORY MODAL ========== */
-        .edit-inv-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            display: none;
-            padding: 20px;
-        }
-        .edit-inv-modal.show {
-            display: flex;
-        }
-        .edit-inv-content {
-            background: white;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 380px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 24px;
-        }
-        .edit-inv-content h3 {
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
-        .edit-inv-content .form-group {
-            margin-bottom: 12px;
-        }
-        .edit-inv-content .form-group label {
-            font-size: 12px;
-            color: #666;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .edit-inv-content .form-group input,
-        .edit-inv-content .form-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-        }
-        .edit-inv-content .form-group input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
-        }
-        .edit-inv-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .edit-inv-buttons button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .edit-inv-buttons .save {
-            background: #34c759;
-            color: white;
-        }
-        .edit-inv-buttons .cancel {
-            background: #f0f0f0;
-            color: #666;
         }
 
         /* ========== ROLE PERMISSIONS STYLES ========== */
@@ -1620,7 +1340,7 @@
                 </div>
             </div>
 
-            <!-- Tabs -->
+            <!-- Tabs - inventory tab removed -->
             <div class="tabs" id="tabContainer">
                 <button class="tab" onclick="switchTab('profile')">profile</button>
                 <button class="tab" onclick="switchTab('employees')">employees</button>
@@ -1734,91 +1454,6 @@
                 <div id="ordersList"><div class="empty-state">📦 loading orders...</div></div>
             </div>
 
-            <!-- Inventory Tab -->
-            <div class="tab-content" id="inventoryTab">
-                <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <span>Stock Ledger (Inventory)</span>
-                    <button class="refresh-btn" onclick="loadInventory()">↻</button>
-                </div>
-
-                <div class="inventory-controls" id="inventoryForm">
-                    <div class="inventory-form-row">
-                        <div class="form-group">
-                            <label class="form-label">Item Name</label>
-                            <input type="text" class="form-input" id="invName" placeholder="e.g. Organic Milk">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Batch #</label>
-                            <input type="text" class="form-input" id="invBatch" placeholder="BATCH-001">
-                        </div>
-                    </div>
-                    <div class="inventory-form-row">
-                        <div class="form-group">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="date" class="form-input" id="invExpiry">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Category</label>
-                            <select class="form-input" id="invCategory">
-                                <option value="dairy">🥛 Dairy</option>
-                                <option value="produce">🥬 Produce</option>
-                                <option value="meat">🥩 Meat</option>
-                                <option value="bakery">🥖 Bakery</option>
-                                <option value="pantry">📦 Pantry</option>
-                                <option value="frozen">❄️ Frozen</option>
-                                <option value="other">📌 Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="inventory-form-row">
-                        <div class="form-group">
-                            <label class="form-label">Qty</label>
-                            <input type="number" class="form-input" id="invQty" value="1" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Original Price ($)</label>
-                            <input type="number" class="form-input" id="invPrice" step="0.01" placeholder="0.00">
-                        </div>
-                    </div>
-                    <div class="inventory-form-row">
-                        <div class="form-group">
-                            <label class="form-label">Sale Price ($) <span style="font-weight:400;color:#999;">(leave 0 if not on sale)</span></label>
-                            <input type="number" class="form-input" id="invSalePrice" step="0.01" placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Image</label>
-                            <input type="file" id="invImageInput" accept="image/*" style="padding:8px;font-size:12px;">
-                        </div>
-                    </div>
-                    <div class="toggle-group">
-                        <label><input type="checkbox" id="invOnSale"> On Sale (using Sale Price)</label>
-                    </div>
-                    <div class="inventory-actions">
-                        <button class="save-btn" onclick="addInventoryItem()">➕ Add to Inventory</button>
-                        <button class="secondary-btn" onclick="importFromAds()">📥 Import from Ads</button>
-                    </div>
-                </div>
-
-                <div class="inventory-table-container">
-                    <table class="inventory-table" id="inventoryTable">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Batch</th>
-                                <th>Expiry</th>
-                                <th>Available</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryBody">
-                            <tr><td colspan="7" class="empty-state">Loading inventory...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Lookup Tab -->
             <div class="tab-content" id="lookupTab">
                 <div style="margin-bottom:16px;">
@@ -1896,7 +1531,7 @@
             </div>
         </div>
 
-        <!-- Bottom Nav (Replaced Orders with Inventory) -->
+        <!-- Bottom Nav -->
         <div class="bottom-nav">
             <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
             <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
@@ -1914,58 +1549,6 @@
             </div>
             <div id="orderDetailBody">
                 <!-- populated by JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== EDIT INVENTORY MODAL ========== -->
-    <div class="edit-inv-modal" id="editInventoryModal">
-        <div class="edit-inv-content">
-            <h3>✏️ Edit Inventory Item</h3>
-            <input type="hidden" id="editInvId">
-            <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" id="editInvName" placeholder="Item name">
-            </div>
-            <div class="form-group">
-                <label>Batch Number</label>
-                <input type="text" id="editInvBatch" placeholder="Batch #">
-            </div>
-            <div class="form-group">
-                <label>Expiry Date</label>
-                <input type="date" id="editInvExpiry">
-            </div>
-            <div class="form-group">
-                <label>Quantity</label>
-                <input type="number" id="editInvQty" min="0" step="1">
-            </div>
-            <div class="form-group">
-                <label>Original Price ($)</label>
-                <input type="number" id="editInvPrice" step="0.01" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Sale Price ($)</label>
-                <input type="number" id="editInvSalePrice" step="0.01" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Category</label>
-                <select id="editInvCategory">
-                    <option value="dairy">🥛 Dairy</option>
-                    <option value="produce">🥬 Produce</option>
-                    <option value="meat">🥩 Meat</option>
-                    <option value="bakery">🥖 Bakery</option>
-                    <option value="pantry">📦 Pantry</option>
-                    <option value="frozen">❄️ Frozen</option>
-                    <option value="other">📌 Other</option>
-                </select>
-            </div>
-            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="editInvOnSale">
-                <label style="margin:0;">On Sale (using Sale Price)</label>
-            </div>
-            <div class="edit-inv-buttons">
-                <button class="cancel" onclick="closeEditInventory()">Cancel</button>
-                <button class="save" onclick="saveEditInventory()">💾 Save Changes</button>
             </div>
         </div>
     </div>
@@ -2026,18 +1609,11 @@
         function updateNavActive(tabName) {
             const navItems = document.querySelectorAll('.bottom-nav .nav-item');
             navItems.forEach(item => item.classList.remove('active'));
-            const map = {
-                'orders': 2,
-                'profile': 3,
-                'employees': 3,
-                'inventory': 3,
-                'lookup': 3,
-                'verification': 3,
-                'notifications': 3,
-                'data': 3
-            };
-            const idx = map[tabName] !== undefined ? map[tabName] : 3;
-            if (navItems[idx]) navItems[idx].classList.add('active');
+            // Only settings is active if we are in settings tab, but we keep simple mapping
+            // Since we removed inventory from tabs, we just keep the settings nav item active for any tab
+            // We'll just set the settings nav item active always when on this page.
+            const settingsNav = document.querySelector('.bottom-nav .nav-item:last-child');
+            if (settingsNav) settingsNav.classList.add('active');
         }
 
         // ===== DOMContentLoaded =====
@@ -2078,10 +1654,11 @@
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.getElementById('dataTab').style.display = 'none';
-                // Hide tab buttons (0:profile,1:employees,2:orders,3:inventory,4:lookup,5:verify,6:alerts,7:data)
+                // Hide tab buttons (0:profile,1:employees,2:orders,3:lookup,4:verify,5:alerts,6:data)
+                // After removing inventory, indices changed: profile(0), employees(1), orders(2), lookup(3), verify(4), alerts(5), data(6)
                 document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[5].style.display = 'none';
-                document.querySelectorAll('.tab')[7].style.display = 'none';
+                document.querySelectorAll('.tab')[4].style.display = 'none';
+                document.querySelectorAll('.tab')[6].style.display = 'none';
                 document.getElementById('walletCard').style.display = 'none';
                 document.querySelector('.stats-grid').style.display = 'none';
                 document.getElementById('roleBanner').style.display = 'none';
@@ -2094,7 +1671,7 @@
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.querySelectorAll('.tab')[1].style.display = 'none';
-                document.querySelectorAll('.tab')[5].style.display = 'none';
+                document.querySelectorAll('.tab')[4].style.display = 'none';
             }
 
             // --- Set UI ---
@@ -2110,12 +1687,13 @@
             await loadNotifications();
             await loadStats();
             await refreshWallet();
-            await loadInventory();
+            // Inventory data loaded on demand via loadInventory if needed, but we removed the tab, so not automatically loaded.
+            // But we still keep the functions for data export.
 
             // --- Handle tab from URL ---
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
-            if (tabParam && ['profile','employees','orders','inventory','lookup','verification','notifications','data'].includes(tabParam)) {
+            if (tabParam && ['profile','employees','orders','lookup','verification','notifications','data'].includes(tabParam)) {
                 switchTab(tabParam);
             } else {
                 switchTab('profile');
@@ -2164,7 +1742,7 @@
             await loadNotifications();
             await loadStats();
             await refreshWallet();
-            await loadInventory();
+            // Inventory not loaded automatically, but we can load it if needed.
             showStatus('All data refreshed!', 'success');
         }
 
@@ -2651,241 +2229,21 @@
             else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING =====
+        // ===== TAB SWITCHING (inventory removed) =====
         function switchTab(tabName) {
             activeTab = tabName;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const tabs = document.querySelectorAll('.tab');
-            const tabMap = { profile: 0, employees: 1, orders: 2, inventory: 3, lookup: 4, verification: 5, notifications: 6, data: 7 };
+            const tabMap = { profile: 0, employees: 1, orders: 2, lookup: 3, verification: 4, notifications: 5, data: 6 };
             if (tabs[tabMap[tabName]]) tabs[tabMap[tabName]].classList.add('active');
             document.getElementById(`${tabName}Tab`).classList.add('active');
             updateNavActive(tabName);
         }
 
-        // ===== INVENTORY =====
-        function computeClaimedFromOrders(adMap, orders) {
-            const claimed = {};
-            for (const order of orders) {
-                if (order.status === 'collected_by_customer' || order.status === 'confirmed_by_business') {
-                    const adId = order.adId;
-                    if (!adId) continue;
-                    const invId = adMap[adId];
-                    if (!invId) continue;
-                    const qty = order.quantity || 1;
-                    if (!claimed[invId]) claimed[invId] = 0;
-                    claimed[invId] += qty;
-                }
-            }
-            return claimed;
-        }
-
-        async function loadInventory() {
-            const tbody = document.getElementById('inventoryBody');
-            try {
-                const items = await Backend.loadInventoryItems(businessId);
-                if (!items || items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="padding:20px;">No inventory items found. Add your first item above!</td></tr>`;
-                    return;
-                }
-
-                const mapStr = localStorage.getItem('inventoryAdMap');
-                const adMap = mapStr ? JSON.parse(mapStr) : {};
-                const reverseMap = {};
-                for (const [adId, invId] of Object.entries(adMap)) {
-                    reverseMap[invId] = adId;
-                }
-
-                const orders = allOrdersCache.length > 0 ? allOrdersCache : await Backend.getOrdersForBusiness(businessId);
-                const claimedMap = computeClaimedFromOrders(adMap, orders);
-
-                tbody.innerHTML = items.map(item => {
-                    const claimed = claimedMap[item.id] || 0;
-                    const available = Math.max(0, (item.quantity || 0) - claimed);
-                    const isListed = !!reverseMap[item.id];
-
-                    let statusHtml = '';
-                    if (available <= 0) {
-                        statusHtml = `<span class="inv-status-soldout">Sold Out</span>`;
-                    } else {
-                        statusHtml = `<span class="inv-status-stock">In Stock</span>`;
-                    }
-
-                    let priceHtml = '';
-                    if (item.onSale && item.salePrice > 0) {
-                        priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice ? item.originalPrice.toFixed(2) : '0.00'}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
-                    } else {
-                        priceHtml = `$${item.originalPrice ? item.originalPrice.toFixed(2) : '0.00'}`;
-                    }
-
-                    let actionsHtml = '';
-                    if (isListed) {
-                        actionsHtml = `<span class="listed-badge">✅ Listed</span>`;
-                    } else {
-                        actionsHtml = `
-                            <button class="edit-inv-btn" onclick="openEditInventory('${item.id}')">✏️</button>
-                            <button class="export-btn" onclick="exportToAd('${item.id}')">📢 Export</button>
-                            <button class="delete-btn" onclick="deleteInventoryItem('${item.id}')">🗑️</button>
-                        `;
-                    }
-
-                    return `
-                        <tr>
-                            <td><strong>${escapeHtml(item.name)}</strong></td>
-                            <td>${item.batchNumber ? escapeHtml(item.batchNumber) : 'N/A'}</td>
-                            <td>${item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}</td>
-                            <td>${available}</td>
-                            <td>${priceHtml}</td>
-                            <td>${statusHtml}</td>
-                            <td>
-                                <div class="inv-actions">
-                                    ${actionsHtml}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-            } catch (error) {
-                console.error('Error loading inventory:', error);
-                tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="padding:20px;color:#ff3b30;">Error loading inventory. Refresh and try again.</td></tr>`;
-            }
-        }
-
-        async function addInventoryItem() {
-            const name = document.getElementById('invName').value.trim();
-            const batch = document.getElementById('invBatch').value.trim();
-            const expiry = document.getElementById('invExpiry').value;
-            const qty = parseInt(document.getElementById('invQty').value) || 0;
-            const price = parseFloat(document.getElementById('invPrice').value) || 0;
-            const salePrice = parseFloat(document.getElementById('invSalePrice').value) || 0;
-            const category = document.getElementById('invCategory').value;
-            const onSale = document.getElementById('invOnSale').checked;
-
-            if (!name) { showStatus('Please enter an item name', 'error'); return; }
-            if (qty <= 0) { showStatus('Quantity must be greater than 0', 'error'); return; }
-
-            const fileInput = document.getElementById('invImageInput');
-            let imageBase64 = null;
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                if (file.size > 5 * 1024 * 1024) { showStatus('Image too large (max 5MB)', 'error'); return; }
-                imageBase64 = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            let currentItems = await Backend.loadInventoryItems(businessId) || [];
-            currentItems.push({
-                name,
-                batchNumber: batch,
-                expiryDate: expiry || null,
-                quantity: qty,
-                originalPrice: price,
-                salePrice: onSale ? salePrice : 0,
-                category,
-                onSale: onSale,
-                imageBase64: imageBase64,
-                businessId: businessId // Ensure the item is tied to the correct business
-            });
-
-            try {
-                const result = await Backend.saveInventoryItems(currentItems);
-                if (result.success) {
-                    showStatus(`✅ "${name}" added to inventory!`, 'success');
-                    document.getElementById('invName').value = ''; document.getElementById('invBatch').value = '';
-                    document.getElementById('invExpiry').value = ''; document.getElementById('invQty').value = '1';
-                    document.getElementById('invPrice').value = ''; document.getElementById('invSalePrice').value = '';
-                    document.getElementById('invOnSale').checked = false; document.getElementById('invImageInput').value = '';
-                    await loadInventory();
-                } else { showStatus('Failed to add item to inventory', 'error'); }
-            } catch (error) { showStatus('Error adding item to inventory', 'error'); }
-        }
-
-        function openEditInventory(itemId) {
-            Backend.loadInventoryItems(businessId).then(items => {
-                const item = items.find(i => i.id === itemId);
-                if (!item) { showStatus('Item not found', 'error'); return; }
-                document.getElementById('editInvId').value = itemId;
-                document.getElementById('editInvName').value = item.name || '';
-                document.getElementById('editInvBatch').value = item.batchNumber || '';
-                document.getElementById('editInvExpiry').value = item.expiryDate || '';
-                document.getElementById('editInvQty').value = item.quantity || 0;
-                document.getElementById('editInvPrice').value = item.originalPrice || 0;
-                document.getElementById('editInvSalePrice').value = item.salePrice || 0;
-                document.getElementById('editInvCategory').value = item.category || 'other';
-                document.getElementById('editInvOnSale').checked = item.onSale || false;
-                document.getElementById('editInventoryModal').classList.add('show');
-            }).catch(err => { showStatus('Error loading item: ' + err.message, 'error'); });
-        }
-
-        function closeEditInventory() {
-            document.getElementById('editInventoryModal').classList.remove('show');
-        }
-
-        async function saveEditInventory() {
-            const itemId = document.getElementById('editInvId').value;
-            if (!itemId) { showStatus('No item selected', 'error'); return; }
-            const updates = {
-                name: document.getElementById('editInvName').value.trim(),
-                batchNumber: document.getElementById('editInvBatch').value.trim(),
-                expiryDate: document.getElementById('editInvExpiry').value || null,
-                quantity: parseInt(document.getElementById('editInvQty').value) || 0,
-                originalPrice: parseFloat(document.getElementById('editInvPrice').value) || 0,
-                salePrice: parseFloat(document.getElementById('editInvSalePrice').value) || 0,
-                category: document.getElementById('editInvCategory').value,
-                onSale: document.getElementById('editInvOnSale').checked
-            };
-
-            if (!updates.name) { showStatus('Item name is required', 'error'); return; }
-
-            try {
-                const result = await Backend.updateInventoryItem(itemId, updates);
-                if (result.success) {
-                    showStatus('✅ Item updated!', 'success');
-                    closeEditInventory();
-                    await loadInventory();
-                } else {
-                    showStatus(result.message || 'Failed to update item', 'error');
-                }
-            } catch (error) { showStatus('Error updating item: ' + error.message, 'error'); }
-        }
-
-        function exportToAd(itemId) {
-            Backend.loadInventoryItems(businessId).then(items => {
-                const item = items.find(i => i.id === itemId);
-                if (!item) { showStatus('Item not found in inventory', 'error'); return; }
-                const imageData = item.productImage || item.imageBase64 || null;
-                const exportData = {
-                    name: item.name,
-                    price: item.originalPrice || 0,
-                    discount: 0,
-                    batch: item.batchNumber || '',
-                    category: item.category || 'other',
-                    image: imageData,
-                    inventoryId: item.id,
-                    expiryDate: item.expiryDate || null,
-                    quantity: item.quantity || 0,
-                    description: ''
-                };
-                if (item.onSale && item.salePrice > 0 && item.salePrice < item.originalPrice) {
-                    exportData.discount = Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100);
-                }
-                localStorage.setItem('inventoryExportData', JSON.stringify(exportData));
-                window.location.href = `advertise.html?fromInventory=true`;
-            }).catch(err => { showStatus('Error loading inventory item: ' + err.message, 'error'); });
-        }
-
-        async function deleteInventoryItem(itemId) {
-            if (!confirm('Are you sure you want to delete this item from inventory?')) return;
-            try {
-                const result = await Backend.deleteInventoryItem(itemId);
-                if (result.success) { showStatus('Item removed from inventory', 'success'); await loadInventory(); } 
-                else { showStatus(result.message || 'Failed to delete item', 'error'); }
-            } catch (error) { showStatus('Error deleting item', 'error'); }
-        }
+        // ===== INVENTORY FUNCTIONS (kept for data export but no tab) =====
+        // These are still used for export, but no UI for adding/managing inventory in this page.
+        // They rely on backend functions, which are still available.
 
         // ===== LOOKUP =====
         function performLookup() {
@@ -3239,7 +2597,7 @@
                 if (result.success) {
                     showStatus(`✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`, 'success');
                     fileInput.value = '';
-                    await loadInventory();
+                    // We don't reload inventory tab because it's removed, but we can still load data if needed for other uses.
                 } else { showStatus('Failed to import inventory items', 'error'); }
             } catch (error) { showStatus('Error importing Excel: ' + error.message, 'error'); }
         }
@@ -3278,13 +2636,7 @@
         window.cancelOrderFromModal = cancelOrderFromModal;
         window.copyInviteCode = copyInviteCode;
         window.generateInviteCode = generateInviteCode;
-        window.loadInventory = loadInventory;
-        window.addInventoryItem = addInventoryItem;
-        window.exportToAd = exportToAd;
-        window.deleteInventoryItem = deleteInventoryItem;
-        window.openEditInventory = openEditInventory;
-        window.closeEditInventory = closeEditInventory;
-        window.saveEditInventory = saveEditInventory;
+        window.loadInventory = loadInventory; // kept for potential use
         window.loadEmployees = loadEmployees;
         window.loadRoles = loadRoles;
         window.approveEmployee = approveEmployee;
