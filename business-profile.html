@@ -1292,7 +1292,7 @@
         </div>
 
         <div class="content">
-            <!-- Verification Banner -->
+            <!-- Verification Banner – will be hidden for employees -->
             <div class="verification-banner" id="verificationBanner">
                 <div class="banner-icon" id="bannerIcon">⏳</div>
                 <div class="banner-content">
@@ -1301,7 +1301,7 @@
                 </div>
             </div>
 
-            <!-- Role Banner -->
+            <!-- Role Banner – hidden for employees -->
             <div class="role-banner" id="roleBanner">
                 <div class="role-icon" id="roleIcon">👑</div>
                 <div class="role-details">
@@ -1310,7 +1310,7 @@
                 </div>
             </div>
 
-            <!-- Stats Grid -->
+            <!-- Stats Grid – hidden for employees -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number" id="statAds">0</div>
@@ -1330,7 +1330,7 @@
                 </div>
             </div>
 
-            <!-- Business Wallet -->
+            <!-- Business Wallet – hidden for employees -->
             <div class="wallet-card" id="walletCard">
                 <div class="wallet-label">🏦 Business Wallet</div>
                 <div class="wallet-amount" id="availableBalance">$0.00</div>
@@ -1567,7 +1567,7 @@
         let isOwner = false;
         let isManager = false;
         let isEmployee = false;
-        let businessId = null; // This holds the owner's ID for employees, or the user's own ID for owners
+        let businessId = null;
 
         let pickupConfirmMap = loadPickupMap();
         let businessRole = 'staff';
@@ -1610,9 +1610,6 @@
         function updateNavActive(tabName) {
             const navItems = document.querySelectorAll('.bottom-nav .nav-item');
             navItems.forEach(item => item.classList.remove('active'));
-            // Only settings is active if we are in settings tab, but we keep simple mapping
-            // Since we removed inventory from tabs, we just keep the settings nav item active for any tab
-            // We'll just set the settings nav item active always when on this page.
             const settingsNav = document.querySelector('.bottom-nav .nav-item:last-child');
             if (settingsNav) settingsNav.classList.add('active');
         }
@@ -1628,8 +1625,6 @@
             currentUser = user;
 
             // --- Resolve business ID ---
-            // For employees: user.get('businessId') is the owner's ID
-            // For owners: it's null, so we use the user's own ID
             businessId = user.get('businessId') || user.id;
             console.log('🔍 Business ID resolved to:', businessId);
 
@@ -1650,13 +1645,16 @@
                 document.getElementById('backLink').href = 'index.html';
             }
 
-            // --- Hide tabs/features for employees ---
+            // --- Hide elements for employees ---
             if (isEmployee) {
+                // Hide verification banner
+                document.getElementById('verificationBanner').style.display = 'none';
+                
+                // Hide tabs and features
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.getElementById('dataTab').style.display = 'none';
-                // Hide tab buttons (0:profile,1:employees,2:orders,3:lookup,4:verify,5:alerts,6:data)
-                // After removing inventory, indices changed: profile(0), employees(1), orders(2), lookup(3), verify(4), alerts(5), data(6)
+                // Hide tab buttons (indices: 0:profile,1:employees,2:orders,3:lookup,4:verify,5:alerts,6:data)
                 document.querySelectorAll('.tab')[1].style.display = 'none';
                 document.querySelectorAll('.tab')[4].style.display = 'none';
                 document.querySelectorAll('.tab')[6].style.display = 'none';
@@ -1688,8 +1686,6 @@
             await loadNotifications();
             await loadStats();
             await refreshWallet();
-            // Inventory data loaded on demand via loadInventory if needed, but we removed the tab, so not automatically loaded.
-            // But we still keep the functions for data export.
 
             // --- Handle tab from URL ---
             const urlParams = new URLSearchParams(window.location.search);
@@ -1720,18 +1716,21 @@
 
         function updateVerificationUI() {
             const banner = document.getElementById('verificationBanner');
-            if (isVerified) {
-                banner.className = 'verification-banner banner-verified';
-                document.getElementById('bannerIcon').textContent = '✅';
-                document.getElementById('bannerTitle').textContent = 'Verified Business';
-                document.getElementById('bannerText').textContent = 'You can post ads';
-                document.getElementById('verifyBtn').disabled = true;
-            } else {
-                banner.className = 'verification-banner';
-                document.getElementById('bannerIcon').textContent = '⏳';
-                document.getElementById('bannerTitle').textContent = 'Verification Pending';
-                document.getElementById('bannerText').textContent = 'Complete verification to post ads';
-                document.getElementById('verifyBtn').disabled = false;
+            // Only update if visible (not hidden for employees)
+            if (banner.style.display !== 'none') {
+                if (isVerified) {
+                    banner.className = 'verification-banner banner-verified';
+                    document.getElementById('bannerIcon').textContent = '✅';
+                    document.getElementById('bannerTitle').textContent = 'Verified Business';
+                    document.getElementById('bannerText').textContent = 'You can post ads';
+                    document.getElementById('verifyBtn').disabled = true;
+                } else {
+                    banner.className = 'verification-banner';
+                    document.getElementById('bannerIcon').textContent = '⏳';
+                    document.getElementById('bannerTitle').textContent = 'Verification Pending';
+                    document.getElementById('bannerText').textContent = 'Complete verification to post ads';
+                    document.getElementById('verifyBtn').disabled = false;
+                }
             }
         }
 
@@ -1743,7 +1742,6 @@
             await loadNotifications();
             await loadStats();
             await refreshWallet();
-            // Inventory not loaded automatically, but we can load it if needed.
             showStatus('All data refreshed!', 'success');
         }
 
@@ -1819,7 +1817,7 @@
             const pendingContainer = document.getElementById('pendingEmployeesList');
             const activeContainer = document.getElementById('activeEmployeesList');
             try {
-                const employees = await Backend.getStaffList();
+                const employees = await Backend.getStaffList(businessId);
                 const roles = await Backend.getRoles(currentUser.id);
 
                 const pending = employees.filter(e => (e.role || '').toLowerCase() === 'pending');
@@ -2242,9 +2240,8 @@
             updateNavActive(tabName);
         }
 
-        // ===== INVENTORY FUNCTIONS (kept for data export but no tab) =====
-        // These are still used for export, but no UI for adding/managing inventory in this page.
-        // They rely on backend functions, which are still available.
+        // ===== INVENTORY FUNCTIONS (kept for data export) =====
+        // (loadInventory, addInventoryItem, etc. are kept but not used in this UI)
 
         // ===== LOOKUP =====
         function performLookup() {
@@ -2460,7 +2457,7 @@
 
         async function exportEmployees() {
             try {
-                const employees = await Backend.getStaffList();
+                const employees = await Backend.getStaffList(businessId);
                 if (employees.length === 0) { showStatus('No employees to export', 'error'); return; }
                 const exportData = employees.map(emp => ({
                     'Employee ID': emp.id || '',
@@ -2477,7 +2474,7 @@
                 showStatus('Preparing all data for export...', 'info');
                 const orders = await Backend.getOrdersForBusiness(businessId);
                 const inventory = await Backend.loadInventoryItems(businessId);
-                const employees = await Backend.getStaffList();
+                const employees = await Backend.getStaffList(businessId);
                 const wb = XLSX.utils.book_new();
                 if (orders.length > 0) {
                     const orderData = orders.map(order => ({
@@ -2598,7 +2595,6 @@
                 if (result.success) {
                     showStatus(`✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`, 'success');
                     fileInput.value = '';
-                    // We don't reload inventory tab because it's removed, but we can still load data if needed for other uses.
                 } else { showStatus('Failed to import inventory items', 'error'); }
             } catch (error) { showStatus('Error importing Excel: ' + error.message, 'error'); }
         }
@@ -2637,7 +2633,6 @@
         window.cancelOrderFromModal = cancelOrderFromModal;
         window.copyInviteCode = copyInviteCode;
         window.generateInviteCode = generateInviteCode;
-        window.loadInventory = loadInventory; // kept for potential use
         window.loadEmployees = loadEmployees;
         window.loadRoles = loadRoles;
         window.approveEmployee = approveEmployee;
