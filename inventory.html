@@ -10,7 +10,6 @@
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script src="backend.js"></script>
     <style>
-        /* ... (styles unchanged, except .refresh-all-btn added) ... */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -114,7 +113,7 @@
         .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
         .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
-        /* Ad Popup */
+        /* Ad Popup (only shown when user can edit) */
         .ad-option-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
         .ad-option-box:hover { border-color: #667eea; }
         .ad-option-box input { margin-right: 8px; }
@@ -234,7 +233,7 @@
         </div>
     </div>
 
-    <!-- Modal for Ad Export (Choose % or $) -->
+    <!-- Modal for Ad Export (only displayed when user can edit) -->
     <div class="modal" id="adModal">
         <div class="modal-content">
             <h3>📢 Post to Ads</h3>
@@ -312,7 +311,7 @@
         });
 
         function setupUI() {
-            // Back link: matches business-profile logic
+            // Back link
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'index-employee.html';
@@ -370,6 +369,7 @@
                         priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
                     }
 
+                    // Actions: only show if user can edit (or is owner)
                     let actionsHtml = '';
                     if (canEdit || isOwner) {
                         actionsHtml = `
@@ -378,9 +378,8 @@
                             <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
                         `;
                     } else {
-                        actionsHtml = `
-                            <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
-                        `;
+                        // Read‑only: no buttons at all (including Post Ad)
+                        actionsHtml = `<span style="color:#999; font-size:11px;">—</span>`;
                     }
 
                     return `
@@ -400,7 +399,7 @@
             }
         }
 
-        // --- CRUD Operations ---
+        // --- CRUD Operations (only available if canEdit or isOwner) ---
         function openCreateModal() {
             if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             document.getElementById('modalTitle').textContent = 'Add New Item';
@@ -473,8 +472,9 @@
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Ad Export Logic ---
+        // --- Ad Export Logic (only available when canEdit) ---
         function openAdModal(id) {
+            // This function is only called from the button, which is only shown when canEdit.
             const item = currentItems.find(i => i.id === id);
             if (!item) { showToast('Item not found', 'error'); return; }
             adExportTargetId = id;
@@ -538,7 +538,7 @@
             }, 500);
         }
 
-        // --- Excel Export ---
+        // --- Excel Export (available to everyone) ---
         function exportExcel() {
             if (currentItems.length === 0) { showToast('No data to export', 'error'); return; }
             const exportData = currentItems.map(item => ({
@@ -564,7 +564,7 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import ---
+        // --- Excel Import (only if canEdit) ---
         async function importExcel(event) {
             if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
             const file = event.target.files[0];
