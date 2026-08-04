@@ -555,7 +555,7 @@
             }
         }
 
-        /* ─── BOTTOM NAV: inventory first ─── */
+        /* ─── BOTTOM NAV: Home, Inventory, Ads, Settings ─── */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -595,7 +595,7 @@
             line-height: 24px;
         }
 
-        /* Discount type dropdown + inline helper */
+        /* Discount type row */
         .discount-type-row {
             display: flex;
             gap: 12px;
@@ -611,7 +611,6 @@
         .discount-type-row .input-group select {
             background: white;
         }
-
         .discount-hint {
             font-size: 11px;
             color: #999;
@@ -637,7 +636,6 @@
             margin-left: 8px;
         }
 
-        /* Responsive tweaks */
         @media (max-width: 380px) {
             .discount-type-row {
                 flex-wrap: wrap;
@@ -792,8 +790,12 @@
             </div>
         </div>
 
-        <!-- ─── BOTTOM NAV: inventory, ads, orders, settings ─── -->
+        <!-- ─── BOTTOM NAV: Home, Inventory, Ads, Settings ─── -->
         <div class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-emoji">🏠</span>
+                <span>home</span>
+            </a>
             <a href="inventory.html" class="nav-item">
                 <span class="nav-emoji">📦</span>
                 <span>inventory</span>
@@ -801,10 +803,6 @@
             <a href="#" class="nav-item active">
                 <span class="nav-emoji">📢</span>
                 <span>ads</span>
-            </a>
-            <a href="business-profile.html?tab=orders" class="nav-item">
-                <span class="nav-emoji">📦</span>
-                <span>orders</span>
             </a>
             <a href="business-profile.html?tab=profile" class="nav-item">
                 <span class="nav-emoji">⚙️</span>
@@ -963,7 +961,6 @@
             document.getElementById('batchNumber').value = data.batch || '';
             document.getElementById('category').value = data.category || 'other';
 
-            // If image exists
             if (data.image) {
                 uploadedImageBase64 = data.image;
                 const preview = document.getElementById('imagePreview');
@@ -971,7 +968,6 @@
                 document.getElementById('removeImageBtn').style.display = 'inline-block';
             }
 
-            // Expiry dates
             if (data.expiryDate) {
                 document.getElementById('batchExpiry').value = data.expiryDate;
             }
@@ -984,21 +980,18 @@
                 document.getElementById('offerEnds').value = data.offerEnds;
             }
 
-            // Discount – try to detect if it's a percentage or fixed
+            // Discount – try to detect
             if (data.discount !== undefined && data.discount !== null) {
-                // If we have a discountType hint from the export, use it
                 if (data.discountType === 'fixed' || data.discountType === 'percentage') {
                     document.getElementById('discountType').value = data.discountType;
                     onDiscountTypeChange();
                     if (data.discountType === 'fixed') {
-                        // For fixed, we store the raw fixed amount in discountValue
                         const fixedAmt = data.discountValue || data.discount;
                         document.getElementById('discount').value = fixedAmt;
                     } else {
                         document.getElementById('discount').value = data.discount;
                     }
                 } else {
-                    // Guess: if discount > 100, it's probably a fixed amount
                     if (data.discount > 100) {
                         document.getElementById('discountType').value = 'fixed';
                         onDiscountTypeChange();
@@ -1050,7 +1043,6 @@
                         document.getElementById('removeImageBtn').style.display = 'inline-block';
                     }
 
-                    // Restore discount type + value
                     const dType = ad.discountType || 'percentage';
                     document.getElementById('discountType').value = dType;
                     onDiscountTypeChange();
@@ -1319,7 +1311,6 @@
                     return;
                 }
                 discountValue = discountInput;
-                // Calculate percentage
                 if (originalPrice > 0) {
                     discountPercent = (discountInput / originalPrice) * 100;
                 } else {
@@ -1352,9 +1343,9 @@
                 foodName: foodName,
                 description: description,
                 originalPrice: originalPrice,
-                discount: discountPercent, // always store as percentage
-                discountType: discountType, // 'percentage' or 'fixed'
-                discountValue: discountValue, // the raw value user entered
+                discount: discountPercent,
+                discountType: discountType,
+                discountValue: discountValue,
                 quantityLeft: quantity,
                 batchNumber: batchNumber,
                 offerEnds: offerEnds,
@@ -1434,7 +1425,6 @@
                 const shopAds = await Backend.getShopAds(currentUser.id);
                 const now = new Date();
 
-                // Enhance each ad with discount display info
                 const enhanced = shopAds.map(ad => {
                     const dType = ad.discountType || 'percentage';
                     const dVal = ad.discountValue !== undefined ? ad.discountValue : ad.discount;
@@ -1563,7 +1553,6 @@
         window.deleteAd = deleteAd;
         window.onDiscountTypeChange = onDiscountTypeChange;
 
-        // Clean up scanner on page unload
         window.addEventListener('beforeunload', () => {
             if (html5QrCode && isScanning) {
                 html5QrCode.stop().catch(console.error);
