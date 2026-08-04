@@ -31,7 +31,6 @@
         }
     </script>        
     <style>
-        /* ... (styles unchanged from previous) ... */
         :root {
             --green: #34c759;
             --blue: #007aff;
@@ -277,6 +276,8 @@
         
         <div class="bottom-nav">
             <div class="nav-item active" onclick="goHome()"><span class="nav-emoji">🏠</span><span>home</span></div>
+            <!-- NEW: Inventory nav item -->
+            <div class="nav-item" onclick="window.location.href='inventory.html'"><span class="nav-emoji">📦</span><span>inventory</span></div>
             <div class="nav-item" onclick="window.location.href='business-profile.html'"><span class="nav-emoji">⚙️</span><span>settings</span></div>
         </div>
     </div>
@@ -322,12 +323,13 @@
             const container = document.getElementById('quickActions');
             let html = '';
 
+            // Inventory card – always shown if they have read or edit permission
             if (perms.can_read_inventory || perms.can_edit_inventory) {
                 html += `
-                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=inventory'">
+                    <div class="action-card" onclick="window.location.href='inventory.html'">
                         <div class="card-emoji">📦</div>
                         <div class="card-title">inventory</div>
-                        <div class="card-desc">view stock</div>
+                        <div class="card-desc">${perms.can_edit_inventory ? 'view & edit stock' : 'view stock'}</div>
                     </div>
                 `;
             }
@@ -352,8 +354,7 @@
                 `;
             }
 
-            // Removed can_manage_employees – staff management is not available to employees
-
+            // Fallback
             if (html === '') {
                 html = `
                     <div class="action-card" onclick="window.location.href='business-profile.html'">
@@ -367,7 +368,7 @@
             container.innerHTML = html;
         }
 
-        // Helper: get the real business ID (owner's ID) from the employee user
+        // Helper: get the real business ID (owner's ID)
         function getBusinessOwnerId() {
             const user = Backend.getCurrentUser();
             return user.get('businessId') || user.id;
@@ -380,7 +381,6 @@
                 let statsHtml = '';
                 let hasData = false;
 
-                // Inventory – only if permission is granted
                 if (currentPermissions.can_read_inventory || currentPermissions.can_edit_inventory) {
                     const items = await Backend.loadInventoryItems(ownerId);
                     statsHtml += `
@@ -392,7 +392,6 @@
                     hasData = true;
                 }
 
-                // Active ads – only if permission is granted
                 if (currentPermissions.can_post_ads) {
                     const ads = await Backend.getShopAds(ownerId);
                     const activeAds = ads.filter(ad => ad.active);
@@ -405,7 +404,6 @@
                     hasData = true;
                 }
 
-                // Pending orders – only if permission is granted
                 if (currentPermissions.can_view_orders) {
                     const orders = await Backend.getOrdersForBusiness(ownerId);
                     const pendingOrders = orders.filter(o => o.status === 'confirmed_by_business');
@@ -417,8 +415,6 @@
                     `;
                     hasData = true;
                 }
-
-                // Staff count removed because can_manage_employees is not used
 
                 if (!hasData) {
                     panel.innerHTML = `
@@ -457,4 +453,3 @@
     </script>
 </body>
 </html>
-
