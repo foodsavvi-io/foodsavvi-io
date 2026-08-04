@@ -36,6 +36,7 @@
         .btn-success { background: #34c759; color: white; }
         .btn-danger { background: #ff3b30; color: white; }
         .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         /* Table */
         .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e0e0e0; }
@@ -52,6 +53,17 @@
         .action-edit { background: #e3f2fd; color: #0d47a1; }
         .action-ad { background: #ff9800; color: white; }
         .action-del { background: #ffebee; color: #c62828; }
+        
+        /* Read-only indicator */
+        .readonly-badge {
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
         
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
@@ -86,19 +98,25 @@
 <body>
     <div class="app">
         <div class="header">
-            <a href="business-profile.html?tab=profile" class="back-link">←</a>
+            <a href="#" id="backLink" class="back-link">←</a>
             <h1>inventory manager</h1>
             <button class="refresh-btn" onclick="loadInventory()">↻</button>
         </div>
 
         <div class="content">
-            <div class="controls">
+            <!-- Controls - hidden for read-only users -->
+            <div class="controls" id="controlsSection">
                 <div class="control-row">
-                    <button class="btn btn-success" onclick="openCreateModal()">+ Add Item</button>
+                    <button class="btn btn-success" id="addBtn" onclick="openCreateModal()">+ Add Item</button>
                     <button class="btn btn-secondary" onclick="exportExcel()">⬇ Export</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('excelInput').click()">⬆ Import</button>
+                    <button class="btn btn-secondary" id="importBtn" onclick="document.getElementById('excelInput').click()">⬆ Import</button>
                     <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onchange="importExcel(event)">
                 </div>
+            </div>
+
+            <!-- Read-only badge -->
+            <div id="readonlyBadge" style="display:none; text-align:center; margin-bottom:12px;">
+                <span class="readonly-badge">👁️ View Only</span>
             </div>
 
             <div class="table-container">
@@ -121,10 +139,10 @@
         </div>
 
         <div class="bottom-nav">
-            <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
-            <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
+            <a href="#" id="navAds" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
             <a href="inventory.html" class="nav-item active"><span class="nav-emoji">📦</span><span>inventory</span></a>
-            <a href="business-profile.html?tab=profile" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
+            <a href="#" id="navSettings" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
 
@@ -186,21 +204,98 @@
     <script>
         let currentItems = [];
         let adExportTargetId = null;
+        let currentPermissions = {};
+        let isOwner = false;
+        let isEmployee = false;
+        let businessId = null;
+        let canEdit = false;
+        let canRead = false;
         
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
             const role = localStorage.getItem('userRole');
-            if (!user || role !== 'advertiser') { window.location.href = 'login.html'; return; }
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // --- Resolve business ID ---
+            businessId = user.get('businessId') || user.id;
+            
+            // --- Check permissions ---
+            currentPermissions = await Backend.getEmployeePermissions(user.id);
+            
+            if (currentPermissions.isOwner) {
+                isOwner = true;
+                canEdit = true;
+                canRead = true;
+            } else {
+                isEmployee = true;
+                canEdit = currentPermissions.can_edit_inventory || false;
+                canRead = currentPermissions.can_read_inventory || false;
+            }
+
+            // --- If no read permission, redirect ---
+            if (!canRead && !isOwner) {
+                showToast('You do not have permission to view inventory', 'error');
+                setTimeout(() => {
+                    window.location.href = isEmployee ? 'index-employee.html' : 'index.html';
+                }, 1500);
+                return;
+            }
+
+            // --- Setup UI based on permissions ---
+            setupUI();
+
+            // --- Load inventory ---
             await loadInventory();
         });
+
+        function setupUI() {
+            // Back link: employees go to index-employee.html, owners go to business-profile.html
+            const backLink = document.getElementById('backLink');
+            if (isEmployee) {
+                backLink.href = 'index-employee.html';
+            } else {
+                backLink.href = 'business-profile.html?tab=profile';
+            }
+
+            // Bottom nav
+            const navHome = document.getElementById('navHome');
+            const navAds = document.getElementById('navAds');
+            const navSettings = document.getElementById('navSettings');
+            
+            if (isEmployee) {
+                navHome.href = 'index-employee.html';
+                navAds.href = 'advertise.html';
+                navSettings.href = 'business-profile.html';
+            } else {
+                navHome.href = 'index.html';
+                navAds.href = 'advertise.html';
+                navSettings.href = 'business-profile.html?tab=profile';
+            }
+
+            // Show/hide controls based on edit permission
+            const controlsSection = document.getElementById('controlsSection');
+            const readonlyBadge = document.getElementById('readonlyBadge');
+            
+            if (canEdit || isOwner) {
+                controlsSection.style.display = 'block';
+                readonlyBadge.style.display = 'none';
+            } else {
+                controlsSection.style.display = 'none';
+                readonlyBadge.style.display = 'block';
+            }
+        }
 
         async function loadInventory() {
             const tbody = document.getElementById('inventoryTableBody');
             try {
-                currentItems = await Backend.loadInventoryItems();
+                // Use the businessId (owner's ID for employees, own ID for owners)
+                currentItems = await Backend.loadInventoryItems(businessId);
                 
                 if (currentItems.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No items found. Add your first item!</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No items found. ${canEdit || isOwner ? 'Add your first item!' : ''}</td></tr>`;
                     return;
                 }
 
@@ -215,6 +310,21 @@
                         priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
                     }
 
+                    // Show action buttons only if user can edit
+                    let actionsHtml = '';
+                    if (canEdit || isOwner) {
+                        actionsHtml = `
+                            <button class="action-btn action-edit" onclick="openEditModal('${item.id}')">✏️</button>
+                            <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
+                            <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
+                        `;
+                    } else {
+                        // Read-only: only show the ad button (posting ad doesn't edit inventory)
+                        actionsHtml = `
+                            <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
+                        `;
+                    }
+
                     return `
                         <tr>
                             <td><strong>${escapeHtml(item.name)}</strong></td>
@@ -222,11 +332,7 @@
                             <td>${qty}</td>
                             <td>${priceHtml}</td>
                             <td>${statusHtml}</td>
-                            <td>
-                                <button class="action-btn action-edit" onclick="openEditModal('${item.id}')">✏️</button>
-                                <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
-                                <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
-                            </td>
+                            <td>${actionsHtml}</td>
                         </tr>
                     `;
                 }).join('');
@@ -236,8 +342,9 @@
             }
         }
 
-        // --- CRUD Operations ---
+        // --- CRUD Operations (only available if canEdit or isOwner) ---
         function openCreateModal() {
+            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             document.getElementById('modalTitle').textContent = 'Add New Item';
             document.getElementById('editId').value = '';
             document.getElementById('fName').value = '';
@@ -251,7 +358,9 @@
         }
 
         function openEditModal(id) {
+            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             const item = currentItems.find(i => i.id === id);
+            if (!item) { showToast('Item not found', 'error'); return; }
             document.getElementById('modalTitle').textContent = 'Edit Item';
             document.getElementById('editId').value = id;
             document.getElementById('fName').value = item.name;
@@ -269,6 +378,7 @@
         }
 
         async function saveItem() {
+            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             const id = document.getElementById('editId').value;
             const data = {
                 name: document.getElementById('fName').value.trim(),
@@ -286,9 +396,12 @@
                 const result = await Backend.updateInventoryItem(id, data);
                 if (result.success) { showToast('Item updated!', 'success'); } else { showToast('Update failed', 'error'); }
             } else {
-                // Create new
-                let items = await Backend.loadInventoryItems();
-                items.push(data);
+                // Create new - ensure businessId is passed
+                let items = await Backend.loadInventoryItems(businessId);
+                items.push({
+                    ...data,
+                    businessId: businessId
+                });
                 const result = await Backend.saveInventoryItems(items);
                 if (result.success) { showToast('Item added!', 'success'); } else { showToast('Add failed', 'error'); }
             }
@@ -297,19 +410,20 @@
         }
 
         async function deleteItem(id) {
+            if (!canEdit && !isOwner) { showToast('Read-only mode', 'error'); return; }
             if (!confirm('Delete this item permanently?')) return;
             const result = await Backend.deleteInventoryItem(id);
             if (result.success) { showToast('Item deleted', 'success'); await loadInventory(); } 
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Ad Export Logic (Fixed vs Percentage) ---
+        // --- Ad Export Logic (available to all with inventory view) ---
         function openAdModal(id) {
-            adExportTargetId = id;
             const item = currentItems.find(i => i.id === id);
+            if (!item) { showToast('Item not found', 'error'); return; }
+            adExportTargetId = id;
             document.getElementById('adItemName').textContent = item.name;
             
-            // Reset selection
             document.getElementById('adPercent').checked = true;
             document.getElementById('adFixed').checked = false;
             document.getElementById('adModal').style.display = 'flex';
@@ -331,6 +445,7 @@
         async function confirmAdExport() {
             if (!adExportTargetId) return;
             const item = currentItems.find(i => i.id === adExportTargetId);
+            if (!item) { showToast('Item not found', 'error'); return; }
             
             let discount = 0;
             const isPercent = document.getElementById('adPercent').checked;
@@ -338,7 +453,6 @@
             if (isPercent) {
                 discount = parseFloat(document.getElementById('adPercentVal').value) || 0;
             } else {
-                // Convert fixed dollar amount to percentage based on original price
                 const fixedAmt = parseFloat(document.getElementById('adFixedVal').value) || 0;
                 if (item.originalPrice > 0) {
                     discount = (fixedAmt / item.originalPrice) * 100;
@@ -348,11 +462,10 @@
                 }
             }
 
-            // Prepare data for Ad page
             const exportData = {
                 name: item.name,
                 price: item.originalPrice || 0,
-                discount: Math.round(discount), // Ad page expects integer %
+                discount: Math.round(discount),
                 batch: item.batchNumber || '',
                 category: item.category || 'other',
                 inventoryId: item.id,
@@ -395,8 +508,9 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import ---
+        // --- Excel Import (only if canEdit) ---
         async function importExcel(event) {
+            if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -414,13 +528,13 @@
                         originalPrice: parseFloat(row['Original Price'] || row['originalPrice'] || 0) || 0,
                         salePrice: parseFloat(row['Sale Price'] || row['salePrice'] || 0) || 0,
                         category: row['Category'] || row['category'] || 'other',
-                        onSale: (row['On Sale'] || row['onSale'] || '').toString().toLowerCase() === 'yes'
+                        onSale: (row['On Sale'] || row['onSale'] || '').toString().toLowerCase() === 'yes',
+                        businessId: businessId
                     })).filter(item => item.name.trim() !== '');
 
                     if (newItems.length === 0) { showToast('No valid items found', 'error'); return; }
                     
-                    // Merge with existing
-                    const existing = await Backend.loadInventoryItems();
+                    const existing = await Backend.loadInventoryItems(businessId);
                     const merged = [...existing, ...newItems];
                     const result = await Backend.saveInventoryItems(merged);
                     if (result.success) {
