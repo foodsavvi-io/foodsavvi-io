@@ -10,7 +10,6 @@
     <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script src="backend.js"></script>
     <style>
-        /* ... (same styles as before) ... */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -313,7 +312,6 @@
                 const group = document.getElementById('discountPctGroup');
                 if (this.checked) {
                     group.style.display = 'block';
-                    // If original price exists, recalc
                     updateSalePrice();
                 } else {
                     group.style.display = 'none';
@@ -326,11 +324,10 @@
             originalPriceInput.addEventListener('input', function() {
                 if (useDiscountCheckbox.checked) updateSalePrice();
             });
-
-            // Also when manually entering sale price, we could auto-calc discount? We'll keep it simple.
         });
 
         function setupUI() {
+            // Back link: matches business-profile
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'employee-settings.html';
@@ -338,21 +335,33 @@
                 backLink.href = 'index.html';
             }
 
+            // Bottom navigation – show only Home & Settings for employees
             const navHome = document.getElementById('navHome');
             const navAds = document.getElementById('navAds');
+            const navInventory = document.getElementById('navInventory');
             const navSettings = document.getElementById('navSettings');
             
             if (isEmployee) {
                 navHome.href = 'index-employee.html';
                 navSettings.href = 'business-profile.html';
+                // Hide Ads and Inventory tabs – only Home and Settings remain
                 navAds.style.display = 'none';
+                navInventory.style.display = 'none';
+                // Set Home as active (since we're hiding inventory)
+                navHome.classList.add('active');
+                navInventory.classList.remove('active');
             } else {
                 navHome.href = 'index.html';
                 navAds.href = 'advertise.html';
                 navAds.style.display = 'block';
+                navInventory.style.display = 'block';
                 navSettings.href = 'business-profile.html?tab=profile';
+                // Inventory is active
+                navHome.classList.remove('active');
+                navInventory.classList.add('active');
             }
 
+            // Controls visibility based on edit permission
             const controlsSection = document.getElementById('controlsSection');
             const readonlyBadge = document.getElementById('readonlyBadge');
             
@@ -455,7 +464,6 @@
             document.getElementById('fOnSale').checked = item.onSale || false;
             editingItemId = id;
 
-            // Handle discount percentage pre-fill
             if (item.onSale && item.salePrice > 0 && item.originalPrice > 0) {
                 const discount = ((item.originalPrice - item.salePrice) / item.originalPrice) * 100;
                 if (discount > 0 && discount < 100) {
@@ -466,7 +474,6 @@
                     document.getElementById('fSale').readOnly = true;
                     document.getElementById('fSale').style.background = '#f5f5f5';
                 } else {
-                    // Sale price not a discount, or edge case
                     document.getElementById('fUseDiscount').checked = false;
                     document.getElementById('discountPctGroup').style.display = 'none';
                     document.getElementById('fSale').value = item.salePrice;
@@ -474,7 +481,6 @@
                     document.getElementById('fSale').style.background = 'white';
                 }
             } else {
-                // No sale price or not on sale
                 document.getElementById('fUseDiscount').checked = false;
                 document.getElementById('discountPctGroup').style.display = 'none';
                 document.getElementById('fSale').value = item.salePrice || '';
@@ -503,7 +509,6 @@
 
             if (!name) { showToast('Item name is required', 'error'); return; }
 
-            // If using discount, recalc sale price
             if (useDiscount) {
                 const pct = parseFloat(document.getElementById('fDiscountPct').value) || 0;
                 if (origPrice > 0 && pct > 0) {
@@ -553,7 +558,7 @@
             else { showToast('Delete failed', 'error'); }
         }
 
-        // --- Export to Ads (only if canEdit AND canPostAds AND item is onSale with salePrice) ---
+        // --- Export to Ads ---
         function exportToAds(id) {
             if (!canEdit || !canPostAds) {
                 showToast('You do not have permission to export to ads', 'error');
