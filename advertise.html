@@ -774,6 +774,7 @@
         let inventoryData = null;
         let isEmployee = false;          // flag for employee role
         let canPostAds = false;          // permission
+        let businessId = null;           // 🔥 FIX: owner's ID for sync
 
         // Product database for barcode lookup
         const productDatabase = {
@@ -844,6 +845,9 @@
                 window.location.href = 'login.html';
                 return;
             }
+
+            // 🔥 FIX: Resolve business ID (owner's ID)
+            businessId = user.get('businessId') || user.id;
 
             // Check if employee (not owner)
             const perms = await Backend.getEmployeePermissions(user.id);
@@ -998,11 +1002,11 @@
             }
         }
 
+        // 🔥 FIX: loadAdForEditing uses businessId
         async function loadAdForEditing(adId) {
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
-                const currentUser = Backend.getCurrentUser();
-                const shopAds = await Backend.getShopAds(currentUser.id);
+                const shopAds = await Backend.getShopAds(businessId);
                 const ad = shopAds.find(a => a.id === adId);
                 if (ad) {
                     document.getElementById('foodName').value = ad.foodName || '';
@@ -1404,14 +1408,15 @@
         }
 
         // ============================================================
-        //  LOAD / MANAGE ADS
+        //  LOAD / MANAGE ADS – 🔥 FIXED: uses businessId
         // ============================================================
         async function loadMyAds() {
             try {
                 const currentUser = Backend.getCurrentUser();
                 if (!currentUser) return;
 
-                const shopAds = await Backend.getShopAds(currentUser.id);
+                // 🔥 FIX: Use businessId (owner's ID) to fetch all ads for the business
+                const shopAds = await Backend.getShopAds(businessId);
                 const now = new Date();
 
                 const enhanced = shopAds.map(ad => {
