@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • inventory</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal; font-style: normal;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'RusticStory', sans-serif; }
+        body { background: #f5f7fa; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        
+        .app { width: 100%; max-width: 400px; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.03); position: relative; padding-bottom: 80px; }
+        
+        .header { padding: 20px 16px; background: white; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+        .back-link { width: 40px; height: 40px; border-radius: 12px; background: #f5f7fa; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #007aff; font-size: 20px; }
+        .header h1 { flex: 1; font-size: 20px; font-weight: 600; }
+        .refresh-btn { width: 40px; height: 40px; border-radius: 12px; background: #f5f7fa; border: none; font-size: 18px; cursor: pointer; }
+        
+        .content { padding: 16px; }
+        
+        /* Controls */
+        .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .control-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; transition: 0.2s; flex: 1; text-align: center; min-width: 60px; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #34c759; color: white; }
+        .btn-danger { background: #ff3b30; color: white; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        
+        /* Table */
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e0e0e0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+        th { background: #f8f9fa; padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .status-instock { background: #e8f5e8; color: #2e7d32; }
+        .status-low { background: #fff3e0; color: #e65100; }
+        .status-out { background: #ffebee; color: #c62828; }
+        
+        .action-btn { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; margin: 2px; }
+        .action-edit { background: #e3f2fd; color: #0d47a1; }
+        .action-ad { background: #ff9800; color: white; }
+        .action-del { background: #ffebee; color: #c62828; }
+        
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { margin-bottom: 16px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
+        .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        
+        /* Ad Popup */
+        .ad-option-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .ad-option-box:hover { border-color: #667eea; }
+        .ad-option-box input { margin-right: 8px; }
+        .ad-option-box label { font-weight: 600; cursor: pointer; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 400px; margin: 0 auto; background: white; border-top: 1px solid #f0f0f0; padding: 8px 20px; display: flex; justify-content: space-around; z-index: 50; }
+        .nav-item { text-decoration: none; color: #999; font-size: 12px; text-align: center; flex: 1; }
+        .nav-item.active { color: #667eea; }
+        .nav-emoji { font-size: 20px; display: block; margin-bottom: 2px; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .loading { text-align: center; padding: 20px; color: #999; }
+        
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1a1a; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; white-space: nowrap; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+        .toast.success { background: #34c759; }
+        .toast.error { background: #ff3b30; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="business-profile.html?tab=profile" class="back-link">←</a>
+            <h1>Inventory Manager</h1>
+            <button class="refresh-btn" onclick="loadInventory()">↻</button>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <div class="control-row">
+                    <button class="btn btn-success" onclick="openCreateModal()">+ Add Item</button>
+                    <button class="btn btn-secondary" onclick="exportExcel()">⬇ Export</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('excelInput').click()">⬆ Import</button>
+                    <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onchange="importExcel(event)">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Batch</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <tr><td colspan="6" class="loading">Loading inventory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>Home</span></a>
+            <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>Ads</span></a>
+            <a href="inventory.html" class="nav-item active"><span class="nav-emoji">📦</span><span>Inventory</span></a>
+            <a href="business-profile.html?tab=profile" class="nav-item"><span class="nav-emoji">⚙️</span><span>Settings</span></a>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Inventory Item</h3>
+            <input type="hidden" id="editId">
+            
+            <div class="form-group"><label>Item Name *</label><input type="text" id="fName" placeholder="e.g. Organic Milk"></div>
+            <div class="form-group"><label>Batch Number</label><input type="text" id="fBatch" placeholder="BATCH-001"></div>
+            <div class="form-group"><label>Quantity *</label><input type="number" id="fQty" value="1" min="0"></div>
+            <div class="form-group"><label>Original Price ($)</label><input type="number" id="fPrice" step="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Sale Price ($)</label><input type="number" id="fSale" step="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Category</label>
+                <select id="fCat">
+                    <option value="dairy">🥛 Dairy</option><option value="produce">🥬 Produce</option>
+                    <option value="meat">🥩 Meat</option><option value="bakery">🥖 Bakery</option>
+                    <option value="pantry">📦 Pantry</option><option value="frozen">❄️ Frozen</option>
+                    <option value="other">📌 Other</option>
+                </select>
+            </div>
+            <div class="form-group"><label><input type="checkbox" id="fOnSale"> On Sale</label></div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Ad Export (Choose % or $) -->
+    <div class="modal" id="adModal">
+        <div class="modal-content">
+            <h3>📢 Post to Ads</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:12px;">Select discount type for <strong id="adItemName">-</strong></p>
+            
+            <div class="ad-option-box" onclick="selectAdType('percent')">
+                <input type="radio" name="adType" value="percent" id="adPercent" checked> 
+                <label for="adPercent">% Discount</label>
+                <input type="number" id="adPercentVal" value="20" min="0" max="100" style="width:60px; padding:4px; margin-left:8px; border:1px solid #ddd; border-radius:4px;">
+            </div>
+            
+            <div class="ad-option-box" onclick="selectAdType('fixed')">
+                <input type="radio" name="adType" value="fixed" id="adFixed"> 
+                <label for="adFixed">Fixed $ Discount</label>
+                <input type="number" id="adFixedVal" value="2.00" step="0.01" min="0" style="width:60px; padding:4px; margin-left:8px; border:1px solid #ddd; border-radius:4px;">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeAdModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmAdExport()">Post Ad</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let currentItems = [];
+        let adExportTargetId = null;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            if (!user || role !== 'advertiser') { window.location.href = 'login.html'; return; }
+            await loadInventory();
+        });
+
+        async function loadInventory() {
+            const tbody = document.getElementById('inventoryTableBody');
+            try {
+                currentItems = await Backend.loadInventoryItems();
+                
+                if (currentItems.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No items found. Add your first item!</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = currentItems.map(item => {
+                    const qty = item.quantity || 0;
+                    let statusHtml = `<span class="status-badge status-instock">In Stock</span>`;
+                    if (qty <= 0) statusHtml = `<span class="status-badge status-out">Sold Out</span>`;
+                    else if (qty <= 5) statusHtml = `<span class="status-badge status-low">Low Stock</span>`;
+
+                    let priceHtml = `$${item.originalPrice.toFixed(2)}`;
+                    if (item.onSale && item.salePrice > 0) {
+                        priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice.toFixed(2)}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
+                    }
+
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(item.name)}</strong></td>
+                            <td>${item.batchNumber || 'N/A'}</td>
+                            <td>${qty}</td>
+                            <td>${priceHtml}</td>
+                            <td>${statusHtml}</td>
+                            <td>
+                                <button class="action-btn action-edit" onclick="openEditModal('${item.id}')">✏️</button>
+                                <button class="action-btn action-ad" onclick="openAdModal('${item.id}')">📢</button>
+                                <button class="action-btn action-del" onclick="deleteItem('${item.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#ff3b30;">Error loading data</td></tr>`;
+            }
+        }
+
+        // --- CRUD Operations ---
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Item';
+            document.getElementById('editId').value = '';
+            document.getElementById('fName').value = '';
+            document.getElementById('fBatch').value = '';
+            document.getElementById('fQty').value = 1;
+            document.getElementById('fPrice').value = '';
+            document.getElementById('fSale').value = '';
+            document.getElementById('fCat').value = 'other';
+            document.getElementById('fOnSale').checked = false;
+            document.getElementById('itemModal').style.display = 'flex';
+        }
+
+        function openEditModal(id) {
+            const item = currentItems.find(i => i.id === id);
+            document.getElementById('modalTitle').textContent = 'Edit Item';
+            document.getElementById('editId').value = id;
+            document.getElementById('fName').value = item.name;
+            document.getElementById('fBatch').value = item.batchNumber || '';
+            document.getElementById('fQty').value = item.quantity;
+            document.getElementById('fPrice').value = item.originalPrice;
+            document.getElementById('fSale').value = item.salePrice || '';
+            document.getElementById('fCat').value = item.category || 'other';
+            document.getElementById('fOnSale').checked = item.onSale || false;
+            document.getElementById('itemModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').style.display = 'none';
+        }
+
+        async function saveItem() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('fName').value.trim(),
+                batchNumber: document.getElementById('fBatch').value.trim(),
+                quantity: parseInt(document.getElementById('fQty').value) || 0,
+                originalPrice: parseFloat(document.getElementById('fPrice').value) || 0,
+                salePrice: parseFloat(document.getElementById('fSale').value) || 0,
+                category: document.getElementById('fCat').value,
+                onSale: document.getElementById('fOnSale').checked
+            };
+            if (!data.name) { showToast('Item name is required', 'error'); return; }
+
+            if (id) {
+                // Update existing
+                const result = await Backend.updateInventoryItem(id, data);
+                if (result.success) { showToast('Item updated!', 'success'); } else { showToast('Update failed', 'error'); }
+            } else {
+                // Create new
+                let items = await Backend.loadInventoryItems();
+                items.push(data);
+                const result = await Backend.saveInventoryItems(items);
+                if (result.success) { showToast('Item added!', 'success'); } else { showToast('Add failed', 'error'); }
+            }
+            closeModal();
+            await loadInventory();
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('Delete this item permanently?')) return;
+            const result = await Backend.deleteInventoryItem(id);
+            if (result.success) { showToast('Item deleted', 'success'); await loadInventory(); } 
+            else { showToast('Delete failed', 'error'); }
+        }
+
+        // --- Ad Export Logic (Fixed vs Percentage) ---
+        function openAdModal(id) {
+            adExportTargetId = id;
+            const item = currentItems.find(i => i.id === id);
+            document.getElementById('adItemName').textContent = item.name;
+            
+            // Reset selection
+            document.getElementById('adPercent').checked = true;
+            document.getElementById('adFixed').checked = false;
+            document.getElementById('adModal').style.display = 'flex';
+        }
+
+        function selectAdType(type) {
+            if (type === 'percent') {
+                document.getElementById('adPercent').checked = true;
+            } else {
+                document.getElementById('adFixed').checked = true;
+            }
+        }
+
+        function closeAdModal() {
+            document.getElementById('adModal').style.display = 'none';
+            adExportTargetId = null;
+        }
+
+        async function confirmAdExport() {
+            if (!adExportTargetId) return;
+            const item = currentItems.find(i => i.id === adExportTargetId);
+            
+            let discount = 0;
+            const isPercent = document.getElementById('adPercent').checked;
+            
+            if (isPercent) {
+                discount = parseFloat(document.getElementById('adPercentVal').value) || 0;
+            } else {
+                // Convert fixed dollar amount to percentage based on original price
+                const fixedAmt = parseFloat(document.getElementById('adFixedVal').value) || 0;
+                if (item.originalPrice > 0) {
+                    discount = (fixedAmt / item.originalPrice) * 100;
+                } else {
+                    showToast('Cannot calculate discount for $0 item', 'error');
+                    return;
+                }
+            }
+
+            // Prepare data for Ad page
+            const exportData = {
+                name: item.name,
+                price: item.originalPrice || 0,
+                discount: Math.round(discount), // Ad page expects integer %
+                batch: item.batchNumber || '',
+                category: item.category || 'other',
+                inventoryId: item.id,
+                expiryDate: item.expiryDate || null,
+                quantity: item.quantity || 0,
+                description: ''
+            };
+            
+            localStorage.setItem('inventoryExportData', JSON.stringify(exportData));
+            closeAdModal();
+            showToast('Redirecting to Ads...', 'success');
+            setTimeout(() => {
+                window.location.href = 'advertise.html?fromInventory=true';
+            }, 500);
+        }
+
+        // --- Excel Export ---
+        function exportExcel() {
+            if (currentItems.length === 0) { showToast('No data to export', 'error'); return; }
+            const exportData = currentItems.map(item => ({
+                'Item Name': item.name,
+                'Batch Number': item.batchNumber || '',
+                'Expiry Date': item.expiryDate || '',
+                'Quantity': item.quantity || 0,
+                'Original Price': item.originalPrice || 0,
+                'Sale Price': item.salePrice || 0,
+                'Category': item.category || '',
+                'On Sale': item.onSale ? 'Yes' : 'No'
+            }));
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            showToast('Exported successfully!', 'success');
+        }
+
+        // --- Excel Import ---
+        async function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    
+                    const newItems = jsonData.map(row => ({
+                        name: row['Item Name'] || row['name'] || '',
+                        batchNumber: row['Batch Number'] || row['batchNumber'] || '',
+                        expiryDate: row['Expiry Date'] || row['expiryDate'] || null,
+                        quantity: parseInt(row['Quantity'] || row['quantity'] || 0) || 0,
+                        originalPrice: parseFloat(row['Original Price'] || row['originalPrice'] || 0) || 0,
+                        salePrice: parseFloat(row['Sale Price'] || row['salePrice'] || 0) || 0,
+                        category: row['Category'] || row['category'] || 'other',
+                        onSale: (row['On Sale'] || row['onSale'] || '').toString().toLowerCase() === 'yes'
+                    })).filter(item => item.name.trim() !== '');
+
+                    if (newItems.length === 0) { showToast('No valid items found', 'error'); return; }
+                    
+                    // Merge with existing
+                    const existing = await Backend.loadInventoryItems();
+                    const merged = [...existing, ...newItems];
+                    const result = await Backend.saveInventoryItems(merged);
+                    if (result.success) {
+                        showToast(`Imported ${newItems.length} items!`, 'success');
+                        await loadInventory();
+                    } else {
+                        showToast('Import failed', 'error');
+                    }
+                } catch (err) { showToast('Error parsing file', 'error'); }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // --- Toast Helper ---
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast show ${type}`;
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        }
+    </script>
+</body>
+</html>

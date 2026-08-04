@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • order lookup</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+        }
+        
+        .header {
+            padding: 20px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .back-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #007aff;
+            font-size: 20px;
+        }
+        
+        .header h1 {
+            flex: 1;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .search-section {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .search-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn {
+            padding: 14px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.3s;
+        }
+        
+        .search-btn:active {
+            background: #5a6fd6;
+            transform: scale(0.97);
+        }
+        
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .order-result {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 16px;
+        }
+        
+        .order-result.show {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .order-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .order-result-id {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        
+        .order-result-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #fff3e0;
+            color: #ff9500;
+        }
+        
+        .status-ready {
+            background: #e3f2fd;
+            color: #007aff;
+        }
+        
+        .status-completed {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        
+        .order-result-details {
+            margin-bottom: 16px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .order-result-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .confirm-btn {
+            background: #34c759;
+            color: white;
+        }
+        
+        .confirm-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .cancel-btn {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .complete-btn {
+            background: #007aff;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .recent-orders {
+            margin-top: 20px;
+        }
+        
+        .recent-orders h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .recent-order-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .recent-order-item:hover {
+            background: #e8ecf0;
+        }
+        
+        .recent-order-item:active {
+            transform: scale(0.98);
+        }
+        
+        .recent-order-id {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .recent-order-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .recent-order-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .recent-status-pending {
+            background: #fff3e0;
+            color: #ff9500;
+        }
+        
+        .recent-status-ready {
+            background: #e3f2fd;
+            color: #007aff;
+        }
+        
+        .recent-status-completed {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a1a;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            transition: 0.3s;
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .notification.success { background: #34c759; }
+        .notification.error { background: #ff3b30; }
+        .notification.info { background: #667eea; }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-emoji {
+            font-size: 20px;
+            margin-bottom: 2px;
+            display: block;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .loading-spinner-large {
+            width: 50px;
+            height: 50px;
+            border: 4px solid white;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="business-profile.html?tab=orders" class="back-link">←</a>
+            <h1>order lookup</h1>
+        </div>
+        
+        <div class="content">
+            <div class="search-section">
+                <h3>🔍 Enter Proof of Purchase Code</h3>
+                <div class="search-box">
+                    <input type="text" class="search-input" id="orderSearchInput" placeholder="e.g., aBc123XyZ" autocomplete="off">
+                    <button class="search-btn" id="searchBtn" onclick="lookupOrder()">Search</button>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #999;">
+                    💡 Enter the full order ID from the customer's proof of purchase
+                </div>
+            </div>
+            
+            <div id="orderResult" class="order-result">
+                <!-- Order details will be rendered here -->
+            </div>
+            
+            <div id="noOrderFound" class="empty-state" style="display: none;">
+                <div class="empty-emoji">🔍</div>
+                <div>No order found with that code</div>
+                <div style="font-size: 13px; margin-top: 8px;">Please check the code and try again</div>
+            </div>
+            
+            <div class="recent-orders" id="recentOrders">
+                <h4>📦 Recent Orders</h4>
+                <div id="recentOrdersList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        loading recent orders...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-emoji">🏠</span>
+                <span>home</span>
+            </a>
+            <a href="advertise.html" class="nav-item">
+                <span class="nav-emoji">📢</span>
+                <span>ads</span>
+            </a>
+            <a href="business-profile.html?tab=orders" class="nav-item">
+                <span class="nav-emoji">📦</span>
+                <span>orders</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-emoji">🔍</span>
+                <span>lookup</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner-large"></div>
+    </div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        let notificationTimeout = null;
+        let currentUser = null;
+        let businessId = null;
+        let allOrders = [];
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            businessId = user.id;
+            loadRecentOrders();
+            
+            // Enter key support
+            document.getElementById('orderSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    lookupOrder();
+                }
+            });
+        });
+        
+        async function loadRecentOrders() {
+            const container = document.getElementById('recentOrdersList');
+            try {
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                allOrders = orders;
+                
+                if (orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 20px;">
+                            <div style="font-size: 24px; margin-bottom: 8px;">📭</div>
+                            <div>No orders yet</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Show last 10 orders
+                const recentOrders = orders.slice(0, 10);
+                container.innerHTML = recentOrders.map(order => {
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    switch(order.status) {
+                        case 'pending':
+                            statusClass = 'recent-status-pending';
+                            statusText = 'pending';
+                            break;
+                        case 'confirmed_by_business':
+                            statusClass = 'recent-status-ready';
+                            statusText = 'ready for pickup';
+                            break;
+                        case 'collected_by_customer':
+                            statusClass = 'recent-status-completed';
+                            statusText = 'completed';
+                            break;
+                        default:
+                            statusClass = 'recent-status-pending';
+                            statusText = order.status;
+                    }
+                    
+                    return `
+                        <div class="recent-order-item" onclick="lookupSpecificOrder('${order.id}')">
+                            <div>
+                                <div class="recent-order-id">#${order.id.slice(-8)}</div>
+                                <div class="recent-order-name">${escapeHtml(order.foodName)} × ${order.quantity}</div>
+                            </div>
+                            <span class="recent-order-status ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading recent orders:', error);
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+                        <div>Error loading orders</div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function lookupOrder() {
+            const input = document.getElementById('orderSearchInput').value.trim();
+            if (!input) {
+                showNotification('Please enter an order code', 'error');
+                return;
+            }
+            
+            // Clear previous results
+            document.getElementById('orderResult').classList.remove('show');
+            document.getElementById('noOrderFound').style.display = 'none';
+            
+            // Show loading
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = true;
+            searchBtn.textContent = '⏳ Searching...';
+            
+            try {
+                // Fetch all orders and search by ID
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                const order = orders.find(o => o.id === input || o.id.includes(input) || input.includes(o.id));
+                
+                if (order) {
+                    displayOrderResult(order);
+                    document.getElementById('noOrderFound').style.display = 'none';
+                } else {
+                    document.getElementById('orderResult').classList.remove('show');
+                    document.getElementById('noOrderFound').style.display = 'block';
+                    showNotification('Order not found', 'error');
+                }
+            } catch (error) {
+                console.error('Error looking up order:', error);
+                showNotification('Error searching for order', 'error');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+        
+        async function lookupSpecificOrder(orderId) {
+            document.getElementById('orderSearchInput').value = orderId;
+            await lookupOrder();
+        }
+        
+        function displayOrderResult(order) {
+            const container = document.getElementById('orderResult');
+            
+            let statusClass = '';
+            let statusText = '';
+            let actionsHtml = '';
+            
+            switch(order.status) {
+                case 'pending':
+                    statusClass = 'status-pending';
+                    statusText = '⏳ Pending Confirmation';
+                    break;
+                case 'confirmed_by_business':
+                    statusClass = 'status-ready';
+                    statusText = '✅ Ready for Pickup';
+                    break;
+                case 'collected_by_customer':
+                    statusClass = 'status-completed';
+                    statusText = '🎉 Completed';
+                    break;
+                default:
+                    statusClass = 'status-pending';
+                    statusText = order.status;
+            }
+            
+            // Only show actions for pending or confirmed orders
+            if (order.status === 'pending') {
+                actionsHtml = `
+                    <div class="order-result-actions">
+                        <button class="action-btn confirm-btn" onclick="confirmOrder('${order.id}')">✓ Confirm Order</button>
+                        <button class="action-btn cancel-btn" onclick="cancelOrder('${order.id}')">✗ Cancel</button>
+                    </div>
+                `;
+            } else if (order.status === 'confirmed_by_business') {
+                actionsHtml = `
+                    <div class="order-result-actions">
+                        <button class="action-btn complete-btn" onclick="markAsCollected('${order.id}')">📦 Mark as Collected</button>
+                        <button class="action-btn cancel-btn" onclick="cancelOrder('${order.id}')">✗ Cancel</button>
+                    </div>
+                `;
+            } else {
+                actionsHtml = `
+                    <div class="order-result-actions">
+                        <div style="text-align: center; width: 100%; color: #34c759; font-weight: 600;">
+                            ✅ Order completed
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = `
+                <div class="order-result-header">
+                    <span class="order-result-id">#${order.id.slice(-8)}</span>
+                    <span class="order-result-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="order-result-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Customer</span>
+                        <span class="detail-value">${escapeHtml(order.consumerName)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Item</span>
+                        <span class="detail-value">${escapeHtml(order.foodName)} × ${order.quantity}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Amount</span>
+                        <span class="detail-value">$${(order.totalAmount || 0).toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Batch Number</span>
+                        <span class="detail-value">${order.batchNumber ? escapeHtml(order.batchNumber) : 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Order Placed</span>
+                        <span class="detail-value">${new Date(order.createdAt).toLocaleString()}</span>
+                    </div>
+                    ${order.collectByTime ? `
+                    <div class="detail-row" style="border-bottom: none;">
+                        <span class="detail-label">⏰ Collect By</span>
+                        <span class="detail-value" style="color: #e65100; font-weight: 600;">${new Date(order.collectByTime).toLocaleString()}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                ${actionsHtml}
+            `;
+            
+            container.classList.add('show');
+            document.getElementById('noOrderFound').style.display = 'none';
+            
+            // Scroll to result
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        async function confirmOrder(orderId) {
+            if (!confirm('Confirm this order? The customer will be notified.')) return;
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                // Use current time + 2 hours as default
+                const defaultTime = new Date();
+                defaultTime.setHours(defaultTime.getHours() + 2);
+                const collectByTime = defaultTime.toISOString();
+                
+                const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
+                if (result.success) {
+                    showNotification('✅ Order confirmed!', 'success');
+                    await loadRecentOrders();
+                    // Reload the displayed order
+                    await lookupOrder();
+                } else {
+                    showNotification(result.message || 'Failed to confirm order', 'error');
+                }
+            } catch (error) {
+                console.error('Error confirming order:', error);
+                showNotification('Error confirming order', 'error');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+        
+        async function markAsCollected(orderId) {
+            if (!confirm('Mark this order as collected? Payment will be released to your wallet.')) return;
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                // This is the business marking as collected (not the customer)
+                // We need to use the backend updateClaimStatus or a similar method
+                const result = await Backend.updateClaimStatus(orderId, 'collected');
+                if (result.success) {
+                    showNotification('✅ Order marked as collected! Payment released.', 'success');
+                    await loadRecentOrders();
+                    await lookupOrder();
+                } else {
+                    showNotification(result.message || 'Failed to mark as collected', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking as collected:', error);
+                showNotification('Error marking as collected', 'error');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+        
+        async function cancelOrder(orderId) {
+            if (!confirm('Cancel this order? This action cannot be undone.')) return;
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                const result = await Backend.updateClaimStatus(orderId, 'cancelled');
+                if (result.success) {
+                    showNotification('❌ Order cancelled', 'success');
+                    await loadRecentOrders();
+                    await lookupOrder();
+                } else {
+                    showNotification(result.message || 'Failed to cancel order', 'error');
+                }
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                showNotification('Error cancelling order', 'error');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        }
+        
+        function showNotification(msg, type) {
+            const notif = document.getElementById('notification');
+            if (notificationTimeout) clearTimeout(notificationTimeout);
+            notif.textContent = msg;
+            notif.className = `notification show ${type}`;
+            notificationTimeout = setTimeout(() => {
+                notif.className = 'notification';
+                notificationTimeout = null;
+            }, 3000);
+        }
+        
+        // Expose functions globally
+        window.lookupOrder = lookupOrder;
+        window.lookupSpecificOrder = lookupSpecificOrder;
+        window.confirmOrder = confirmOrder;
+        window.markAsCollected = markAsCollected;
+        window.cancelOrder = cancelOrder;
+    </script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • employee home</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icon.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="assets/icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/icon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/icon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/icon.png">
+    <link rel="apple-touch-icon" href="assets/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="foodsavvi">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <link rel="manifest" href="assets/site.webmanifest">
+    <meta name="msapplication-TileImage" content="assets/icon.png">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="theme-color" content="#667eea">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>        
+    <style>
+        :root {
+            --green: #34c759;
+            --blue: #007aff;
+            --orange: #ff9500;
+            --red: #ff3b30;
+            --purple: #764ba2;
+        }
+
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            animation: appSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes appSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .greeting {
+            font-size: 24px; font-weight: 600; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 12px;
+            position: relative; z-index: 1;
+            animation: slideInLeft 0.5s ease;
+        }
+        .user-avatar {
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; overflow: hidden;
+        }
+        .user-info { flex: 1; }
+        .user-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .user-badge {
+            display: inline-block; padding: 4px 12px;
+            background: rgba(255,255,255,0.2); border-radius: 20px;
+            font-size: 12px; 
+        }
+        .date { font-size: 14px; opacity: 0.9; margin-top: 8px; position: relative; z-index: 1; animation: slideInRight 0.5s ease 0.1s both; }
+        
+        .logout-btn {
+            position: absolute; top: 30px; right: 20px;
+            background: rgba(255,255,255,0.2); border: none;
+            color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; cursor: pointer; transition: background 0.2s ease; font-family: inherit; z-index: 2;
+        }
+        .logout-btn:hover { background: rgba(255,59,48,0.4); }
+        .logout-btn:active { background: rgba(255,59,48,0.6); }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            padding-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Quick Actions */
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+        .action-card {
+            background: #f8f9fa; border-radius: 16px; padding: 20px;
+            text-decoration: none; color: #1a1a1a;
+            border: 1px solid #f0f0f0; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-color: #667eea;
+        }
+        .action-card:active { transform: scale(0.96); }
+        .card-emoji { font-size: 28px; margin-bottom: 8px; transition: transform 0.3s ease; display: inline-block; line-height: 1; }
+        .action-card:hover .card-emoji { transform: scale(1.2); }
+        .card-title { font-weight: 600; margin-bottom: 4px; }
+        .card-desc { font-size: 12px; color: #666; }
+
+        /* Dynamic Summary Panel – different color, compact spacing */
+        .summary-panel {
+            background: linear-gradient(135deg, #e8eaf6, #d1c4e9);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 8px;
+            border: 1px solid #d1c4e9;
+            animation: slideInRight 0.4s ease;
+        }
+        .summary-panel h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #4a3f6b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #5e4b8b;
+            margin-bottom: 2px;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #7e6e9e;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .no-perms-message {
+            text-align: center;
+            color: #6c5f8a;
+            font-size: 13px;
+        }
+        
+        .bottom-nav {
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+            margin-top: auto;
+        }
+        .nav-item {
+            text-decoration: none; color: #999; font-size: 12px;
+            text-align: center; flex: 1; padding: 4px 0;
+            cursor: pointer; transition: all 0.3s ease; position: relative;
+        }
+        .nav-item:hover { color: #667eea; }
+        .nav-item.active { color: #667eea; }
+        .nav-emoji { font-size: 20px; margin-bottom: 2px; display: block; height: 24px; line-height: 24px; transition: transform 0.3s; }
+        .nav-item:hover .nav-emoji { transform: translateY(-3px); }
+        .nav-item:active .nav-emoji { transform: scale(1.3); }
+
+        .loading-spinner {
+            width: 30px; height: 30px;
+            border: 3px solid #f0f0f0; border-top-color: #667eea;
+            border-radius: 50%; animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state { text-align: center; padding: 20px; color: #999; }
+        
+        .notification {
+            position: fixed; bottom: 80px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a1a; color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 14px; transition: 0.3s;
+            z-index: 1000; text-align: center; max-width: 90%;
+            opacity: 0; pointer-events: none;
+        }
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1; pointer-events: auto;
+        }
+        .notification.success { background: #34c759; }
+        .notification.error { background: #ff3b30; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <div class="greeting">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">loading...</div>
+                    <div class="user-badge" id="userBadge">employee</div>
+                </div>
+            </div>
+            <div class="date" id="currentDate"></div>
+            <button class="logout-btn" onclick="simpleLogout()">logout</button>
+        </div>
+        
+        <div class="content">
+            <div class="quick-actions" id="quickActions">
+                <!-- Dynamic cards injected by renderQuickActions() -->
+            </div>
+
+            <!-- Business Overview (dynamic stats) -->
+            <div class="summary-panel" id="summaryPanel">
+                <div class="loading-spinner"></div>
+                <p style="text-align:center; color:#7e6e9e;">loading stats...</p>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="goHome()"><span class="nav-emoji">🏠</span><span>home</span></div>
+            <div class="nav-item" onclick="window.location.href='business-profile.html'"><span class="nav-emoji">⚙️</span><span>settings</span></div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        let currentPermissions = {};
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentPermissions = await Backend.getEmployeePermissions(user.id);
+
+            if (currentPermissions.isPending) {
+                window.location.href = 'waiting-approval.html';
+                return;
+            }
+
+            if (currentPermissions.isOwner) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userName').textContent = user.get('username');
+            document.getElementById('userBadge').textContent = user.get('businessRole') || 'employee';
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+            renderQuickActions(currentPermissions);
+            loadStats();
+        });
+
+        function renderQuickActions(perms) {
+            const container = document.getElementById('quickActions');
+            let html = '';
+
+            if (perms.can_read_inventory || perms.can_edit_inventory) {
+                html += `
+                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=inventory'">
+                        <div class="card-emoji">📦</div>
+                        <div class="card-title">inventory</div>
+                        <div class="card-desc">view stock</div>
+                    </div>
+                `;
+            }
+
+            if (perms.can_post_ads) {
+                html += `
+                    <div class="action-card" onclick="window.location.href='advertise.html'">
+                        <div class="card-emoji">📢</div>
+                        <div class="card-title">post ad</div>
+                        <div class="card-desc">list surplus food</div>
+                    </div>
+                `;
+            }
+
+            if (perms.can_view_orders) {
+                html += `
+                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=orders'">
+                        <div class="card-emoji">📦</div>
+                        <div class="card-title">orders</div>
+                        <div class="card-desc">incoming requests</div>
+                    </div>
+                `;
+            }
+
+            if (perms.can_manage_employees) {
+                html += `
+                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=employees'">
+                        <div class="card-emoji">👥</div>
+                        <div class="card-title">staff</div>
+                        <div class="card-desc">manage team</div>
+                    </div>
+                `;
+            }
+
+            if (html === '') {
+                html = `
+                    <div class="action-card" onclick="window.location.href='business-profile.html'">
+                        <div class="card-emoji">⚙️</div>
+                        <div class="card-title">settings</div>
+                        <div class="card-desc">view your profile</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Helper: get the real business ID (owner's ID) from the employee user
+        function getBusinessOwnerId() {
+            const user = Backend.getCurrentUser();
+            return user.get('businessId') || user.id;
+        }
+
+        async function loadStats() {
+            const panel = document.getElementById('summaryPanel');
+            try {
+                const ownerId = getBusinessOwnerId();
+                let statsHtml = '';
+                let hasData = false;
+
+                // Inventory – pass ownerId
+                if (currentPermissions.can_read_inventory || currentPermissions.can_edit_inventory) {
+                    const items = await Backend.loadInventoryItems(ownerId);
+                    statsHtml += `
+                        <div class="stat-item">
+                            <div class="stat-number">${items.length}</div>
+                            <div class="stat-label">Inventory Items</div>
+                        </div>
+                    `;
+                    hasData = true;
+                }
+
+                // Active ads – getShopAds accepts businessId
+                if (currentPermissions.can_post_ads) {
+                    const ads = await Backend.getShopAds(ownerId);
+                    const activeAds = ads.filter(ad => ad.active);
+                    statsHtml += `
+                        <div class="stat-item">
+                            <div class="stat-number">${activeAds.length}</div>
+                            <div class="stat-label">Active Ads</div>
+                        </div>
+                    `;
+                    hasData = true;
+                }
+
+                // Pending orders – getOrdersForBusiness accepts businessId
+                if (currentPermissions.can_view_orders) {
+                    const orders = await Backend.getOrdersForBusiness(ownerId);
+                    const pendingOrders = orders.filter(o => o.status === 'confirmed_by_business');
+                    statsHtml += `
+                        <div class="stat-item">
+                            <div class="stat-number">${pendingOrders.length}</div>
+                            <div class="stat-label">Awaiting Pickup</div>
+                        </div>
+                    `;
+                    hasData = true;
+                }
+
+                // Staff count – pass ownerId
+                if (currentPermissions.can_manage_employees) {
+                    const staff = await Backend.getStaffList(ownerId);
+                    const activeStaff = staff.filter(e => e.role !== 'pending' && e.role !== 'owner');
+                    statsHtml += `
+                        <div class="stat-item">
+                            <div class="stat-number">${activeStaff.length}</div>
+                            <div class="stat-label">Team Members</div>
+                        </div>
+                    `;
+                    hasData = true;
+                }
+
+                if (!hasData) {
+                    panel.innerHTML = `
+                        <div class="no-perms-message">
+                            👋 Welcome! You have access to the business dashboard.<br>
+                            Use the actions above to get started.
+                        </div>
+                    `;
+                    return;
+                }
+
+                panel.innerHTML = `
+                    <h3>📊 Business Overview</h3>
+                    <div class="stat-grid">
+                        ${statsHtml}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                panel.innerHTML = `<p class="empty-state">Could not load stats</p>`;
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'index-employee.html';
+        }
+
+        function simpleLogout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            try { Backend.logout().catch(() => {}); } catch (e) {}
+            window.location.href = 'login.html';
+        }
+
+        window.goHome = goHome;
+        window.simpleLogout = simpleLogout;
+    </script>
+</body>
+</html>

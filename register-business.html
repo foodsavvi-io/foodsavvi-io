@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • register business</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #34c759 0%, #2d9d4f 25%, #007aff 75%, #0056cc 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .app {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1;
+        }
+
+        .app::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #34c759, #007aff, #34c759);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+            z-index: 2;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .header {
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 25px 24px 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 16px;
+            text-decoration: none;
+            color: #007aff;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .app-name span { color: #34c759; }
+        
+        .tagline {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .form-container {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 16px;
+            font-size: 15px;
+            background: #fafafa;
+            transition: all 0.3s;
+            font-family: inherit;
+            color: #1a1a1a;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+            box-shadow: 0 4px 16px rgba(0,122,255,0.1);
+        }
+
+        .input-field.error {
+            border-color: #ff3b30;
+            background: #fff5f5;
+            animation: shake 0.5s ease;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Location autocomplete suggestions (attached to address input) */
+        .address-wrapper {
+            position: relative;
+        }
+
+        .address-wrapper .suggestions-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .address-wrapper .suggestions-list.show {
+            display: block;
+        }
+
+        .address-wrapper .suggestion-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+            color: #1a1a1a;
+        }
+
+        .address-wrapper .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-wrapper .suggestion-item:hover {
+            background: #f0f7ff;
+        }
+
+        .address-wrapper .suggestion-item:active {
+            background: #e3f2fd;
+        }
+
+        .address-wrapper .suggestion-item .highlight {
+            font-weight: 600;
+            color: #007aff;
+        }
+
+        .address-wrapper .suggestion-item .sub {
+            font-size: 11px;
+            color: #999;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Location button */
+        .location-btn {
+            background: #f0f7ff;
+            border: 2px solid #bbdefb;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #007aff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .location-btn:active {
+            transform: scale(0.97);
+            background: #e3f2fd;
+        }
+        .location-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .location-btn .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0,122,255,0.2);
+            border-top-color: #007aff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        .register-btn {
+            background: linear-gradient(135deg, #34c759, #2db14e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52,199,89,0.3);
+        }
+
+        .register-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(52,199,89,0.2);
+        }
+
+        .register-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .terms-section {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .terms-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 4px 0;
+            user-select: none;
+        }
+
+        .terms-header h4 {
+            font-size: 14px;
+            color: #1a1a1a;
+            flex: 1;
+        }
+
+        .terms-arrow {
+            transition: transform 0.3s;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .terms-arrow.open { transform: rotate(180deg); }
+
+        .terms-content {
+            max-height: 0;
+            overflow-y: auto;
+            transition: max-height 0.4s ease;
+            font-size: 11px;
+            color: #777;
+            line-height: 1.6;
+        }
+
+        .terms-content.open { max-height: 280px; }
+
+        .terms-content::-webkit-scrollbar { width: 3px; }
+        .terms-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+        .terms-content p { margin-bottom: 8px; }
+        .terms-content h5 {
+            font-size: 12px;
+            color: #1a1a1a;
+            margin: 12px 0 6px 0;
+            font-weight: 600;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #34c759;
+        }
+
+        .checkbox-group label {
+            font-size: 13px;
+            color: #777;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .status-message {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-message.error { display: flex; background: #fff5f5; color: #d63031; border: 1px solid #ffcdd2; }
+        .status-message.success { display: flex; background: #f0fff4; color: #2db14e; border: 1px solid #c8e6c9; }
+        .status-message.info { display: flex; background: #f0f7ff; color: #007aff; border: 1px solid #bbdefb; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.4s ease;
+            border-radius: 3px;
+        }
+
+        .strength-bar.weak { width: 33%; background: #ff3b30; }
+        .strength-bar.medium { width: 66%; background: #ff9500; }
+        .strength-bar.strong { width: 100%; background: #34c759; }
+
+        .strength-text {
+            font-size: 11px;
+            margin-top: 4px;
+            transition: color 0.3s;
+        }
+        .strength-text.weak { color: #ff3b30; }
+        .strength-text.medium { color: #ff9500; }
+        .strength-text.strong { color: #34c759; }
+
+        .success-code-box {
+            margin-top: 12px;
+            padding: 16px;
+            background: #e8f5e8;
+            border: 2px dashed #34c759;
+            border-radius: 12px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+            display: none;
+        }
+
+        .success-code-box h4 { font-size: 16px; color: #2e7d32; margin-bottom: 8px; }
+        .invitation-code { font-size: 24px; font-weight: 800; letter-spacing: 4px; color: #1a1a1a; font-family: monospace; }
+
+        @media (max-width: 400px) {
+            .app { border-radius: 20px; }
+            .header { padding: 20px 18px 16px; }
+            .form-container { padding: 20px 18px; }
+            .app-name { font-size: 24px; }
+            .row-2 { grid-template-columns: 1fr; }
+            .address-wrapper .suggestions-list { max-height: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="login.html" class="back-link">← back to login</a>
+            <div class="app-name">food<span>savvi</span></div>
+            <div class="tagline">register your business</div>
+        </div>
+        
+        <div class="form-container">
+            <div id="statusMessage" class="status-message" style="display: none;"></div>
+            
+            <!-- Registration Form -->
+            <div id="registrationForm">
+                <div class="form-group">
+                    <label class="form-label">business name *</label>
+                    <input type="text" class="input-field" id="shopName" placeholder="e.g., Whole Foods Market">
+                </div>
+                
+                <div class="row-2">
+                    <div class="form-group">
+                        <label class="form-label">phone</label>
+                        <input type="tel" class="input-field" id="shopPhone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">email</label>
+                        <input type="email" class="input-field" id="shopEmail" placeholder="shop@example.com">
+                    </div>
+                </div>
+                
+                <!-- ===== ADDRESS INPUT WITH AUTOCOMPLETE ===== -->
+                <div class="form-group">
+                    <label class="form-label">address *</label>
+                    <div class="address-wrapper">
+                        <input type="text" class="input-field" id="shopAddress" placeholder="123 Main St, City, State" autocomplete="off">
+                        <div class="suggestions-list" id="addressSuggestions"></div>
+                    </div>
+                </div>
+
+                <!-- ===== GET CURRENT LOCATION BUTTON ===== -->
+                <div class="form-group">
+                    <button type="button" class="location-btn" id="locationBtn" onclick="fetchLocation()">
+                        📍 Get Current Location
+                    </button>
+                </div>
+
+                <!-- ===== LATITUDE / LONGITUDE ===== -->
+                <div class="row-2">
+                    <div class="form-group">
+                        <label class="form-label">latitude</label>
+                        <input type="text" class="input-field" id="shopLat" placeholder="40.7128" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">longitude</label>
+                        <input type="text" class="input-field" id="shopLng" placeholder="-74.0060" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">choose username *</label>
+                    <input type="text" class="input-field" id="shopUsername" placeholder="choose a username">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">password *</label>
+                    <input type="password" class="input-field" id="shopPassword" placeholder="••••••••" onkeyup="checkPasswordStrength(this.value)">
+                    <div class="password-strength" id="shopStrength"><div class="strength-bar"></div></div>
+                    <div class="strength-text" id="shopStrengthText" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">confirm password *</label>
+                    <input type="password" class="input-field" id="shopConfirmPassword" placeholder="••••••••">
+                </div>
+                
+                <div class="row-2">
+                    <div class="form-group">
+                        <label class="form-label">open time</label>
+                        <input type="time" class="input-field" id="shopOpen" value="09:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">close time</label>
+                        <input type="time" class="input-field" id="shopClose" value="21:00">
+                    </div>
+                </div>
+                
+                <div class="terms-section">
+                    <div class="terms-header" onclick="toggleTerms()">
+                        <span class="terms-arrow" id="termsArrow">▶</span>
+                        <h4>📜 Terms and Conditions</h4>
+                    </div>
+                    <div class="terms-content" id="termsContent">
+                        <p><strong>Terms and Conditions for Foodsavvi</strong><br><em>Last updated: 1/4/2026</em></p>
+                        <h5>1. Agreement to Terms</h5>
+                        <p>By accessing or using Foodsavvi, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use this website.</p>
+                        
+                        <h5>2. Use of the Website</h5>
+                        <p>You agree to use Foodsavvi only for lawful purposes and in a way that does not harm, disrupt, or misuse the platform.</p>
+                        <p>You must NOT: Attempt to crash, overload, or disrupt the website, Interfere with the proper working of the application, Use automated scripts, bots, or exploits to abuse the system, Attempt unauthorized access to any part of the website.</p>
+                        
+                        <h5>3. No Hacking or Abuse</h5>
+                        <p>Any attempt to: Hack, reverse-engineer, or exploit the website, Bypass security measures, Manipulate data or functionality is strictly prohibited and may result in blocked access and potential legal action.</p>
+                        
+                        <h5>4. Intellectual Property & Code Usage</h5>
+                        <p>All content, design, and source code on FoodSavvi are protected. You are NOT allowed to: Copy, reuse, or redistribute the code without permission, Republish or modify the code for your own projects, Claim any part of the website as your own. You may: View the website and its code for personal, non-commercial reference only.</p>
+                        
+                        <h5>5. Cookies and Data Usage</h5>
+                        <p>Foodsavvi uses cookies and/or local storage to: Remember your saved items, Improve user experience. We do NOT: Sell your personal data, Share your information with third-party companies for marketing.</p>
+                        
+                        <h5>6. User Data Responsibility</h5>
+                        <p>You are responsible for how you use the website. While we aim to store data (like saved items), we do not guarantee permanent storage or accuracy.</p>
+                        
+                        <h5>7. Disclaimer</h5>
+                        <p>Foodsavvi is provided "as is" without warranties of any kind. We do not guarantee: The website will always be available, The data will always be accurate or saved, The site will be free from bugs or interruptions.</p>
+                        
+                        <h5>8. Limitation of Liability</h5>
+                        <p>Foodsavvi will not be held responsible for: Loss of data (including saved items), Any damages caused by using the website, Service interruptions or technical issues.</p>
+                        
+                        <h5>9. Changes to Terms</h5>
+                        <p>We may update these Terms at any time. Continued use of the website means you accept any changes.</p>
+                        
+                        <h5>10. Governing Law</h5>
+                        <p>These Terms are governed by the laws of Singapore.</p>
+                        
+                        <h5>11. Demo Disclaimer</h5>
+                        <p><strong>This is a demonstration application only.</strong> No real money, real food items, or real transactions are processed. All listings, purchases, and savings are simulated for educational and showcase purposes. Foodsavvi does not handle actual payments or inventory. You agree that you will not attempt to use this platform for real commercial activities.</p>
+                        
+                        <h5>12. Contact</h5>
+                        <p>If you have any questions, contact: reubenyee2012@gmail.com</p>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="businessTermsCheckbox">
+                        <label for="businessTermsCheckbox">I have read and agree to the <a href="#" onclick="toggleTerms(); return false;">Terms and Conditions</a></label>
+                    </div>
+                </div>
+                
+                <button class="action-btn register-btn" onclick="handleShopRegister()" id="shopRegisterBtn">
+                    <span>🏪</span> register business
+                </button>
+
+                <div class="success-code-box" id="successCodeBox">
+                    <h4>✅ Business Registered!</h4>
+                    <p style="font-size:13px; color:#555; margin-bottom:8px;">Share this code with your employees to join:</p>
+                    <div class="invitation-code" id="invitationCodeDisplay">-----</div>
+                    <p style="font-size:11px; color:#999; margin-top:12px;">Redirecting to dashboard...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        // ===== ADDRESS AUTOCOMPLETE =====
+        const addressInput = document.getElementById('shopAddress');
+        const suggestionsList = document.getElementById('addressSuggestions');
+        let searchTimeout = null;
+
+        addressInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            if (query.length < 2) {
+                suggestionsList.classList.remove('show');
+                return;
+            }
+            searchTimeout = setTimeout(() => performLocationSearch(query), 400);
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.address-wrapper')) {
+                suggestionsList.classList.remove('show');
+            }
+        });
+
+        async function performLocationSearch(query) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1&countrycodes=sg,my,id,th,ph,vn,cn,us,gb,au,nz`);
+                const data = await response.json();
+                if (!data || data.length === 0) {
+                    suggestionsList.innerHTML = `<div class="suggestion-item" style="color:#999;cursor:default;">No results found</div>`;
+                    suggestionsList.classList.add('show');
+                    return;
+                }
+                suggestionsList.innerHTML = data.map(item => {
+                    const displayName = item.display_name || '';
+                    const lat = item.lat;
+                    const lon = item.lon;
+                    return `<div class="suggestion-item" data-lat="${lat}" data-lon="${lon}" data-display="${displayName}">
+                                ${highlightMatch(displayName, query)}
+                                <span class="sub">📍 ${lat}, ${lon}</span>
+                            </div>`;
+                }).join('');
+                suggestionsList.classList.add('show');
+
+                // Click handler for suggestions
+                suggestionsList.querySelectorAll('.suggestion-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const lat = this.dataset.lat;
+                        const lon = this.dataset.lon;
+                        const display = this.dataset.display;
+                        selectLocation(lat, lon, display);
+                    });
+                });
+            } catch (error) {
+                console.error('Location search error:', error);
+                suggestionsList.innerHTML = `<div class="suggestion-item" style="color:#ff3b30;cursor:default;">Error fetching results</div>`;
+                suggestionsList.classList.add('show');
+            }
+        }
+
+        function highlightMatch(text, query) {
+            const index = text.toLowerCase().indexOf(query.toLowerCase());
+            if (index === -1) return text;
+            const before = text.substring(0, index);
+            const match = text.substring(index, index + query.length);
+            const after = text.substring(index + query.length);
+            return `${before}<span class="highlight">${match}</span>${after}`;
+        }
+
+        function selectLocation(lat, lon, displayName) {
+            document.getElementById('shopLat').value = lat;
+            document.getElementById('shopLng').value = lon;
+            document.getElementById('shopAddress').value = displayName;
+            suggestionsList.classList.remove('show');
+            showStatus('📍 Location set!', 'success');
+        }
+
+        // ===== GEOLOCATION (current location) =====
+        async function fetchLocation() {
+            const btn = document.getElementById('locationBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> fetching location...';
+            
+            if (!navigator.geolocation) {
+                showStatus('Geolocation is not supported by your browser', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '📍 Get Current Location';
+                return;
+            }
+            
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+                
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                document.getElementById('shopLat').value = lat;
+                document.getElementById('shopLng').value = lng;
+                
+                // Reverse geocode
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                const data = await response.json();
+                
+                if (data && data.display_name) {
+                    document.getElementById('shopAddress').value = data.display_name;
+                    showStatus('📍 Location found! Address and coordinates filled.', 'success');
+                } else {
+                    showStatus('📍 Coordinates filled, but address could not be retrieved. Please enter address manually.', 'info');
+                }
+            } catch (error) {
+                console.error('Location error:', error);
+                let msg = 'Unable to get location. ';
+                if (error.code === 1) msg += 'Please allow location access and try again.';
+                else if (error.code === 2) msg += 'Location unavailable. Try again later.';
+                else if (error.code === 3) msg += 'Location request timed out. Check your connection.';
+                else msg += error.message || 'Unknown error.';
+                showStatus('❌ ' + msg, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📍 Get Current Location';
+            }
+        }
+
+        // ===== PASSWORD STRENGTH =====
+        function checkPasswordStrength(password) {
+            const strengthBar = document.querySelector('#shopStrength .strength-bar');
+            const strengthText = document.getElementById('shopStrengthText');
+            if (!strengthBar) return;
+            let strength = 0;
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+            strengthBar.className = 'strength-bar';
+            strengthText.style.display = 'block';
+            strengthText.className = 'strength-text';
+            if (password.length === 0) {
+                strengthBar.style.width = '0';
+                strengthText.style.display = 'none';
+            } else if (strength <= 2) {
+                strengthBar.classList.add('weak');
+                strengthText.classList.add('weak');
+                strengthText.textContent = 'weak password — add numbers and symbols';
+            } else if (strength <= 4) {
+                strengthBar.classList.add('medium');
+                strengthText.classList.add('medium');
+                strengthText.textContent = 'getting better — add a special character';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthText.classList.add('strong');
+                strengthText.textContent = 'strong password! 🔒';
+            }
+        }
+
+        // ===== TERMS TOGGLE =====
+        function toggleTerms() {
+            const content = document.getElementById('termsContent');
+            const arrow = document.getElementById('termsArrow');
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+            arrow.textContent = arrow.classList.contains('open') ? '▼' : '▶';
+        }
+
+        // ===== STATUS MESSAGES =====
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('statusMessage');
+            const icons = { error: '❌', success: '✅', info: 'ℹ️' };
+            statusEl.innerHTML = `<span class="status-icon">${icons[type] || 'ℹ️'}</span> ${message}`;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'flex';
+        }
+
+        function hideStatus() {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.style.display = 'none';
+            statusEl.className = 'status-message';
+        }
+
+        function showLoading(btnId) {
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            btn.dataset.originalText = originalText;
+            btn.innerHTML = '<span class="loading-spinner"></span> loading...';
+            btn.disabled = true;
+        }
+
+        function hideLoading(btnId) {
+            const btn = document.getElementById(btnId);
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+            }
+            btn.disabled = false;
+        }
+
+        function shakeElement(element) {
+            if (!element) return;
+            element.classList.add('error');
+            element.focus();
+            setTimeout(() => element.classList.remove('error'), 600);
+        }
+
+        // ===== REGISTRATION =====
+        async function handleShopRegister() {
+            const username = document.getElementById('shopUsername').value.trim();
+            const password = document.getElementById('shopPassword').value;
+            const confirm = document.getElementById('shopConfirmPassword').value;
+            const businessName = document.getElementById('shopName').value.trim();
+            const termsChecked = document.getElementById('businessTermsCheckbox').checked;
+            
+            if (!username || !password) {
+                showStatus('please enter username and password', 'error');
+                return;
+            }
+            if (!businessName) {
+                showStatus('please enter your business name', 'error');
+                shakeElement(document.getElementById('shopName'));
+                return;
+            }
+            if (username.length < 3) {
+                showStatus('username must be at least 3 characters', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showStatus('password must be at least 6 characters', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showStatus('passwords do not match', 'error');
+                shakeElement(document.getElementById('shopConfirmPassword'));
+                return;
+            }
+            if (!termsChecked) {
+                showStatus('please agree to the terms and conditions', 'error');
+                return;
+            }
+            
+            showLoading('shopRegisterBtn');
+            showStatus('checking availability...', 'info');
+            
+            const usernameCheck = await Backend.checkUsernameExists(username);
+            if (usernameCheck.exists) {
+                showStatus(`"${username}" is already taken — try another`, 'error');
+                hideLoading('shopRegisterBtn');
+                return;
+            }
+            
+            const businessNameCheck = await Backend.checkBusinessNameExists(businessName);
+            if (businessNameCheck.exists) {
+                showStatus(`"${businessName}" is already registered`, 'error');
+                hideLoading('shopRegisterBtn');
+                return;
+            }
+            
+            const businessDetails = {
+                name: businessName,
+                phone: document.getElementById('shopPhone').value.trim(),
+                email: document.getElementById('shopEmail').value.trim(),
+                address: document.getElementById('shopAddress').value.trim(),
+                latitude: document.getElementById('shopLat').value.trim(),
+                longitude: document.getElementById('shopLng').value.trim(),
+                openTime: document.getElementById('shopOpen').value,
+                closeTime: document.getElementById('shopClose').value,
+                type: 'grocery'
+            };
+            
+            showStatus('creating your business account...', 'info');
+            
+            const inviteCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            const result = await Backend.register(username, password, 'advertiser', businessDetails);
+            
+            if (result.success) {
+                try {
+                    const currentUser = Parse.User.current();
+                    if (currentUser) {
+                        currentUser.set("invitationCode", inviteCode);
+                        await currentUser.save();
+                    }
+                } catch (saveError) {
+                    console.error("Error saving invitation code:", saveError);
+                }
+
+                const codeBox = document.getElementById('successCodeBox');
+                const codeDisplay = document.getElementById('invitationCodeDisplay');
+                codeDisplay.textContent = inviteCode;
+                codeBox.style.display = 'block';
+                
+                showStatus('Business registered! Logging you in...', 'success');
+                
+                setTimeout(async () => {
+                    const loginResult = await Backend.login(username, password, 'advertiser');
+                    if (loginResult.success) {
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        showStatus('Account created — please log in manually', 'error');
+                        hideLoading('shopRegisterBtn');
+                    }
+                }, 1200);
+            } else {
+                showStatus(result.message || 'registration failed — try again', 'error');
+                hideLoading('shopRegisterBtn');
+            }
+        }
+
+        // ===== KEYBOARD SHORTCUTS =====
+        document.getElementById('shopPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleShopRegister();
+        });
+        document.getElementById('shopConfirmPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleShopRegister();
+        });
+
+        // Expose functions globally
+        window.checkPasswordStrength = checkPasswordStrength;
+        window.toggleTerms = toggleTerms;
+        window.handleShopRegister = handleShopRegister;
+        window.fetchLocation = fetchLocation;
+    </script>
+</body>
+</html>

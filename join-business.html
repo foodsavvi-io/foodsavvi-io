@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • join business</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .app {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .app::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .header {
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 25px 24px 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 16px;
+            text-decoration: none;
+            color: #667eea;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .app-name span { color: #667eea; }
+        
+        .tagline {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .form-container {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 16px;
+            font-size: 15px;
+            background: #fafafa;
+            transition: all 0.3s;
+            font-family: inherit;
+            color: #1a1a1a;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-field.error {
+            border-color: #ff3b30;
+            background: #fff5f5;
+            animation: shake 0.5s ease;
+        }
+
+        .invite-code-input {
+            border-color: #ff9500;
+            background: #fffbf0;
+        }
+        .invite-code-input:focus { border-color: #ff9500; background: white; }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        .join-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .join-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .join-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status-message {
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-message.error { display: flex; background: #fff5f5; color: #d63031; border: 1px solid #ffcdd2; }
+        .status-message.success { display: flex; background: #f0fff4; color: #2db14e; border: 1px solid #c8e6c9; }
+        .status-message.info { display: flex; background: #f0f7ff; color: #667eea; border: 1px solid #bbdefb; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.4s ease;
+            border-radius: 3px;
+        }
+
+        .strength-bar.weak { width: 33%; background: #ff3b30; }
+        .strength-bar.medium { width: 66%; background: #ff9500; }
+        .strength-bar.strong { width: 100%; background: #34c759; }
+
+        .strength-text {
+            font-size: 11px;
+            margin-top: 4px;
+            transition: color 0.3s;
+        }
+        .strength-text.weak { color: #ff3b30; }
+        .strength-text.medium { color: #ff9500; }
+        .strength-text.strong { color: #34c759; }
+
+        .terms-section {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .terms-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 4px 0;
+            user-select: none;
+        }
+
+        .terms-header h4 {
+            font-size: 14px;
+            color: #1a1a1a;
+            flex: 1;
+        }
+
+        .terms-arrow {
+            transition: transform 0.3s;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .terms-arrow.open { transform: rotate(180deg); }
+
+        .terms-content {
+            max-height: 0;
+            overflow-y: auto;
+            transition: max-height 0.4s ease;
+            font-size: 11px;
+            color: #777;
+            line-height: 1.6;
+        }
+
+        .terms-content.open { max-height: 280px; }
+
+        .terms-content::-webkit-scrollbar { width: 3px; }
+        .terms-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+        .terms-content p { margin-bottom: 8px; }
+        .terms-content h5 {
+            font-size: 12px;
+            color: #1a1a1a;
+            margin: 12px 0 6px 0;
+            font-weight: 600;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group label {
+            font-size: 13px;
+            color: #777;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 400px) {
+            .app { border-radius: 20px; }
+            .header { padding: 20px 18px 16px; }
+            .form-container { padding: 20px 18px; }
+            .app-name { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="login.html" class="back-link">← back to login</a>
+            <div class="app-name">food<span>savvi</span></div>
+            <div class="tagline">join an existing business</div>
+        </div>
+        
+        <div class="form-container">
+            <div id="statusMessage" class="status-message" style="display: none;"></div>
+            
+            <div style="background: #fffbf0; border: 1px solid #ffd700; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 13px; color: #665;">
+                <strong>📋 Need an invitation code?</strong><br>
+                Ask your business owner/manager for the unique 6-digit code they generated when they registered the business on foodsavvi.
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">your full name *</label>
+                <input type="text" class="input-field" id="employeeFullName" placeholder="e.g., Jane Doe">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">choose a username *</label>
+                <input type="text" class="input-field" id="employeeUsername" placeholder="e.g., janedoe">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">password *</label>
+                <input type="password" class="input-field" id="employeePassword" placeholder="••••••••" onkeyup="checkPasswordStrength(this.value)">
+                <div class="password-strength" id="empStrength"><div class="strength-bar"></div></div>
+                <div class="strength-text" id="empStrengthText" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">confirm password *</label>
+                <input type="password" class="input-field" id="employeeConfirmPassword" placeholder="••••••••">
+            </div>
+
+            <div style="border-top: 2px dashed #e0e0e0; margin: 16px 0; padding-top: 16px;">
+                <div class="form-group">
+                    <label class="form-label">🔑 Business Invitation Code *</label>
+                    <input type="text" class="input-field invite-code-input" id="inviteCode" placeholder="e.g., 483921" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:6px; font-weight:700;">
+                </div>
+            </div>
+            
+            <div class="terms-section">
+                <div class="terms-header" onclick="toggleTerms()">
+                    <span class="terms-arrow" id="termsArrow">▶</span>
+                    <h4>📜 Terms and Conditions</h4>
+                </div>
+                <div class="terms-content" id="termsContent">
+                    <p><strong>Terms and Conditions for Foodsavvi</strong><br><em>Last updated: 1/4/2026</em></p>
+                    <h5>1. Agreement to Terms</h5>
+                    <p>By accessing or using Foodsavvi, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use this website.</p>
+                    <h5>2. Use of the Website</h5>
+                    <p>You agree to use Foodsavvi only for lawful purposes and in a way that does not harm, disrupt, or misuse the platform.</p>
+                    <h5>3. No Hacking or Abuse</h5>
+                    <p>Any attempt to: Hack, reverse-engineer, or exploit the website, Bypass security measures, Manipulate data or functionality is strictly prohibited.</p>
+                    <h5>4. Intellectual Property</h5>
+                    <p>All content, design, and source code on FoodSavvi are protected. You are NOT allowed to copy, reuse, or redistribute the code without permission.</p>
+                    <h5>5. Data Usage</h5>
+                    <p>Foodsavvi uses cookies and/or local storage to remember your saved items and improve user experience. We do NOT sell or share your personal data.</p>
+                    <h5>6. Demo Disclaimer</h5>
+                    <p><strong>This is a demonstration application only.</strong> No real money, real food items, or real transactions are processed. All listings, purchases, and savings are simulated for educational and showcase purposes.</p>
+                    <h5>7. Contact</h5>
+                    <p>If you have any questions, contact: reubenyee2012@gmail.com</p>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="termsCheckbox">
+                    <label for="termsCheckbox">I have read and agree to the <a href="#" onclick="toggleTerms(); return false;">Terms and Conditions</a></label>
+                </div>
+            </div>
+            
+            <button class="action-btn join-btn" onclick="handleEmployeeJoin()" id="joinBtn">
+                <span>🔑</span> join business
+            </button>
+        </div>
+    </div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        function checkPasswordStrength(password) {
+            const strengthBar = document.querySelector('#empStrength .strength-bar');
+            const strengthText = document.getElementById('empStrengthText');
+            if (!strengthBar) return;
+            let strength = 0;
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+            strengthBar.className = 'strength-bar';
+            strengthText.style.display = 'block';
+            strengthText.className = 'strength-text';
+            if (password.length === 0) {
+                strengthBar.style.width = '0';
+                strengthText.style.display = 'none';
+            } else if (strength <= 2) {
+                strengthBar.classList.add('weak');
+                strengthText.classList.add('weak');
+                strengthText.textContent = 'weak password — add numbers and symbols';
+            } else if (strength <= 4) {
+                strengthBar.classList.add('medium');
+                strengthText.classList.add('medium');
+                strengthText.textContent = 'getting better — add a special character';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthText.classList.add('strong');
+                strengthText.textContent = 'strong password! 🔒';
+            }
+        }
+
+        function toggleTerms() {
+            const content = document.getElementById('termsContent');
+            const arrow = document.getElementById('termsArrow');
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+            arrow.textContent = arrow.classList.contains('open') ? '▼' : '▶';
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('statusMessage');
+            const icons = { error: '❌', success: '✅', info: 'ℹ️' };
+            statusEl.innerHTML = `<span class="status-icon">${icons[type] || 'ℹ️'}</span> ${message}`;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'flex';
+        }
+
+        function hideStatus() {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.style.display = 'none';
+            statusEl.className = 'status-message';
+        }
+
+        function showLoading(btnId) {
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            btn.dataset.originalText = originalText;
+            btn.innerHTML = '<span class="loading-spinner"></span> loading...';
+            btn.disabled = true;
+        }
+
+        function hideLoading(btnId) {
+            const btn = document.getElementById(btnId);
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+            }
+            btn.disabled = false;
+        }
+
+        function shakeElement(element) {
+            if (!element) return;
+            element.classList.add('error');
+            element.focus();
+            setTimeout(() => element.classList.remove('error'), 600);
+        }
+
+        async function handleEmployeeJoin() {
+            const fullName = document.getElementById('employeeFullName').value.trim();
+            const username = document.getElementById('employeeUsername').value.trim();
+            const password = document.getElementById('employeePassword').value;
+            const confirm = document.getElementById('employeeConfirmPassword').value;
+            const inviteCode = document.getElementById('inviteCode').value.trim();
+            const termsChecked = document.getElementById('termsCheckbox').checked;
+            
+            if (!fullName) {
+                showStatus('Please enter your full name', 'error');
+                shakeElement(document.getElementById('employeeFullName'));
+                return;
+            }
+            if (!username || username.length < 3) {
+                showStatus('Username must be at least 3 characters', 'error');
+                return;
+            }
+            if (!password || password.length < 6) {
+                showStatus('Password must be at least 6 characters', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showStatus('Passwords do not match', 'error');
+                shakeElement(document.getElementById('employeeConfirmPassword'));
+                return;
+            }
+            if (!inviteCode || inviteCode.length < 4) {
+                showStatus('Please enter a valid invitation code', 'error');
+                shakeElement(document.getElementById('inviteCode'));
+                return;
+            }
+            if (!termsChecked) {
+                showStatus('Please agree to the terms and conditions', 'error');
+                return;
+            }
+            
+            showLoading('joinBtn');
+            showStatus('Checking invitation code...', 'info');
+            
+            // 1. Check if username exists
+            const usernameCheck = await Backend.checkUsernameExists(username);
+            if (usernameCheck.exists) {
+                showStatus(`"${username}" is already taken`, 'error');
+                hideLoading('joinBtn');
+                return;
+            }
+            
+            // 2. Find the business via Invitation Code
+            const ownerQuery = new Parse.Query(Parse.User);
+            ownerQuery.equalTo("role", "advertiser");
+            ownerQuery.equalTo("businessRole", "owner");
+            ownerQuery.equalTo("invitationCode", inviteCode);
+            
+            try {
+                const owner = await ownerQuery.first({ useMasterKey: true });
+                
+                if (!owner) {
+                    showStatus('Invalid invitation code. Please check with your business owner.', 'error');
+                    hideLoading('joinBtn');
+                    return;
+                }
+                
+                // 3. Prepare the business details for the employee
+                // We pass a flag `isEmployee: true` so the backend knows to link them to the owner
+                const businessDetails = {
+                    isEmployee: true,
+                    businessId: owner.id,
+                    businessName: owner.get("businessName")
+                };
+
+                // 4. Register the employee via Backend (which handles adding to staff list)
+                const result = await Backend.register(username, password, 'advertiser', businessDetails);
+                
+                if (result.success) {
+                    // 5. Auto-login the employee
+                    const loginResult = await Backend.login(username, password, 'advertiser');
+                    if (loginResult.success) {
+                        showStatus('Successfully joined the business! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'waiting-approval.html';
+                        }, 1500);
+                    } else {
+                        showStatus('Account created, please log in manually.', 'info');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 1500);
+                    }
+                } else {
+                    showStatus(result.message || 'Failed to join business', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Join business error:', error);
+                showStatus('Error joining business: ' + error.message, 'error');
+            } finally {
+                hideLoading('joinBtn');
+            }
+        }
+
+        document.getElementById('employeePassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleEmployeeJoin();
+        });
+        document.getElementById('employeeConfirmPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleEmployeeJoin();
+        });
+
+        window.checkPasswordStrength = checkPasswordStrength;
+        window.toggleTerms = toggleTerms;
+        window.handleEmployeeJoin = handleEmployeeJoin;
+    </script>
+</body>
+</html>

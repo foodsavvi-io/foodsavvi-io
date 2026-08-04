@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • lists</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('SW registration failed:', err);
+                    });
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            padding: 20px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .home-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #007aff;
+            font-size: 20px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        
+        .home-link:active {
+            background: #e8ecf0;
+            transform: scale(0.95);
+        }
+        
+        .header h1 {
+            flex: 1;
+            font-size: 22px;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        .sync-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .sync-btn:active {
+            background: #e8ecf0;
+            transform: rotate(180deg);
+        }
+        
+        /* Main Content */
+        .content {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 80px; /* space for bottom nav */
+            overflow-y: auto;
+        }
+        
+        /* List Selector */
+        .list-selector {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0 12px;
+            margin-bottom: 8px;
+            scrollbar-width: none;
+            align-items: center;
+        }
+        
+        .list-selector::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .list-tab {
+            padding: 8px 12px;
+            background: #f5f7fa;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .list-tab.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .list-tab:active {
+            transform: scale(0.95);
+        }
+        
+        .list-tab .list-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 2px;
+        }
+        
+        .list-tab .rename-btn,
+        .list-tab .delete-list-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 2px;
+            line-height: 1;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        
+        .list-tab .rename-btn:hover,
+        .list-tab .delete-list-btn:hover {
+            opacity: 1;
+        }
+        
+        .list-tab .delete-list-btn {
+            color: #ff3b30;
+        }
+        
+        /* Find Stores Button */
+        .find-stores-btn {
+            background: #34c759;
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 16px;
+            transition: 0.2s;
+        }
+        
+        .find-stores-btn:active {
+            background: #2db14e;
+            transform: scale(0.98);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .move-to-fridge-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .clear-checked-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        /* Add Item - SMALLER QUANTITY BOX */
+        .add-section {
+            background: #f5f7fa;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .add-row input {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .add-row input:first-child {
+            flex: 2;
+        }
+        
+        /* SMALLER QUANTITY INPUT */
+        .add-row input[name="price"] {
+            flex: 1;
+        }
+        
+        .add-row input[name="qty"] {
+            flex: 0.6;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        /* Expiry Date Input */
+        .expiry-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .expiry-row input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .expiry-row label {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .expiry-checkbox {
+            width: auto !important;
+            margin-right: 4px;
+        }
+        
+        .add-btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+        }
+        
+        .add-btn:active {
+            background: #005bbf;
+            transform: scale(0.98);
+        }
+        
+        /* Category Filter */
+        .category-filter {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 8px 0 16px;
+            scrollbar-width: none;
+        }
+        
+        .category-filter::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .cat-btn {
+            padding: 6px 14px;
+            background: #f5f7fa;
+            border-radius: 16px;
+            font-size: 13px;
+            border: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .cat-btn.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        /* List Stats */
+        .list-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Items */
+        .items-container {
+            margin-bottom: 20px;
+        }
+        
+        .item {
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+        }
+        
+        .item:active {
+            background: #f9f9f9;
+        }
+        
+        .item.completed {
+            opacity: 0.6;
+        }
+        
+        .item.completed .item-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .item-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            flex-wrap: wrap;
+        }
+        
+        .item-cat {
+            background: #f0f2f5;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .item-price {
+            color: #007aff;
+            font-weight: 500;
+        }
+        
+        .item-expiry {
+            color: #ff9500;
+            font-size: 10px;
+            background: #fff3e0;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+        
+        .item-expiry.urgent {
+            background: #ffebee;
+            color: #ff3b30;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .item-actions button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            padding: 4px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+        
+        .item-actions button:hover {
+            opacity: 1;
+        }
+        
+        .edit-btn {
+            color: #667eea;
+        }
+        
+        /* Total */
+        .total {
+            background: #1a1a1a;
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 18px;
+            margin-top: 8px;
+        }
+        
+        /* Templates */
+        .templates-section {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .templates-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .template-item {
+            background: #f5f7fa;
+            padding: 10px 4px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .template-item:active {
+            background: #e8ecf0;
+            transform: scale(0.95);
+        }
+        
+        .template-emoji {
+            font-size: 20px;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .modal-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .modal-row input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .modal-buttons .primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .modal-buttons .secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        /* New List Modal */
+        .new-list-modal .modal-content {
+            max-width: 320px;
+        }
+        
+        /* Notification – changed base to green */
+        .notification {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #34c759;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            transition: 0.3s;
+            z-index: 1000;
+            white-space: nowrap;
+            max-width: 90%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .notification.success {
+            background: #34c759;
+        }
+        
+        .notification.error {
+            background: #ff3b30;
+        }
+        
+        /* ---- Bottom Navigation ---- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 50;
+        }
+        
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: #007aff;
+        }
+        
+        .nav-emoji {
+            font-size: 20px;
+            margin-bottom: 2px;
+            display: block;
+            height: 24px;
+            line-height: 24px;
+        }
+        
+        .nav-emoji img {
+            width: auto;
+            height: 100%;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <div class="header">
+            <a href="index.html" class="home-link">←</a>
+            <h1>lists</h1>
+            <button class="sync-btn" onclick="syncWithCloud()">↻</button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Find Stores Button -->
+            <a href="find-stores.html" class="find-stores-btn">
+                <span>🔍</span> Find Stores with Deals
+            </a>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn move-to-fridge-btn" onclick="moveCheckedToFridge()">
+                    📦 move checked to fridge
+                </button>
+                <button class="action-btn clear-checked-btn" onclick="clearCompleted()">
+                    🗑️ clear checked
+                </button>
+            </div>
+            
+            <!-- List Selector -->
+            <div class="list-selector" id="listSelector"></div>
+            
+            <!-- Add Item Form with Expiry -->
+            <div class="add-section">
+                <div class="add-row">
+                    <input type="text" id="itemName" placeholder="item name">
+                </div>
+                <div class="add-row">
+                    <input type="number" id="itemPrice" name="price" placeholder="$ price" step="0.01" min="0">
+                    <input type="number" id="itemQty" name="qty" placeholder="qty" min="1" value="1">
+                </div>
+                <div class="expiry-row">
+                    <label>
+                        <input type="checkbox" id="addExpiryCheckbox"> 📅 add expiry date
+                    </label>
+                    <input type="date" id="itemExpiry" style="display: none;">
+                </div>
+                <button class="add-btn" onclick="addItem()">+ add to list</button>
+            </div>
+            
+            <!-- Category Filter -->
+            <div class="category-filter" id="categoryFilter"></div>
+            
+            <!-- List Stats -->
+            <div class="list-stats">
+                <span id="itemCount">0 items</span>
+            </div>
+            
+            <!-- Items Container -->
+            <div class="items-container" id="itemsContainer"></div>
+            
+            <!-- Total -->
+            <div class="total" id="totalDisplay">
+                <span>total</span>
+                <span id="totalAmount">$0.00</span>
+            </div>
+            
+            <!-- Templates -->
+            <div class="templates-section">
+                <div class="templates-title">quick add</div>
+                <div class="templates-grid" id="templatesGrid"></div>
+            </div>
+        </div>
+        
+        <!-- Standard consumer bottom nav -->
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-emoji">🏠</span>
+                <span>home</span>
+            </a>
+            <a href="find-stores.html" class="nav-item">
+                <span class="nav-emoji">🔍</span>
+                <span>deals</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-emoji">📝</span>
+                <span>lists</span>
+            </a>
+            <a href="fridge.html" class="nav-item">
+                <span class="nav-emoji"><img src="assets/fridge.png" alt="fridge"></span>
+                <span>fridge</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Edit Item Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3>✏️ edit item</h3>
+            <input type="text" id="editItemName" placeholder="item name">
+            <div class="modal-row">
+                <input type="number" id="editItemPrice" placeholder="price" step="0.01" min="0">
+                <input type="number" id="editItemQty" placeholder="qty" min="1">
+            </div>
+            <select id="editItemCategory">
+                <option value="dairy">🥛 Dairy</option>
+                <option value="produce">🥬 Produce</option>
+                <option value="meat">🥩 Meat</option>
+                <option value="bakery">🥖 Bakery</option>
+                <option value="pantry">📦 Pantry</option>
+                <option value="frozen">❄️ Frozen</option>
+                <option value="other">📌 Other</option>
+            </select>
+            <div class="modal-row">
+                <input type="date" id="editItemExpiry" placeholder="expiry date">
+            </div>
+            <div class="modal-buttons">
+                <button class="primary" onclick="saveEditItem()">save</button>
+                <button class="secondary" onclick="closeEditModal()">cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New List Modal -->
+    <div class="modal new-list-modal" id="newListModal">
+        <div class="modal-content">
+            <h3>new list</h3>
+            <input type="text" id="newListName" placeholder="list name">
+            <div class="modal-buttons">
+                <button class="primary" onclick="createList()">create</button>
+                <button class="secondary" onclick="closeModal()">cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        // ==================== STATE ====================
+        let lists = {};
+        let currentListId = 'default';
+        let currentCategory = 'all';
+        let editingItemIndex = -1;
+        let notificationTimeout = null;
+        
+        // Expiry checkbox toggle
+        document.getElementById('addExpiryCheckbox')?.addEventListener('change', function(e) {
+            const expiryInput = document.getElementById('itemExpiry');
+            if (e.target.checked) {
+                expiryInput.style.display = 'block';
+                const today = new Date();
+                today.setDate(today.getDate() + 7);
+                expiryInput.value = today.toISOString().split('T')[0];
+            } else {
+                expiryInput.style.display = 'none';
+                expiryInput.value = '';
+            }
+        });
+        
+        const categories = [
+            { id: 'all', label: 'all', icon: '📝' },
+            { id: 'produce', label: 'produce', icon: '🥬' },
+            { id: 'dairy', label: 'dairy', icon: '🥛' },
+            { id: 'meat', label: 'meat', icon: '🥩' },
+            { id: 'pantry', label: 'pantry', icon: '📦' },
+            { id: 'frozen', label: 'frozen', icon: '❄️' },
+            { id: 'bakery', label: 'bakery', icon: '🥖' },
+            { id: 'other', label: 'other', icon: '📌' }
+        ];
+        
+        const templates = [
+            { name: 'milk', emoji: '🥛', category: 'dairy' },
+            { name: 'eggs', emoji: '🥚', category: 'dairy' },
+            { name: 'bread', emoji: '🍞', category: 'bakery' },
+            { name: 'chicken', emoji: '🍗', category: 'meat' },
+            { name: 'bananas', emoji: '🍌', category: 'produce' },
+            { name: 'rice', emoji: '🍚', category: 'pantry' },
+            { name: 'cheese', emoji: '🧀', category: 'dairy' },
+            { name: 'apples', emoji: '🍎', category: 'produce' }
+        ];
+        
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await loadListsFromCloud();
+            render();
+        });
+        
+        async function loadListsFromCloud() {
+            try {
+                const cloudLists = await Backend.loadShoppingLists();
+                if (cloudLists && Object.keys(cloudLists).length > 0) {
+                    lists = cloudLists;
+                } else {
+                    const saved = localStorage.getItem('shoplists');
+                    if (saved) {
+                        lists = JSON.parse(saved);
+                    } else {
+                        lists = {
+                            'default': {
+                                id: 'default',
+                                name: 'main',
+                                icon: '📝',   // pencil and paper emoji
+                                items: []
+                            }
+                        };
+                    }
+                }
+            } catch (error) {
+                const saved = localStorage.getItem('shoplists');
+                if (saved) {
+                    lists = JSON.parse(saved);
+                } else {
+                    lists = {
+                        'default': {
+                            id: 'default',
+                            name: 'main',
+                            icon: '📝',
+                            items: []
+                        }
+                    };
+                }
+            }
+        }
+        
+        async function saveListsToCloud() {
+            try {
+                await Backend.saveShoppingLists(lists);
+                localStorage.setItem('shoplists', JSON.stringify(lists));
+            } catch (error) {
+                localStorage.setItem('shoplists', JSON.stringify(lists));
+            }
+        }
+        
+        // ==================== RENDER ====================
+        function render() {
+            renderLists();
+            renderCategories();
+            renderItems();
+            renderTemplates();
+        }
+        
+        function renderLists() {
+            const container = document.getElementById('listSelector');
+            container.innerHTML = Object.values(lists).map(list => `
+                <button class="list-tab ${list.id === currentListId ? 'active' : ''}" 
+                        onclick="switchList('${list.id}')">
+                    ${list.icon || '📝'} ${list.name}
+                    <span class="list-actions" onclick="event.stopPropagation()">
+                        <span class="rename-btn" onclick="renameList('${list.id}')" title="Rename list">✏️</span>
+                        <span class="delete-list-btn" onclick="deleteList('${list.id}')" title="Delete list">✕</span>
+                    </span>
+                </button>
+            `).join('');
+            container.innerHTML += `<button class="list-tab" onclick="showNewListModal()">➕ new</button>`;
+        }
+        
+        // RENAME LIST FUNCTION
+        async function renameList(listId) {
+            if (!lists[listId]) return;
+            const oldName = lists[listId].name;
+            const newName = prompt(`Rename list "${oldName}" to:`, oldName);
+            if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+                lists[listId].name = newName.trim();
+                await saveListsToCloud();
+                render();
+                showNotification(`Renamed to "${newName.trim()}"`, 'success');
+            }
+        }
+        
+        // DELETE LIST FUNCTION
+        async function deleteList(listId) {
+            if (!lists[listId]) return;
+            const listCount = Object.keys(lists).length;
+            if (listCount <= 1) {
+                showNotification('Cannot delete the last list', 'error');
+                return;
+            }
+            const listName = lists[listId].name;
+            if (!confirm(`Delete list "${listName}" and all its items?`)) return;
+            
+            delete lists[listId];
+            
+            if (currentListId === listId) {
+                const firstKey = Object.keys(lists)[0];
+                currentListId = firstKey || 'default';
+                if (!lists[currentListId]) {
+                    lists['default'] = {
+                        id: 'default',
+                        name: 'main',
+                        icon: '📝',
+                        items: []
+                    };
+                    currentListId = 'default';
+                }
+            }
+            
+            await saveListsToCloud();
+            render();
+            showNotification(`Deleted "${listName}"`, 'success');
+        }
+        
+        function renderCategories() {
+            const container = document.getElementById('categoryFilter');
+            container.innerHTML = categories.map(cat => `
+                <button class="cat-btn ${cat.id === currentCategory ? 'active' : ''}" 
+                        onclick="filterByCategory('${cat.id}')">
+                    ${cat.icon} ${cat.label}
+                </button>
+            `).join('');
+        }
+        
+        function renderItems() {
+            const container = document.getElementById('itemsContainer');
+            const currentList = lists[currentListId];
+            
+            if (!currentList) return;
+            
+            let items = currentList.items || [];
+            
+            if (currentCategory !== 'all') {
+                items = items.filter(item => item.category === currentCategory);
+            }
+            
+            if (items.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">list is empty</div>';
+                updateStats();
+                updateTotal();
+                return;
+            }
+            
+            const active = items.filter(i => !i.completed);
+            const completed = items.filter(i => i.completed);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            container.innerHTML = [...active, ...completed].map((item, index) => {
+                const originalIndex = currentList.items.findIndex(i => i.id === item.id);
+                
+                let expiryHtml = '';
+                let expiryClass = '';
+                if (item.expiryDate) {
+                    const expiryDate = new Date(item.expiryDate);
+                    expiryDate.setHours(0, 0, 0, 0);
+                    const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                    expiryClass = daysLeft <= 3 ? 'urgent' : '';
+                    expiryHtml = `<span class="item-expiry ${expiryClass}">📅 expires: ${item.expiryDate}</span>`;
+                }
+                
+                return `
+                    <div class="item ${item.completed ? 'completed' : ''}">
+                        <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                               onchange="toggleItem(${originalIndex})">
+                        <div class="item-details">
+                            <div class="item-name">${escapeHtml(item.name)}</div>
+                            <div class="item-meta">
+                                <span class="item-cat">${item.category || 'other'}</span>
+                                ${item.price ? `<span class="item-price">$${item.price.toFixed(2)} × ${item.qty}</span>` : ''}
+                                ${expiryHtml}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" onclick="openEditModal(${originalIndex})">✏️</button>
+                            <button onclick="duplicateItem(${originalIndex})">📝</button>
+                            <button onclick="deleteItem(${originalIndex})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            updateStats();
+            updateTotal();
+        }
+        
+        function renderTemplates() {
+            const container = document.getElementById('templatesGrid');
+            container.innerHTML = templates.map(t => `
+                <div class="template-item" onclick="quickAdd('${t.name}', '${t.category}')">
+                    <span class="template-emoji">${t.emoji}</span>
+                    ${t.name}
+                </div>
+            `).join('');
+        }
+        
+        // ==================== EDIT ITEM ====================
+        function openEditModal(index) {
+            editingItemIndex = index;
+            const item = lists[currentListId].items[index];
+            
+            document.getElementById('editItemName').value = item.name;
+            document.getElementById('editItemPrice').value = item.price || '';
+            document.getElementById('editItemQty').value = item.qty || 1;
+            document.getElementById('editItemCategory').value = item.category || 'other';
+            document.getElementById('editItemExpiry').value = item.expiryDate || '';
+            
+            document.getElementById('editModal').classList.add('show');
+        }
+        
+        async function saveEditItem() {
+            if (editingItemIndex === -1) return;
+            
+            const newName = document.getElementById('editItemName').value.trim();
+            const newPrice = parseFloat(document.getElementById('editItemPrice').value) || 0;
+            const newQty = parseInt(document.getElementById('editItemQty').value) || 1;
+            const newCategory = document.getElementById('editItemCategory').value;
+            const newExpiry = document.getElementById('editItemExpiry').value;
+            
+            if (!newName) {
+                showNotification('Item name cannot be empty', 'error');
+                return;
+            }
+            
+            const oldName = lists[currentListId].items[editingItemIndex].name;
+            
+            lists[currentListId].items[editingItemIndex] = {
+                ...lists[currentListId].items[editingItemIndex],
+                name: newName,
+                price: newPrice,
+                qty: newQty,
+                category: newCategory,
+                expiryDate: newExpiry || null
+            };
+            
+            await saveListsToCloud();
+            render();
+            closeEditModal();
+            showNotification(`Updated "${oldName}" → "${newName}"`, 'success');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            editingItemIndex = -1;
+        }
+        
+        // ==================== LIST FUNCTIONS ====================
+        function switchList(listId) {
+            currentListId = listId;
+            currentCategory = 'all';
+            render();
+            showNotification(`switched to ${lists[listId].name}`, 'success');
+        }
+        
+        function showNewListModal() {
+            document.getElementById('newListModal').classList.add('show');
+            document.getElementById('newListName').value = '';
+        }
+        
+        async function createList() {
+            const name = document.getElementById('newListName').value.trim();
+            if (!name) return;
+            
+            const id = 'list_' + Date.now();
+            lists[id] = {
+                id: id,
+                name: name,
+                icon: '📝',   // pencil and paper emoji
+                items: []
+            };
+            
+            await saveListsToCloud();
+            closeModal();
+            switchList(id);
+            showNotification(`created "${name}"`, 'success');
+        }
+        
+        function closeModal() {
+            document.getElementById('newListModal').classList.remove('show');
+        }
+        
+        // ==================== ITEM FUNCTIONS ====================
+        async function addItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+            const qty = parseInt(document.getElementById('itemQty').value) || 1;
+            const addExpiry = document.getElementById('addExpiryCheckbox').checked;
+            const expiryDate = addExpiry ? document.getElementById('itemExpiry').value : null;
+            
+            if (!name) {
+                showNotification('enter item name', 'error');
+                return;
+            }
+            
+            const category = guessCategory(name);
+            
+            const item = {
+                id: Date.now() + Math.random(),
+                name: name,
+                price: price,
+                qty: qty,
+                category: category,
+                completed: false,
+                date: new Date().toISOString(),
+                expiryDate: expiryDate
+            };
+            
+            lists[currentListId].items.push(item);
+            await saveListsToCloud();
+            
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('itemQty').value = '1';
+            document.getElementById('addExpiryCheckbox').checked = false;
+            document.getElementById('itemExpiry').style.display = 'none';
+            document.getElementById('itemExpiry').value = '';
+            
+            render();
+            showNotification(`added ${name}`, 'success');
+        }
+        
+        function guessCategory(name) {
+            name = name.toLowerCase();
+            if (name.includes('milk') || name.includes('cheese') || name.includes('yogurt') || name.includes('egg')) return 'dairy';
+            if (name.includes('apple') || name.includes('banana') || name.includes('lettuce') || name.includes('tomato')) return 'produce';
+            if (name.includes('chicken') || name.includes('beef') || name.includes('pork') || name.includes('fish')) return 'meat';
+            if (name.includes('rice') || name.includes('pasta') || name.includes('bean') || name.includes('cereal')) return 'pantry';
+            if (name.includes('bread') || name.includes('bagel') || name.includes('muffin')) return 'bakery';
+            if (name.includes('frozen') || name.includes('ice cream')) return 'frozen';
+            return 'other';
+        }
+        
+        async function toggleItem(index) {
+            lists[currentListId].items[index].completed = !lists[currentListId].items[index].completed;
+            await saveListsToCloud();
+            render();
+        }
+        
+        async function deleteItem(index) {
+            const item = lists[currentListId].items[index];
+            if (confirm(`Remove "${item.name}"?`)) {
+                lists[currentListId].items.splice(index, 1);
+                await saveListsToCloud();
+                render();
+                showNotification(`removed ${item.name}`, 'success');
+            }
+        }
+        
+        async function duplicateItem(index) {
+            const original = lists[currentListId].items[index];
+            const duplicate = {
+                ...original,
+                id: Date.now() + Math.random(),
+                completed: false,
+                date: new Date().toISOString()
+            };
+            lists[currentListId].items.push(duplicate);
+            await saveListsToCloud();
+            render();
+            showNotification(`duplicated ${original.name}`, 'success');
+        }
+        
+        async function quickAdd(name, category) {
+            const item = {
+                id: Date.now() + Math.random(),
+                name: name,
+                price: 0,
+                qty: 1,
+                category: category,
+                completed: false,
+                date: new Date().toISOString(),
+                expiryDate: null
+            };
+            
+            lists[currentListId].items.push(item);
+            await saveListsToCloud();
+            render();
+            showNotification(`added ${name}`, 'success');
+        }
+        
+        // ==================== MOVE CHECKED TO FRIDGE WITH EXPIRY ====================
+        async function moveCheckedToFridge() {
+            const currentList = lists[currentListId];
+            if (!currentList) return;
+            
+            const checkedItems = currentList.items.filter(item => item.completed === true);
+            
+            if (checkedItems.length === 0) {
+                showNotification('No checked items to move', 'error');
+                return;
+            }
+            
+            if (!confirm(`Move ${checkedItems.length} checked item(s) to fridge?`)) return;
+            
+            try {
+                let fridgeItems = await Backend.loadFridgeItems();
+                if (!fridgeItems || fridgeItems.length === 0) {
+                    fridgeItems = JSON.parse(localStorage.getItem('foodItems')) || [];
+                }
+                
+                const newFridgeItems = [...fridgeItems];
+                
+                checkedItems.forEach(item => {
+                    let expiryDate;
+                    if (item.expiryDate) {
+                        expiryDate = item.expiryDate;
+                    } else {
+                        const today = new Date();
+                        expiryDate = new Date();
+                        expiryDate.setDate(today.getDate() + 7);
+                        expiryDate = expiryDate.toISOString().split('T')[0];
+                    }
+                    
+                    newFridgeItems.push({
+                        name: item.name,
+                        expiry: expiryDate,
+                        category: item.category || 'other',
+                        addedDate: new Date().toISOString(),
+                        price: item.price || 0,
+                        qty: item.qty || 1
+                    });
+                });
+                
+                await Backend.saveFridgeItems(newFridgeItems);
+                localStorage.setItem('foodItems', JSON.stringify(newFridgeItems));
+                
+                currentList.items = currentList.items.filter(item => !item.completed);
+                await saveListsToCloud();
+                
+                render();
+                showNotification(`Moved ${checkedItems.length} item(s) to fridge!`, 'success');
+                
+            } catch (error) {
+                console.error('Error moving items to fridge:', error);
+                showNotification('Error moving items to fridge', 'error');
+            }
+        }
+        
+        async function clearCompleted() {
+            const currentList = lists[currentListId];
+            if (!currentList) return;
+            
+            const completedCount = currentList.items.filter(i => i.completed).length;
+            if (completedCount === 0) {
+                showNotification('No completed items to clear', 'error');
+                return;
+            }
+            
+            if (confirm(`Clear ${completedCount} completed item(s)?`)) {
+                currentList.items = currentList.items.filter(i => !i.completed);
+                await saveListsToCloud();
+                render();
+                showNotification(`Cleared ${completedCount} items`, 'success');
+            }
+        }
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            renderItems();
+        }
+        
+        // ==================== SYNC ====================
+        async function syncWithCloud() {
+            showNotification('Syncing...', 'success');
+            await saveListsToCloud();
+            await loadListsFromCloud();
+            render();
+            showNotification('Synced!', 'success');
+        }
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        function updateStats() {
+            const items = lists[currentListId]?.items || [];
+            const activeCount = items.filter(i => !i.completed).length;
+            document.getElementById('itemCount').textContent = `${activeCount} item${activeCount !== 1 ? 's' : ''}`;
+        }
+        
+        function updateTotal() {
+            const items = lists[currentListId]?.items || [];
+            const total = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        function showNotification(msg, type = 'success') {
+            const notif = document.getElementById('notification');
+            if (notificationTimeout) clearTimeout(notificationTimeout);
+            notif.textContent = msg;
+            notif.className = `notification show ${type}`;
+            notificationTimeout = setTimeout(() => {
+                notif.className = 'notification';
+                notificationTimeout = null;
+            }, 2000);
+        }
+        
+        // Make functions global
+        window.switchList = switchList;
+        window.showNewListModal = showNewListModal;
+        window.createList = createList;
+        window.closeModal = closeModal;
+        window.addItem = addItem;
+        window.toggleItem = toggleItem;
+        window.deleteItem = deleteItem;
+        window.duplicateItem = duplicateItem;
+        window.quickAdd = quickAdd;
+        window.openEditModal = openEditModal;
+        window.saveEditItem = saveEditItem;
+        window.closeEditModal = closeEditModal;
+        window.moveCheckedToFridge = moveCheckedToFridge;
+        window.clearCompleted = clearCompleted;
+        window.filterByCategory = filterByCategory;
+        window.syncWithCloud = syncWithCloud;
+        window.deleteList = deleteList;
+        window.renameList = renameList;
+    </script>
+</body>
+</html>

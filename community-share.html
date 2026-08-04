@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • share food</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icon.png">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <meta name="theme-color" content="#ee5a24">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('SW registration failed:', err);
+                    });
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            position: relative;
+            padding-bottom: 20px;
+        }
+        
+        .header {
+            padding: 30px 20px 20px;
+            background: linear-gradient(135deg, #FF6B6B, #ee5a24);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+        
+        /* Back link – matching fridge/list pages */
+        .back-link {
+            position: absolute;
+            top: 30px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+        .back-link:active {
+            background: rgba(255,255,255,0.35);
+            transform: scale(0.95);
+        }
+        
+        .header h1 { font-size: 24px; margin-bottom: 4px; }
+        .header-subtitle { font-size: 14px; opacity: 0.9; }
+        
+        .content { padding: 20px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; display: block; }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: #ee5a24; }
+        .form-textarea { min-height: 100px; resize: vertical; }
+        
+        .reason-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .reason-option {
+            padding: 10px 6px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            font-size: 11px;
+            background: white;
+        }
+        .reason-option:active { transform: scale(0.97); }
+        .reason-option.active { border-color: #ee5a24; background: #fff5f2; }
+        .reason-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+        .reason-text { font-size: 11px; color: #666; }
+        .reason-option.active .reason-text { color: #ee5a24; }
+        
+        .dietary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .dietary-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+            background: white;
+        }
+        .dietary-option:active { transform: scale(0.97); }
+        .dietary-option.checked {
+            border-color: #34c759;
+            background: #e8f5e8;
+        }
+        .dietary-option input { display: none; }
+        .dietary-icon { font-size: 18px; }
+        .dietary-name { font-size: 13px; font-weight: 500; }
+        
+        .share-type-selector { display: flex; gap: 12px; }
+        .share-type-option {
+            flex: 1; padding: 16px; border: 2px solid #e0e0e0;
+            border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s;
+        }
+        .share-type-option.active { border-color: #ee5a24; background: #fff5f2; }
+        .type-emoji { font-size: 28px; margin-bottom: 6px; }
+        .type-label { font-size: 14px; font-weight: 600; color: #333; }
+        
+        .guidelines-box {
+            background: #fffbf0;
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .guidelines-box h4 { font-size: 14px; margin-bottom: 8px; color: #ff9500; }
+        .guidelines-box ul { font-size: 12px; color: #666; padding-left: 18px; line-height: 1.6; }
+        .guidelines-box ul li { margin-bottom: 4px; }
+        
+        .food-items-container { margin-bottom: 12px; }
+        .food-item-row {
+            display: flex; gap: 8px; margin-bottom: 8px; align-items: center;
+        }
+        .food-item-row .form-input { flex: 1; }
+        .remove-btn {
+            background: #ff3b30; color: white; border: none;
+            width: 36px; height: 36px; border-radius: 18px;
+            cursor: pointer; font-size: 18px; display: flex;
+            align-items: center; justify-content: center; min-width: 36px;
+        }
+        .add-food-btn {
+            background: #f0f0f0; border: 2px dashed #ccc; color: #666;
+            padding: 12px; border-radius: 12px; width: 100%;
+            cursor: pointer; font-family: inherit; font-size: 14px;
+        }
+        
+        /* Location – manual entry + GPS */
+        .location-picker { display: flex; flex-direction: column; gap: 8px; }
+        .manual-location-row { display: flex; gap: 8px; }
+        .manual-location-row input { flex: 1; }
+        .locate-btn {
+            background: #007aff; color: white; border: none;
+            padding: 12px 16px; border-radius: 12px; cursor: pointer;
+            font-family: inherit; font-size: 14px; white-space: nowrap;
+        }
+        .manual-location-row button,
+        .set-address-btn {
+            background: #ee5a24; color: white; border: none;
+            padding: 12px 16px; border-radius: 12px; cursor: pointer;
+            font-family: inherit; font-size: 14px; white-space: nowrap;
+        }
+        .map-preview {
+            width: 100%; height: 60px; background: #f0f0f0;
+            border-radius: 12px; margin-top: 8px; display: flex;
+            align-items: center; justify-content: center; color: #999; font-size: 13px;
+        }
+        .map-preview.set { background: #e8f5e8; color: #34c759; }
+        
+        .agreement-box {
+            background: #f8f9fa; border-radius: 12px; padding: 14px; margin-bottom: 16px;
+        }
+        .agreement-item {
+            display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;
+        }
+        .agreement-item:last-child { margin-bottom: 0; }
+        .agreement-item input { margin-top: 2px; width: 16px; height: 16px; cursor: pointer; accent-color: #ee5a24; }
+        .agreement-item label { font-size: 12px; color: #666; line-height: 1.4; cursor: pointer; }
+        
+        .submit-btn {
+            background: #ee5a24; color: white; border: none;
+            padding: 16px; border-radius: 25px; font-weight: 600;
+            font-size: 16px; width: 100%; cursor: pointer;
+            font-family: inherit; box-shadow: 0 4px 15px rgba(238,90,36,0.3);
+        }
+        .submit-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+        
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center;
+            justify-content: center; z-index: 2000; display: none;
+        }
+        .loading-spinner {
+            width: 50px; height: 50px; border: 4px solid white;
+            border-top-color: #ee5a24; border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 380px) {
+            .reason-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <a href="community.html" class="back-link">←</a>
+        <h1>Share Food</h1>
+        <div class="header-subtitle">help reduce food waste</div>
+    </div>
+    
+    <div class="content">
+        <div class="guidelines-box">
+            <h4>📋 Sharing guidelines</h4>
+            <ul>
+                <li>Food must be <strong>safe to eat</strong> and properly stored</li>
+                <li>Be honest about ingredients and expiry dates</li>
+                <li>Label any common allergens (nuts, dairy, gluten, etc.)</li>
+                <li>Include clear pickup instructions for your safety</li>
+                <li>Only share what you'd be happy to eat yourself!</li>
+            </ul>
+        </div>
+        
+        <form id="shareForm" onsubmit="submitShare(event)">
+            <div class="form-group">
+                <label class="form-label">Why are you sharing?</label>
+                <div class="reason-grid">
+                    <button type="button" class="reason-option active" onclick="selectReason('cooked_too_much')" data-reason="cooked_too_much">
+                        <span class="reason-emoji">🍳</span><span class="reason-text">cooked too much</span>
+                    </button>
+                    <button type="button" class="reason-option" onclick="selectReason('bought_extra')" data-reason="bought_extra">
+                        <span class="reason-emoji">🛒</span><span class="reason-text">bought extra</span>
+                    </button>
+                    <button type="button" class="reason-option" onclick="selectReason('going_away')" data-reason="going_away">
+                        <span class="reason-emoji">✈️</span><span class="reason-text">going away</span>
+                    </button>
+                    <button type="button" class="reason-option" onclick="selectReason('expiring_soon')" data-reason="expiring_soon">
+                        <span class="reason-emoji">⏰</span><span class="reason-text">expiring soon</span>
+                    </button>
+                    <button type="button" class="reason-option" onclick="selectReason('diet_change')" data-reason="diet_change">
+                        <span class="reason-emoji">🥗</span><span class="reason-text">diet change</span>
+                    </button>
+                    <button type="button" class="reason-option" onclick="selectReason('other')" data-reason="other">
+                        <span class="reason-emoji">🤷</span><span class="reason-text">other</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Giveaway or swap?</label>
+                <div class="share-type-selector">
+                    <button type="button" class="share-type-option active" onclick="selectShareType('giveaway')" id="giveawayBtn">
+                        <div class="type-emoji">🎁</div><div class="type-label">free giveaway</div>
+                    </button>
+                    <button type="button" class="share-type-option" onclick="selectShareType('swap')" id="swapBtn">
+                        <div class="type-emoji">🔄</div><div class="type-label">happy to swap</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">What food are you sharing?</label>
+                <div class="food-items-container" id="foodItemsContainer">
+                    <div class="food-item-row">
+                        <input type="text" class="form-input" placeholder="e.g., 🥖 bread" name="foodItem">
+                        <button type="button" class="remove-btn" onclick="removeFoodItem(this)" style="visibility:hidden;">−</button>
+                    </div>
+                </div>
+                <button type="button" class="add-food-btn" onclick="addFoodItem()">+ add another item</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">🍽️ Dietary information <span style="font-weight:400;color:#999;font-size:12px;">(select all that apply)</span></label>
+                <div class="dietary-grid">
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="halal"><span class="dietary-icon">☪️</span><span class="dietary-name">halal</span>
+                    </label>
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="vegetarian"><span class="dietary-icon">🥬</span><span class="dietary-name">vegetarian</span>
+                    </label>
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="vegan"><span class="dietary-icon">🌱</span><span class="dietary-name">vegan</span>
+                    </label>
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="glutenFree"><span class="dietary-icon">🌾</span><span class="dietary-name">gluten-free</span>
+                    </label>
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="dairyFree"><span class="dietary-icon">🥛</span><span class="dietary-name">dairy-free</span>
+                    </label>
+                    <label class="dietary-option" onclick="toggleDietary(this)">
+                        <input type="checkbox" name="dietary" value="nutFree"><span class="dietary-icon">🥜</span><span class="dietary-name">nut-free</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Description <span style="font-weight:400;color:#999;font-size:12px;">(optional)</span></label>
+                <textarea class="form-textarea" id="description" placeholder="Tell neighbours about the food — when it was made, ingredients, dietary info, how to reheat, etc."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">⚠️ Allergen info <span style="font-weight:400;color:#999;font-size:12px;">(optional but helpful)</span></label>
+                <input type="text" class="form-input" id="allergenInfo" placeholder="e.g., contains nuts, cooked with dairy, etc.">
+            </div>
+            
+            <!-- Pickup Location – manual entry + GPS (no auto-locate) -->
+            <div class="form-group">
+                <label class="form-label">Pickup location <span style="color:#ff3b30;">*</span></label>
+                <div class="location-picker">
+                    <div class="manual-location-row">
+                        <input type="text" class="form-input" id="locationAddress" placeholder="Enter address or use locate button">
+                        <button type="button" class="locate-btn" onclick="getCurrentLocation()">📍 locate</button>
+                    </div>
+                    <button type="button" class="set-address-btn" onclick="setLocationFromAddress()">Set Address</button>
+                </div>
+                <div class="map-preview" id="mapPreview">📍 tap 'locate' or type an address and press 'Set Address'</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Pickup instructions <span style="font-weight:400;color:#999;font-size:12px;">(optional)</span></label>
+                <textarea class="form-textarea" id="pickupInstructions" placeholder="e.g., leave at door, text when arriving, available after 6pm, buzz #123, etc." style="min-height:70px;"></textarea>
+            </div>
+            
+            <div class="agreement-box">
+                <div class="agreement-item">
+                    <input type="checkbox" id="agreeSafe">
+                    <label for="agreeSafe">The food I'm sharing is <strong>safe to eat</strong> and properly stored</label>
+                </div>
+                <div class="agreement-item">
+                    <input type="checkbox" id="agreeHonest">
+                    <label for="agreeHonest">I've honestly described the food including any allergens</label>
+                </div>
+                <div class="agreement-item">
+                    <input type="checkbox" id="agreeGuidelines">
+                    <label for="agreeGuidelines">I've read and agree to the <strong>sharing guidelines</strong></label>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">🤝 share</button>
+        </form>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+<script src="backend.js"></script>
+<script>
+    let shareReason = 'cooked_too_much';
+    let shareType = 'giveaway';
+    let userLocation = null;
+    
+    // NO automatic GPS request anymore – user must manually trigger it
+    
+    function selectReason(reason) {
+        shareReason = reason;
+        document.querySelectorAll('.reason-grid .reason-option').forEach(el => el.classList.remove('active'));
+        document.querySelector(`[data-reason="${reason}"]`).classList.add('active');
+    }
+    
+    function selectShareType(type) {
+        shareType = type;
+        document.getElementById('giveawayBtn').classList.toggle('active', type === 'giveaway');
+        document.getElementById('swapBtn').classList.toggle('active', type === 'swap');
+    }
+    
+    function toggleDietary(label) {
+        const checkbox = label.querySelector('input');
+        checkbox.checked = !checkbox.checked;
+        label.classList.toggle('checked', checkbox.checked);
+    }
+    
+    function addFoodItem() {
+        const container = document.getElementById('foodItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'food-item-row';
+        row.innerHTML = `<input type="text" class="form-input" placeholder="e.g., 🥖 bread (half loaf)" name="foodItem"><button type="button" class="remove-btn" onclick="removeFoodItem(this)">−</button>`;
+        container.appendChild(row);
+        updateRemoveButtons();
+    }
+    
+    function removeFoodItem(btn) {
+        const container = document.getElementById('foodItemsContainer');
+        if (container.children.length > 1) btn.parentElement.remove();
+        updateRemoveButtons();
+    }
+    
+    function updateRemoveButtons() {
+        const container = document.getElementById('foodItemsContainer');
+        const buttons = container.querySelectorAll('.remove-btn');
+        buttons.forEach(btn => btn.style.visibility = container.children.length > 1 ? 'visible' : 'hidden');
+    }
+    
+    // GPS locate – prompts for permission only when user clicks
+    function getCurrentLocation() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported on this device. Please type your address manually.');
+            return;
+        }
+        document.getElementById('mapPreview').innerHTML = '📍 getting location...';
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.lat}&lon=${userLocation.lng}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('locationAddress').value = data.display_name || 'Location found';
+                        document.getElementById('mapPreview').innerHTML = '✅ Location set! Neighbours can see where to pick up';
+                        document.getElementById('mapPreview').classList.add('set');
+                    })
+                    .catch(() => {
+                        document.getElementById('locationAddress').value = `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`;
+                        document.getElementById('mapPreview').innerHTML = '✅ Location set (coordinates)';
+                        document.getElementById('mapPreview').classList.add('set');
+                    });
+            },
+            (error) => {
+                // User denied or location unavailable → show helpful message
+                let msg = 'Could not get your location. ';
+                if (error.code === error.PERMISSION_DENIED) {
+                    msg += 'Location access was denied. Please enable it in your device settings, or type your address manually below.';
+                } else {
+                    msg += 'Please ensure location services are enabled, or type your address manually.';
+                }
+                alert(msg);
+                document.getElementById('mapPreview').innerHTML = '📍 could not get location – type address instead';
+                document.getElementById('mapPreview').classList.remove('set');
+            }
+        );
+    }
+    
+    // Manual address geocoding – works without GPS permission
+    async function setLocationFromAddress() {
+        const address = document.getElementById('locationAddress').value.trim();
+        if (!address) {
+            alert('Please enter an address first.');
+            return;
+        }
+        document.getElementById('mapPreview').innerHTML = '🔍 looking up address...';
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+            );
+            const data = await response.json();
+            if (data.length === 0) {
+                document.getElementById('mapPreview').innerHTML = '📍 address not found – try a more specific one';
+                document.getElementById('mapPreview').classList.remove('set');
+                return;
+            }
+            userLocation = {
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon)
+            };
+            document.getElementById('locationAddress').value = data[0].display_name;
+            document.getElementById('mapPreview').innerHTML = '✅ Location set!';
+            document.getElementById('mapPreview').classList.add('set');
+        } catch (e) {
+            document.getElementById('mapPreview').innerHTML = '⚠️ error – check your internet connection';
+            document.getElementById('mapPreview').classList.remove('set');
+        }
+    }
+    
+    async function submitShare(event) {
+        event.preventDefault();
+        const foodItemInputs = document.querySelectorAll('input[name="foodItem"]');
+        const foodItems = [];
+        foodItemInputs.forEach(input => {
+            const value = input.value.trim();
+            if (value) {
+                const emojiMatch = value.match(/^([\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]\u{FE0F}?\s*)/u);
+                foodItems.push({ name: value, emoji: emojiMatch ? emojiMatch[1].trim() : '🍽️' });
+            }
+        });
+        if (foodItems.length === 0) { alert('Please add at least one food item'); return; }
+        if (!userLocation) { alert('Please set a pickup location (use GPS or type an address)'); return; }
+        if (!document.getElementById('agreeSafe').checked || !document.getElementById('agreeHonest').checked || !document.getElementById('agreeGuidelines').checked) {
+            alert('Please agree to all sharing guidelines'); return;
+        }
+        const dietaryInfo = {};
+        document.querySelectorAll('input[name="dietary"]:checked').forEach(cb => dietaryInfo[cb.value] = true);
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ sharing...';
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            const allergenInfo = document.getElementById('allergenInfo').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const fullDescription = allergenInfo ? `${description}\n\n⚠️ Allergens: ${allergenInfo}` : description;
+            
+            const shareData = {
+                foodItems, description: fullDescription,
+                reason: shareReason, shareType, dietaryInfo,
+                location: { lat: userLocation.lat, lng: userLocation.lng, address: document.getElementById('locationAddress').value },
+                pickupInstructions: document.getElementById('pickupInstructions').value.trim()
+            };
+            const result = await Backend.createCommunityShare(shareData);
+            if (result.success) {
+                alert('🎉 Food shared! Neighbours nearby can now see it.');
+                window.location.href = 'community.html';
+            } else {
+                alert(result.message || 'Failed to share food.');
+            }
+        } catch(e) { alert('Failed to share food.'); }
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🤝 share with neighbours';
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+    
+    window.selectReason = selectReason;
+    window.selectShareType = selectShareType;
+    window.toggleDietary = toggleDietary;
+    window.addFoodItem = addFoodItem;
+    window.removeFoodItem = removeFoodItem;
+    window.getCurrentLocation = getCurrentLocation;
+    window.setLocationFromAddress = setLocationFromAddress;
+</script>
+</body>
+</html>

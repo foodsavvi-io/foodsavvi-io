@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • find deals</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('SW registration failed:', err);
+                    });
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        
+        .header {
+            padding: 20px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .back-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #007aff;
+            font-size: 20px;
+        }
+        
+        .header h1 {
+            flex: 1;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            text-decoration: none;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background: #ff3b30;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 6px;
+            font-size: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .search-section {
+            padding: 16px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        
+        .search-btn {
+            padding: 14px 20px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .category-filter {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 0;
+            scrollbar-width: none;
+        }
+        
+        .category-filter::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .cat-btn {
+            padding: 8px 16px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .cat-btn.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .results-section {
+            padding: 0 16px 80px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #34c759;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .result-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: #e8ecf0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .result-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .result-image .placeholder {
+            font-size: 32px;
+        }
+        
+        .result-info {
+            flex: 1;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        
+        .result-food {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .result-discount {
+            color: #34c759;
+            font-weight: 600;
+        }
+        
+        .result-shop {
+            font-size: 13px;
+            color: #007aff;
+            margin-bottom: 6px;
+        }
+        
+        .result-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .batch-info {
+            font-size: 10px;
+            color: #666;
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .quantity-info {
+            font-size: 10px;
+            color: #34c759;
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .quantity-info.low {
+            background: #ffebee;
+            color: #ff3b30;
+        }
+        
+        .price-info {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .price-info .original {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .price-info .discounted {
+            color: #34c759;
+            font-weight: 600;
+        }
+        
+        .result-expiry {
+            font-size: 11px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #007aff;
+        }
+        
+        .qty-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .qty-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .qty-value {
+            min-width: 30px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a1a;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            transition: 0.3s;
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .notification.success {
+            background: #34c759;
+        }
+        
+        .notification.error {
+            background: #ff3b30;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: #007aff;
+        }
+        
+        .nav-emoji {
+            font-size: 20px;
+            margin-bottom: 2px;
+            display: block;
+            height: 24px;
+            line-height: 24px;
+        }
+        
+        .nav-emoji img {
+            width: auto;
+            height: 100%;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="index.html" class="back-link">←</a>
+            <h1>find deals</h1>
+            <a href="claim.html" class="cart-icon">
+                🛒
+                <span class="cart-count" id="cartCount">0</span>
+            </a>
+        </div>
+        
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="search food...">
+                <button class="search-btn" onclick="searchDeals()">search</button>
+            </div>
+            
+            <div class="category-filter" id="categoryFilter"></div>
+        </div>
+        
+        <div class="results-section" id="resultsContainer">
+            <div class="loading" id="loadingState">
+                <div class="loading-spinner"></div>
+                loading deals...
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-emoji">🏠</span>
+                <span>home</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-emoji">🔍</span>
+                <span>deals</span>
+            </a>
+            <a href="shoplist.html" class="nav-item">
+                <span class="nav-emoji">📝</span>
+                <span>lists</span>
+            </a>
+            <a href="fridge.html" class="nav-item">
+                <span class="nav-emoji"><img src="assets/fridge.png" alt="fridge"></span>
+                <span>fridge</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+    
+    <script>
+        let currentCategory = 'all';
+        let currentSearch = '';
+        let cart = [];
+        let notificationTimeout = null;
+        let allAds = []; // Store the full ad objects from backend
+        
+        const categories = [
+            { id: 'all', label: 'all' },
+            { id: 'dairy', label: '🥛 dairy' },
+            { id: 'produce', label: '🥬 produce' },
+            { id: 'meat', label: '🥩 meat' },
+            { id: 'bakery', label: '🥖 bakery' },
+            { id: 'pantry', label: '📦 pantry' },
+            { id: 'frozen', label: '❄️ frozen' }
+        ];
+        
+        const categoryEmojis = {
+            dairy: '🥛',
+            produce: '🥬',
+            meat: '🥩',
+            bakery: '🥖',
+            pantry: '📦',
+            frozen: '❄️',
+            other: '🍽️'
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            
+            if (!user || role !== 'consumer') {
+                showNotification('Please login as consumer', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+            
+            renderCategories();
+            loadDeals();
+            updateCartCount();
+        });
+        
+        function updateCartCount() {
+            const savedCart = localStorage.getItem('claimCart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                document.getElementById('cartCount').textContent = totalItems;
+            }
+        }
+        
+        function renderCategories() {
+            const container = document.getElementById('categoryFilter');
+            container.innerHTML = categories.map(cat => `
+                <button class="cat-btn ${cat.id === currentCategory ? 'active' : ''}" 
+                        onclick="filterByCategory('${cat.id}')">
+                    ${cat.label}
+                </button>
+            `).join('');
+        }
+        
+        async function loadDeals() {
+            const container = document.getElementById('resultsContainer');
+            
+            try {
+                const ads = await Backend.getActiveAds({
+                    category: currentCategory,
+                    search: currentSearch
+                });
+                
+                allAds = ads; // Store the full backend ad objects
+                
+                if (ads.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                            <div>no deals found</div>
+                            <div style="font-size:13px; margin-top:8px;">try searching for something else</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const savedCart = localStorage.getItem('claimCart');
+                const currentCart = savedCart ? JSON.parse(savedCart) : [];
+                
+                container.innerHTML = ads.map(ad => {
+                    const daysUntil = Math.ceil((new Date(ad.offerEnds) - new Date()) / (1000*60*60*24));
+                    const isLowStock = ad.quantityLeft && ad.quantityLeft <= 5;
+                    const discountedPrice = ad.originalPrice ? (ad.originalPrice * (1 - ad.discount / 100)).toFixed(2) : null;
+                    const savedAmount = ad.originalPrice ? (ad.originalPrice - discountedPrice).toFixed(2) : 0;
+                    
+                    const cartItem = currentCart.find(item => item.id === ad.id);
+                    const currentQty = cartItem ? cartItem.quantity : 0;
+                    const remainingStock = ad.quantityLeft - currentQty;
+                    const categoryEmoji = categoryEmojis[ad.category] || '🍽️';
+                    
+                    return `
+                        <div class="result-item">
+                            <div class="result-image">
+                                ${ad.productImage ? 
+                                    `<img src="${ad.productImage}" alt="${escapeHtml(ad.foodName)}" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'placeholder\'>${categoryEmoji}</div>'">` : 
+                                    `<div class="placeholder">${categoryEmoji}</div>`
+                                }
+                            </div>
+                            <div class="result-info">
+                                <div class="result-header">
+                                    <span class="result-food">${escapeHtml(ad.foodName)}</span>
+                                    <span class="result-discount">-${ad.discount}%</span>
+                                </div>
+                                <div class="result-shop">🏪 ${escapeHtml(ad.shopName)}</div>
+                                <div class="result-meta">
+                                    ${ad.batchNumber ? `<span class="batch-info">📦 ${escapeHtml(ad.batchNumber)}</span>` : ''}
+                                    <span class="quantity-info ${isLowStock ? 'low' : ''}">📊 ${ad.quantityLeft} left</span>
+                                </div>
+                                ${ad.originalPrice ? `
+                                    <div class="price-info">
+                                        <span class="original">$${ad.originalPrice.toFixed(2)}</span>
+                                        <span class="discounted"> → $${discountedPrice}</span>
+                                        <span style="color: #ff9500;"> (save $${savedAmount})</span>
+                                    </div>
+                                ` : ''}
+                                <div class="result-expiry">
+                                    <span>⏰ ${daysUntil} days left • 👁️ ${ad.views || 0} views</span>
+                                    <div class="quantity-selector">
+                                        <button class="qty-btn" onclick="changeQuantity('${ad.id}', -1, ${ad.quantityLeft})" ${remainingStock <= 0 || currentQty <= 0 ? 'disabled' : ''}>-</button>
+                                        <span class="qty-value" id="qty-${ad.id}">${currentQty}</span>
+                                        <button class="qty-btn" onclick="changeQuantity('${ad.id}', 1, ${ad.quantityLeft})" ${remainingStock <= 0 ? 'disabled' : ''}>+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading deals:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div>failed to load deals</div>
+                        <div style="font-size:13px; margin-top:8px;">${error.message}</div>
+                        <button onclick="loadDeals()" style="margin-top:16px; padding:8px 20px; background:#007aff; color:white; border:none; border-radius:20px;">retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        async function changeQuantity(adId, delta, maxStock) {
+            try {
+                // 🔥 FIX: Find the ad from the full list fetched from backend
+                const ad = allAds.find(a => a.id === adId);
+                
+                if (!ad) {
+                    showNotification('Deal not found or expired', 'error');
+                    await loadDeals();
+                    return;
+                }
+                
+                const savedCart = localStorage.getItem('claimCart');
+                let cart = savedCart ? JSON.parse(savedCart) : [];
+                const existingIndex = cart.findIndex(item => item.id === adId);
+                const currentQty = existingIndex >= 0 ? cart[existingIndex].quantity : 0;
+                const newQty = currentQty + delta;
+                
+                if (newQty < 0) {
+                    if (existingIndex >= 0) {
+                        cart.splice(existingIndex, 1);
+                    }
+                } else if (newQty > maxStock) {
+                    showNotification(`Only ${maxStock} items available`, 'error');
+                    return;
+                } else if (newQty > 0) {
+                    if (existingIndex >= 0) {
+                        cart[existingIndex].quantity = newQty;
+                    } else {
+                        // 🔥 FIX: Save the EXACT ID from the backend ad object
+                        cart.push({
+                            id: ad.id,                     // ✅ This is the real backend objectId
+                            foodName: ad.foodName,
+                            shopName: ad.shopName,
+                            originalPrice: ad.originalPrice || 0,
+                            discount: ad.discount,
+                            category: ad.category,
+                            batchNumber: ad.batchNumber,
+                            quantity: 1,
+                            maxQuantity: maxStock,
+                            productImage: ad.productImage || null
+                        });
+                    }
+                }
+                
+                localStorage.setItem('claimCart', JSON.stringify(cart));
+                updateCartCount();
+                
+                const qtySpan = document.getElementById(`qty-${adId}`);
+                if (qtySpan) {
+                    qtySpan.textContent = newQty > 0 ? newQty : 0;
+                }
+                
+                const minusBtn = document.querySelector(`button[onclick*="changeQuantity('${adId}', -1"]`);
+                const plusBtn = document.querySelector(`button[onclick*="changeQuantity('${adId}', 1"]`);
+                if (minusBtn) minusBtn.disabled = newQty <= 0;
+                if (plusBtn) plusBtn.disabled = (maxStock - newQty) <= 0;
+                
+                if (delta > 0) {
+                    showNotification(`Added ${ad.foodName} to cart`, 'success');
+                }
+                
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showNotification('Error adding to cart', 'error');
+            }
+        }
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            renderCategories();
+            loadDeals();
+        }
+        
+        function searchDeals() {
+            currentSearch = document.getElementById('searchInput').value.trim();
+            loadDeals();
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        function showNotification(msg, type) {
+            const notif = document.getElementById('notification');
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            notif.textContent = msg;
+            notif.className = `notification show ${type}`;
+            
+            notificationTimeout = setTimeout(() => {
+                notif.className = 'notification';
+                notificationTimeout = null;
+            }, 2000);
+        }
+        
+        window.filterByCategory = filterByCategory;
+        window.searchDeals = searchDeals;
+        window.changeQuantity = changeQuantity;
+    </script>
+</body>
+</html>

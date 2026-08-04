@@ -1,0 +1,3310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>foodsavvi • business settings</title>
+    <link rel="icon" type="image/png" href="assets/icon.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png" />
+    <!-- SheetJS Library for Excel import/export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .header {
+            padding: 20px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #667eea;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+        .back-link:active {
+            background: #e8ecf0;
+            transform: scale(0.95);
+        }
+
+        .header h1 {
+            flex: 1;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .refresh-all-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .content {
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .verification-banner {
+            background: #fff3e0;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #ff9500;
+        }
+
+        .banner-verified {
+            background: #e8f5e8;
+            border-left-color: #34c759;
+        }
+
+        .banner-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .banner-content {
+            flex: 1;
+        }
+
+        .banner-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .banner-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .role-banner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .role-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .role-details {
+            flex: 1;
+        }
+
+        .role-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .role-permissions {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, #34c759, #28a745);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .wallet-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .wallet-amount {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .wallet-small {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .wallet-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .wallet-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            padding: 10px 12px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: #34c759;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        .save-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .employee-list,
+        .claims-list,
+        .notifications-list {
+            margin-top: 16px;
+        }
+
+        .employee-item {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            background: #e8eaf6;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .employee-details {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .employee-role {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .employee-role.owner {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .employee-role.manager {
+            background: #e3f2fd;
+            color: #007aff;
+        }
+        .employee-role.staff {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .employee-role.pending {
+            background: #ffebee;
+            color: #d63031;
+        }
+
+        .employee-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .emp-action-btn {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+        .emp-action-btn.approve { background: #e8f5e8; color: #2e7d32; }
+        .emp-action-btn.approve:hover { background: #c8e6c9; }
+        .emp-action-btn.revoke { background: #ffebee; color: #c62828; }
+        .emp-action-btn.revoke:hover { background: #ffcdd2; }
+        .emp-action-btn.assign { background: #e3f2fd; color: #0d47a1; }
+        .emp-action-btn.assign:hover { background: #bbdefb; }
+
+        .role-assign-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .role-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 130px;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 4px 0;
+        }
+        .role-dropdown-menu.show {
+            display: block;
+        }
+        .role-dropdown-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .role-dropdown-item:hover {
+            background: #f0f4ff;
+        }
+
+        .notification-item.unread {
+            background: #e3f2fd;
+            border-left: 3px solid #007aff;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .nav-item.active .nav-emoji {
+            color: #999;
+        }
+
+        .nav-item.active span:last-child {
+            color: #667eea;
+        }
+
+        .nav-emoji {
+            font-size: 20px;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-message {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .status-message.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .status-message.success {
+            background: #34c759;
+            color: white;
+        }
+        .status-message.error {
+            background: #ff3b30;
+            color: white;
+        }
+        .status-message.info {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        /* ========== ORDER STYLES ========== */
+        .order-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 14px 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #34c759;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .order-item.pending {
+            border-left-color: #ff9500;
+        }
+        .order-item.waiting {
+            border-left-color: #f57c00;
+        }
+        .order-item.picked-up {
+            border-left-color: #e65100;
+        }
+        .order-item.completed {
+            border-left-color: #34c759;
+        }
+        .order-item.cancelled {
+            border-left-color: #ff3b30;
+            background: #fff5f5;
+            opacity: 1;
+        }
+        .order-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .order-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .order-content {
+            flex: 1;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: nowrap;
+            gap: 6px;
+        }
+
+        .order-id {
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .order-status {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 100px;
+            text-align: center;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #ff9500;
+        }
+        .status-waiting {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+        .status-picked-up {
+            background: #ffcc80;
+            color: #e65100;
+        }
+        .status-completed {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        .status-cancelled {
+            background: #ff3b30;
+            color: white;
+            font-weight: 600;
+        }
+
+        .order-details {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .order-total {
+            font-size: 14px;
+            font-weight: 600;
+            color: #34c759;
+        }
+
+        .order-date {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .action-btn {
+            background: #34c759;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .action-btn:hover {
+            background: #2db14e;
+        }
+
+        .waiting-text {
+            font-size: 11px;
+            white-space: nowrap;
+            color: #34c759;
+        }
+
+        .bulk-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #f0f4ff;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .select-all-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .bulk-confirm-btn {
+            background: #34c759;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .bulk-confirm-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .selected-count {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ========== LOOKUP STYLES ========== */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fafafa;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        .search-box button {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .search-box button:active {
+            transform: scale(0.97);
+        }
+
+        .lookup-result-item {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #34c759;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lookup-result-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            background: #f0f4ff;
+        }
+        .lookup-result-item:active {
+            transform: scale(0.98);
+        }
+        .lookup-result-item.pending {
+            border-left-color: #ff9500;
+        }
+        .lookup-result-item.waiting {
+            border-left-color: #f57c00;
+        }
+        .lookup-result-item.picked-up {
+            border-left-color: #e65100;
+        }
+        .lookup-result-item.completed {
+            border-left-color: #34c759;
+        }
+        .lookup-result-item.cancelled {
+            border-left-color: #ff3b30;
+            background: #fff5f5;
+        }
+
+        .lookup-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            gap: 8px;
+        }
+        .lookup-customer {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .lookup-status {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 100px;
+            text-align: center;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+        .lookup-status.pending {
+            background: #fff3e0;
+            color: #ff9500;
+        }
+        .lookup-status.waiting {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+        .lookup-status.picked-up {
+            background: #ffcc80;
+            color: #e65100;
+        }
+        .lookup-status.completed {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        .lookup-status.cancelled {
+            background: #ff3b30;
+            color: white;
+            font-weight: 600;
+        }
+
+        .lookup-detail {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        .lookup-meta {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .click-hint {
+            font-size: 10px;
+            color: #667eea;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+
+        /* ========== ORDER DETAIL MODAL ========== */
+        .order-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+            padding: 20px;
+        }
+
+        .order-detail-modal.show {
+            display: flex;
+        }
+
+        .order-detail-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 360px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .order-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .order-detail-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .order-detail-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 4px;
+        }
+        .order-detail-close:hover {
+            color: #333;
+        }
+
+        .detail-field {
+            margin-bottom: 12px;
+        }
+
+        .detail-field-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+        }
+
+        .detail-field-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .detail-field-value .batch-tag {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .detail-field-value .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #ff9500;
+        }
+        .status-badge.waiting {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+        .status-badge.picked-up {
+            background: #ffcc80;
+            color: #e65100;
+        }
+        .status-badge.completed {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        .status-badge.cancelled {
+            background: #ff3b30;
+            color: white;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .order-detail-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+            flex-wrap: wrap;
+        }
+
+        .order-detail-actions .modal-action-btn {
+            flex: 0 1 auto;
+            min-width: 100px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .order-detail-actions .modal-action-btn:active {
+            transform: scale(0.97);
+        }
+
+        .modal-action-btn.pickup-btn {
+            background: #007aff;
+            color: white;
+        }
+        .modal-action-btn.pickup-btn:hover {
+            background: #005bbf;
+        }
+
+        .modal-action-btn.cancel-btn {
+            background: #ff3b30;
+            color: white;
+        }
+        .modal-action-btn.cancel-btn:hover {
+            background: #d63031;
+        }
+
+        .modal-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .pending-message {
+            background: #fff3e0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #e65100;
+            font-size: 14px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .waiting-message {
+            background: #fff8e1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #f57c00;
+            font-size: 14px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .picked-up-message {
+            background: #ffcc80;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #e65100;
+            font-size: 14px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .completed-message {
+            background: #e8f5e8;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #2e7d32;
+            font-size: 14px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .cancelled-message {
+            background: #ff3b30;
+            padding: 16px;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+        }
+
+        .collect-time-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            margin-top: 4px;
+            background: #fafafa;
+        }
+        .collect-time-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        /* ========== INVENTORY STYLES ========== */
+        .inventory-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        .inventory-form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .inventory-form-row .form-group {
+            flex: 1;
+            min-width: 120px;
+            margin-bottom: 0;
+        }
+        .inventory-form-row .form-input {
+            padding: 10px;
+            font-size: 14px;
+        }
+        .inventory-form-row .form-label {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .inventory-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .inventory-actions .save-btn {
+            flex: 1;
+            min-width: 100px;
+            margin-top: 0;
+            font-size: 14px;
+            padding: 12px;
+        }
+        .inventory-actions .secondary-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 100px;
+        }
+        .inventory-actions .secondary-btn:active {
+            transform: scale(0.97);
+        }
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .toggle-group label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        .inventory-table-container {
+            margin-top: 16px;
+            overflow-x: auto;
+        }
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .inventory-table th {
+            background: #f0f2f5;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: 600;
+        }
+        .inventory-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .inventory-table td img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .inv-status-stock {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .inv-status-soldout {
+            background: #ffebee;
+            color: #c62828;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .inv-status-listed {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .inv-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .inv-actions button {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .inv-actions .export-btn {
+            background: #007aff;
+            color: white;
+        }
+        .inv-actions .export-btn:hover {
+            background: #005bbf;
+        }
+        .inv-actions .export-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .inv-actions .delete-btn {
+            background: #ff3b30;
+            color: white;
+        }
+        .inv-actions .delete-btn:hover {
+            background: #d63031;
+        }
+        .inv-actions .edit-inv-btn {
+            background: #ff9500;
+            color: white;
+        }
+        .inv-actions .edit-inv-btn:hover {
+            background: #e68900;
+        }
+        .listed-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: #0d47a1;
+            background: #e3f2fd;
+            padding: 2px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        @media (max-width: 380px) {
+            .order-detail-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .order-detail-actions .modal-action-btn {
+                min-width: 100px;
+                width: 100%;
+            }
+            .inventory-actions {
+                flex-direction: column;
+            }
+            .inventory-actions .save-btn,
+            .inventory-actions .secondary-btn {
+                width: 100%;
+            }
+        }
+
+        /* ========== INVITATION CODE CARD ========== */
+        .invite-code-card {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border: 2px solid #34c759;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.15);
+        }
+        .invite-code-card h4 {
+            color: #2e7d32;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+        .invite-code-card .sub {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        .invite-code-display {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            color: #1a1a1a;
+            font-family: monospace;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            display: inline-block;
+            border: 1px solid #a5d6a7;
+            min-width: 180px;
+        }
+        .invite-code-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .invite-code-actions button {
+            background: #34c759;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .invite-code-actions button:hover {
+            background: #2db14e;
+        }
+        .invite-code-actions button.secondary {
+            background: #667eea;
+        }
+        .invite-code-actions button.secondary:hover {
+            background: #5a6fd6;
+        }
+        .invite-code-actions button:active {
+            transform: scale(0.97);
+        }
+
+        /* ========== EDIT INVENTORY MODAL ========== */
+        .edit-inv-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            display: none;
+            padding: 20px;
+        }
+        .edit-inv-modal.show {
+            display: flex;
+        }
+        .edit-inv-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        .edit-inv-content h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .edit-inv-content .form-group {
+            margin-bottom: 12px;
+        }
+        .edit-inv-content .form-group label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .edit-inv-content .form-group input,
+        .edit-inv-content .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .edit-inv-content .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        .edit-inv-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .edit-inv-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .edit-inv-buttons .save {
+            background: #34c759;
+            color: white;
+        }
+        .edit-inv-buttons .cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        /* ========== ROLE PERMISSIONS STYLES ========== */
+        .role-box {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .role-permission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .role-permission-grid label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #444;
+            cursor: pointer;
+        }
+        .role-permission-grid input[type="checkbox"] {
+            accent-color: #667eea;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ========== DATA IMPORT/EXPORT STYLES ========== */
+        .data-section {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .data-section h4 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+        .data-section p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        .file-input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .file-input-wrapper input[type="file"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+        }
+        .template-btn {
+            background: #34c759;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        .template-btn:hover {
+            background: #2db14e;
+        }
+        .import-help {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #999;
+        }
+        .import-help strong {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <a href="#" id="backLink" class="back-link">←</a>
+            <h1>business settings</h1>
+            <button class="refresh-all-btn" onclick="refreshAll()">↻</button>
+        </div>
+
+        <div class="content">
+            <!-- Verification Banner -->
+            <div class="verification-banner" id="verificationBanner">
+                <div class="banner-icon" id="bannerIcon">⏳</div>
+                <div class="banner-content">
+                    <div class="banner-title" id="bannerTitle">Verification Pending</div>
+                    <div class="banner-text" id="bannerText">Complete verification to post ads</div>
+                </div>
+            </div>
+
+            <!-- Role Banner -->
+            <div class="role-banner" id="roleBanner">
+                <div class="role-icon" id="roleIcon">👑</div>
+                <div class="role-details">
+                    <div class="role-name" id="roleName">Business Owner</div>
+                    <div class="role-permissions" id="rolePermissions">Full access</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statAds">0</div>
+                    <div class="stat-label">active ads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statOrders">0</div>
+                    <div class="stat-label">pending orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statRevenue">$0</div>
+                    <div class="stat-label">total revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statCustomers">0</div>
+                    <div class="stat-label">customers</div>
+                </div>
+            </div>
+
+            <!-- Business Wallet -->
+            <div class="wallet-card" id="walletCard">
+                <div class="wallet-label">🏦 Business Wallet</div>
+                <div class="wallet-amount" id="availableBalance">$0.00</div>
+                <div class="wallet-small" id="pendingBalance">Pending: $0.00</div>
+                <div class="wallet-buttons">
+                    <button class="wallet-btn" onclick="refreshWallet()">↻ Refresh</button>
+                    <button class="wallet-btn" onclick="requestWithdraw()">💸 Withdraw (min $5)</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs" id="tabContainer">
+                <button class="tab" onclick="switchTab('profile')">profile</button>
+                <button class="tab" onclick="switchTab('employees')">employees</button>
+                <button class="tab" onclick="switchTab('orders')">orders</button>
+                <button class="tab" onclick="switchTab('inventory')">inventory</button>
+                <button class="tab" onclick="switchTab('lookup')">lookup</button>
+                <button class="tab" onclick="switchTab('verification')">verify</button>
+                <button class="tab" onclick="switchTab('notifications')">alerts</button>
+                <button class="tab" onclick="switchTab('data')">data</button>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profileTab">
+                <div class="form-group">
+                    <label class="form-label">business name</label>
+                    <input type="text" class="form-input" id="businessName" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">phone</label>
+                    <input type="tel" class="form-input" id="businessPhone" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">email</label>
+                    <input type="email" class="form-input" id="businessEmail" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">shop address <span style="color:#999;font-weight:400;">(shows on pickup details)</span></label>
+                    <input type="text" class="form-input" id="businessAddress" placeholder="123 Main St, Singapore" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">open time</label>
+                        <input type="time" class="form-input" id="businessOpen" value="09:00" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">close time</label>
+                        <input type="time" class="form-input" id="businessClose" value="21:00" />
+                    </div>
+                </div>
+                <button class="save-btn" id="saveProfileBtn" onclick="saveProfile()">save changes</button>
+            </div>
+
+            <!-- ========== EMPLOYEES & ROLES TAB ========== -->
+            <div class="tab-content" id="employeesTab">
+                
+                <!-- Invitation Code Card (TOP) -->
+                <div id="inviteCodeSection">
+                    <div class="invite-code-card">
+                        <h4>🔑 Business Invitation Code</h4>
+                        <div class="sub">Share this code with employees to join your business</div>
+                        <div class="invite-code-display" id="displayInviteCode">-----</div>
+                        <div class="invite-code-actions">
+                            <button onclick="copyInviteCode()">📋 Copy Code</button>
+                            <button class="secondary" onclick="generateInviteCode()">🔄 Generate New Code</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Approvals -->
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 14px; color: #e65100; margin-bottom: 12px;">⏳ Pending Approvals</h4>
+                    <div id="pendingEmployeesList">
+                        <div class="empty-state" style="padding: 20px;">No pending requests</div>
+                    </div>
+                </div>
+
+                <!-- Active Employees -->
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 14px; color: #1a1a1a; margin-bottom: 12px;">✅ Active Employees</h4>
+                    <div id="activeEmployeesList">
+                        <div class="empty-state" style="padding: 20px;">No active employees</div>
+                    </div>
+                </div>
+
+                <!-- Role Management -->
+                <div style="border-top: 2px solid #f0f0f0; padding-top: 20px; margin-top: 20px;">
+                    <h4 style="font-size: 14px; color: #1a1a1a; margin-bottom: 12px;">⚙️ Manage Custom Roles</h4>
+                    
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                        <input type="text" class="form-input" id="newRoleName" placeholder="e.g. Floor Manager" style="margin-bottom: 12px;">
+                        <div class="role-permission-grid" id="rolePermissionsGrid">
+                            <label><input type="checkbox" value="can_post_ads"> 📢 Post Ads</label>
+                            <label><input type="checkbox" value="can_edit_inventory"> 📦 Edit Inventory</label>
+                            <label><input type="checkbox" value="can_read_inventory"> 👀 Read Inventory</label>
+                            <label><input type="checkbox" value="can_edit_profile"> ✏️ Edit Profile</label>
+                            <label><input type="checkbox" value="can_manage_employees"> 👥 Manage Employees</label>
+                            <label><input type="checkbox" value="can_approve_members"> ✅ Approve Members</label>
+                            <label><input type="checkbox" value="can_view_orders"> 📦 View Orders</label>
+                        </div>
+                        <button class="save-btn" onclick="createRole()" style="margin-top: 12px; padding: 12px;">➕ Create New Role</button>
+                    </div>
+
+                    <div id="existingRolesList">
+                        <!-- Existing roles loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div class="tab-content" id="ordersTab">
+                <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span>📦 incoming orders</span>
+                    <button class="refresh-btn" onclick="loadOrders()">↻</button>
+                </div>
+                <div id="orderBulkActions" style="display:none;">
+                    <div class="bulk-actions">
+                        <button class="select-all-btn" id="selectAllBtn" onclick="toggleSelectAllOrders()">☐ Select All</button>
+                        <span class="selected-count" id="selectedOrdersCount">0 selected</span>
+                        <button class="bulk-confirm-btn" id="bulkConfirmBtn" onclick="confirmSelectedOrders()" disabled>✓ Confirm Selected</button>
+                    </div>
+                </div>
+                <div id="ordersList"><div class="empty-state">📦 loading orders...</div></div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-content" id="inventoryTab">
+                <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span>Stock Ledger (Inventory)</span>
+                    <button class="refresh-btn" onclick="loadInventory()">↻</button>
+                </div>
+
+                <div class="inventory-controls" id="inventoryForm">
+                    <div class="inventory-form-row">
+                        <div class="form-group">
+                            <label class="form-label">Item Name</label>
+                            <input type="text" class="form-input" id="invName" placeholder="e.g. Organic Milk">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Batch #</label>
+                            <input type="text" class="form-input" id="invBatch" placeholder="BATCH-001">
+                        </div>
+                    </div>
+                    <div class="inventory-form-row">
+                        <div class="form-group">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-input" id="invExpiry">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-input" id="invCategory">
+                                <option value="dairy">🥛 Dairy</option>
+                                <option value="produce">🥬 Produce</option>
+                                <option value="meat">🥩 Meat</option>
+                                <option value="bakery">🥖 Bakery</option>
+                                <option value="pantry">📦 Pantry</option>
+                                <option value="frozen">❄️ Frozen</option>
+                                <option value="other">📌 Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="inventory-form-row">
+                        <div class="form-group">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-input" id="invQty" value="1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Original Price ($)</label>
+                            <input type="number" class="form-input" id="invPrice" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="inventory-form-row">
+                        <div class="form-group">
+                            <label class="form-label">Sale Price ($) <span style="font-weight:400;color:#999;">(leave 0 if not on sale)</span></label>
+                            <input type="number" class="form-input" id="invSalePrice" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image</label>
+                            <input type="file" id="invImageInput" accept="image/*" style="padding:8px;font-size:12px;">
+                        </div>
+                    </div>
+                    <div class="toggle-group">
+                        <label><input type="checkbox" id="invOnSale"> On Sale (using Sale Price)</label>
+                    </div>
+                    <div class="inventory-actions">
+                        <button class="save-btn" onclick="addInventoryItem()">➕ Add to Inventory</button>
+                        <button class="secondary-btn" onclick="importFromAds()">📥 Import from Ads</button>
+                    </div>
+                </div>
+
+                <div class="inventory-table-container">
+                    <table class="inventory-table" id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
+                                <th>Available</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryBody">
+                            <tr><td colspan="7" class="empty-state">Loading inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lookup Tab -->
+            <div class="tab-content" id="lookupTab">
+                <div style="margin-bottom:16px;">
+                    <p style="font-size:13px; color:#666; margin-bottom:12px;">
+                        Search by customer name or order ID.
+                        <strong>Click any result</strong> to view details and manage pickup.
+                    </p>
+                    <div class="search-box">
+                        <input type="text" id="lookupInput" placeholder="Customer name or order ID..." onkeydown="if(event.key==='Enter') performLookup()" />
+                        <button onclick="performLookup()">🔍 Search</button>
+                    </div>
+                </div>
+                <div id="lookupResults">
+                    <div class="empty-state">🔍 Enter a name or order ID to search</div>
+                </div>
+            </div>
+
+            <!-- Verification Tab -->
+            <div class="tab-content" id="verificationTab">
+                <div class="form-group">
+                    <label class="form-label">tax ID / license</label>
+                    <input type="text" class="form-input" id="taxId" placeholder="enter tax ID or license number" />
+                </div>
+                <button class="save-btn" onclick="submitVerification()" id="verifyBtn">submit for verification</button>
+                <p style="font-size:12px; color:#999; text-align:center; margin-top:12px;">Once verified, you can post ads</p>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div class="tab-content" id="notificationsTab">
+                <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span>🔔 notifications</span>
+                    <button class="refresh-btn" onclick="loadNotifications()">↻</button>
+                </div>
+                <div class="notifications-list" id="notificationsList">
+                    <div class="loading"><div class="loading-spinner"></div>loading notifications...</div>
+                </div>
+            </div>
+
+            <!-- Data Tab -->
+            <div class="tab-content" id="dataTab">
+                <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span>📊 Data Import / Export</span>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📤 Export Data</h4>
+                    <p>Download your data as Excel (.xlsx) files for analysis or backup.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <button class="save-btn" onclick="exportOrders()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Orders</button>
+                        <button class="save-btn" onclick="exportInventory()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Inventory</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button class="save-btn" onclick="exportEmployees()" style="padding: 12px; font-size: 14px; margin-top: 0;">👥 Export Employees</button>
+                        <button class="save-btn" onclick="exportAllData()" style="padding: 12px; font-size: 14px; margin-top: 0; background: #667eea;">📊 Export All</button>
+                    </div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📥 Import Data</h4>
+                    <p>Upload Excel (.xlsx) files to import data into your database.</p>
+                    
+                    <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Import Inventory (Excel)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="inventoryImportFile" accept=".xlsx,.xls">
+                            <button onclick="importInventoryFromExcel()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit;">Import</button>
+                            <button class="template-btn" onclick="downloadTemplate('inventory')">📄 Template</button>
+                        </div>
+                        <div class="import-help">
+                            Required columns: <strong>Item Name</strong>, <strong>Quantity</strong>. Optional: Batch Number, Expiry Date, Original Price, Sale Price, Category, On Sale
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav (Replaced Orders with Inventory) -->
+        <div class="bottom-nav">
+            <a href="index.html" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
+            <a href="advertise.html" class="nav-item"><span class="nav-emoji">📢</span><span>ads</span></a>
+            <a href="inventory.html" class="nav-item"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="business-profile.html?tab=profile" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
+        </div>
+    </div>
+
+    <!-- ========== ORDER DETAIL MODAL ========== -->
+    <div class="order-detail-modal" id="orderDetailModal">
+        <div class="order-detail-content">
+            <div class="order-detail-header">
+                <span class="order-detail-title">📋 Order Details</span>
+                <button class="order-detail-close" onclick="closeOrderDetailModal()">✕</button>
+            </div>
+            <div id="orderDetailBody">
+                <!-- populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== EDIT INVENTORY MODAL ========== -->
+    <div class="edit-inv-modal" id="editInventoryModal">
+        <div class="edit-inv-content">
+            <h3>✏️ Edit Inventory Item</h3>
+            <input type="hidden" id="editInvId">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="editInvName" placeholder="Item name">
+            </div>
+            <div class="form-group">
+                <label>Batch Number</label>
+                <input type="text" id="editInvBatch" placeholder="Batch #">
+            </div>
+            <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="date" id="editInvExpiry">
+            </div>
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="editInvQty" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Original Price ($)</label>
+                <input type="number" id="editInvPrice" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Sale Price ($)</label>
+                <input type="number" id="editInvSalePrice" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="editInvCategory">
+                    <option value="dairy">🥛 Dairy</option>
+                    <option value="produce">🥬 Produce</option>
+                    <option value="meat">🥩 Meat</option>
+                    <option value="bakery">🥖 Bakery</option>
+                    <option value="pantry">📦 Pantry</option>
+                    <option value="frozen">❄️ Frozen</option>
+                    <option value="other">📌 Other</option>
+                </select>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="editInvOnSale">
+                <label style="margin:0;">On Sale (using Sale Price)</label>
+            </div>
+            <div class="edit-inv-buttons">
+                <button class="cancel" onclick="closeEditInventory()">Cancel</button>
+                <button class="save" onclick="saveEditInventory()">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <script src="https://npmcdn.com/parse/dist/parse.min.js">
+    </script>
+    <script src="backend.js">
+    </script>
+
+    <script>
+        // ===== GLOBAL VARIABLES =====
+        let currentPermissions = {};
+        let isOwner = false;
+        let isManager = false;
+        let isEmployee = false;
+        let businessId = null; // This holds the owner's ID for employees, or the user's own ID for owners
+
+        let pickupConfirmMap = loadPickupMap();
+        let businessRole = 'staff';
+        let isVerified = false;
+        let currentUser = null;
+        let activeTab = 'profile';
+        let allOrdersCache = [];
+        let selectedOrderIds = new Set();
+        let currentDetailOrderId = null;
+
+        // ===== PERSISTENCE HELPERS =====
+        function loadPickupMap() {
+            try {
+                const raw = localStorage.getItem('businessPickupConfirmMap');
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) { return {}; }
+        }
+
+        function savePickupMap(map) {
+            localStorage.setItem('businessPickupConfirmMap', JSON.stringify(map));
+        }
+
+        function calcPendingFromOrders(orders) {
+            let total = 0;
+            for (const order of orders) {
+                if (order.status === 'confirmed_by_business') total += (order.totalAmount || 0);
+            }
+            return total;
+        }
+
+        function countPendingOrders(orders) {
+            return orders.filter(o => o.status === 'confirmed_by_business').length;
+        }
+
+        function updatePendingDisplay() {
+            const pending = calcPendingFromOrders(allOrdersCache);
+            document.getElementById('pendingBalance').textContent = `Pending: $${pending.toFixed(2)}`;
+        }
+
+        function updateNavActive(tabName) {
+            const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            const map = {
+                'orders': 2,
+                'profile': 3,
+                'employees': 3,
+                'inventory': 3,
+                'lookup': 3,
+                'verification': 3,
+                'notifications': 3,
+                'data': 3
+            };
+            const idx = map[tabName] !== undefined ? map[tabName] : 3;
+            if (navItems[idx]) navItems[idx].classList.add('active');
+        }
+
+        // ===== DOMContentLoaded =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+
+            // --- Resolve business ID ---
+            // For employees: user.get('businessId') is the owner's ID
+            // For owners: it's null, so we use the user's own ID
+            businessId = user.get('businessId') || user.id;
+            console.log('🔍 Business ID resolved to:', businessId);
+
+            // --- Check permissions ---
+            currentPermissions = await Backend.getEmployeePermissions(user.id);
+            if (currentPermissions.isOwner) {
+                isOwner = true;
+            } else if (user.get('businessRole') === 'manager') {
+                isManager = true;
+            } else if (!currentPermissions.isPending) {
+                isEmployee = true;
+            }
+
+            // --- Set back link ---
+            if (isEmployee || isManager) {
+                document.getElementById('backLink').href = 'employee-settings.html';
+            } else {
+                document.getElementById('backLink').href = 'index.html';
+            }
+
+            // --- Hide tabs/features for employees ---
+            if (isEmployee) {
+                document.getElementById('employeesTab').style.display = 'none';
+                document.getElementById('verificationTab').style.display = 'none';
+                document.getElementById('dataTab').style.display = 'none';
+                // Hide tab buttons (0:profile,1:employees,2:orders,3:inventory,4:lookup,5:verify,6:alerts,7:data)
+                document.querySelectorAll('.tab')[1].style.display = 'none';
+                document.querySelectorAll('.tab')[5].style.display = 'none';
+                document.querySelectorAll('.tab')[7].style.display = 'none';
+                document.getElementById('walletCard').style.display = 'none';
+                document.querySelector('.stats-grid').style.display = 'none';
+                document.getElementById('roleBanner').style.display = 'none';
+                document.getElementById('saveProfileBtn').style.display = 'none';
+                document.querySelectorAll('#profileTab .form-input').forEach(input => {
+                    input.disabled = true;
+                });
+            }
+            if (isManager && !isOwner) {
+                document.getElementById('employeesTab').style.display = 'none';
+                document.getElementById('verificationTab').style.display = 'none';
+                document.querySelectorAll('.tab')[1].style.display = 'none';
+                document.querySelectorAll('.tab')[5].style.display = 'none';
+            }
+
+            // --- Set UI ---
+            businessRole = localStorage.getItem('businessRole') || 'owner';
+            isVerified = localStorage.getItem('businessVerified') === 'true';
+            updateRoleUI();
+            updateVerificationUI();
+
+            // --- Load all data (businessId is now guaranteed) ---
+            await loadBusinessData();
+            await loadEmployeesAndRoles();
+            await loadOrders();
+            await loadNotifications();
+            await loadStats();
+            await refreshWallet();
+            await loadInventory();
+
+            // --- Handle tab from URL ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam && ['profile','employees','orders','inventory','lookup','verification','notifications','data'].includes(tabParam)) {
+                switchTab(tabParam);
+            } else {
+                switchTab('profile');
+            }
+        });
+
+        // ===== UI UPDATE FUNCTIONS =====
+        function updateRoleUI() {
+            if (businessRole === 'owner') {
+                document.getElementById('roleIcon').textContent = '👑';
+                document.getElementById('roleName').textContent = 'Business Owner';
+                document.getElementById('rolePermissions').textContent = 'Full access';
+            } else if (businessRole === 'manager') {
+                document.getElementById('roleIcon').textContent = '⭐';
+                document.getElementById('roleName').textContent = 'Manager';
+                document.getElementById('rolePermissions').textContent = 'Limited access';
+            } else {
+                document.getElementById('roleIcon').textContent = '👤';
+                document.getElementById('roleName').textContent = 'Employee';
+                document.getElementById('rolePermissions').textContent = 'Limited access';
+            }
+        }
+
+        function updateVerificationUI() {
+            const banner = document.getElementById('verificationBanner');
+            if (isVerified) {
+                banner.className = 'verification-banner banner-verified';
+                document.getElementById('bannerIcon').textContent = '✅';
+                document.getElementById('bannerTitle').textContent = 'Verified Business';
+                document.getElementById('bannerText').textContent = 'You can post ads';
+                document.getElementById('verifyBtn').disabled = true;
+            } else {
+                banner.className = 'verification-banner';
+                document.getElementById('bannerIcon').textContent = '⏳';
+                document.getElementById('bannerTitle').textContent = 'Verification Pending';
+                document.getElementById('bannerText').textContent = 'Complete verification to post ads';
+                document.getElementById('verifyBtn').disabled = false;
+            }
+        }
+
+        // ===== REFRESH =====
+        async function refreshAll() {
+            await loadBusinessData();
+            await loadEmployeesAndRoles();
+            await loadOrders();
+            await loadNotifications();
+            await loadStats();
+            await refreshWallet();
+            await loadInventory();
+            showStatus('All data refreshed!', 'success');
+        }
+
+        // ===== BUSINESS DATA =====
+        async function loadBusinessData() {
+            try {
+                const user = Backend.getCurrentUser();
+                document.getElementById('businessName').value = user.get('businessName') || '';
+                document.getElementById('businessPhone').value = user.get('businessPhone') || '';
+                document.getElementById('businessEmail').value = user.get('businessEmail') || '';
+                document.getElementById('businessAddress').value = user.get('businessAddress') || '';
+                document.getElementById('businessOpen').value = user.get('businessOpen') || '09:00';
+                document.getElementById('businessClose').value = user.get('businessClose') || '21:00';
+                document.getElementById('taxId').value = user.get('businessTaxId') || '';
+            } catch (error) {
+                showStatus('Error loading business data', 'error');
+            }
+        }
+
+        async function saveProfile() {
+            if (isEmployee) {
+                showStatus('Employees cannot edit profile', 'error');
+                return;
+            }
+            const updates = {
+                businessName: document.getElementById('businessName').value,
+                businessPhone: document.getElementById('businessPhone').value,
+                businessEmail: document.getElementById('businessEmail').value,
+                businessAddress: document.getElementById('businessAddress').value,
+                businessOpen: document.getElementById('businessOpen').value,
+                businessClose: document.getElementById('businessClose').value
+            };
+            const result = await Backend.updateBusinessProfile(updates);
+            if (result.success) {
+                showStatus('Profile updated', 'success');
+                localStorage.setItem('businessName', updates.businessName);
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        // ===== WALLET =====
+        async function refreshWallet() {
+            try {
+                const balance = await Backend.getBusinessWalletBalance(businessId);
+                document.getElementById('availableBalance').textContent = `$${balance.available.toFixed(2)}`;
+                updatePendingDisplay();
+            } catch (error) {
+                document.getElementById('availableBalance').textContent = '$0.00';
+                document.getElementById('pendingBalance').textContent = 'Pending: $0.00';
+            }
+        }
+
+        async function requestWithdraw() {
+            const balance = await Backend.getBusinessWalletBalance(businessId);
+            if (balance.available < 5) { showStatus(`Minimum withdrawal $5. Available: $${balance.available.toFixed(2)}`, 'error'); return; }
+            const amount = prompt(`Enter amount to withdraw (min $5, max $${balance.available.toFixed(2)})`, '5');
+            if (!amount) return;
+            const withdrawAmount = parseFloat(amount);
+            if (isNaN(withdrawAmount) || withdrawAmount < 5 || withdrawAmount > balance.available) { showStatus('Invalid amount', 'error'); return; }
+            const result = await Backend.requestWithdrawal(businessId, withdrawAmount);
+            if (result.success) { showStatus(result.message, 'success'); await refreshWallet(); await loadStats(); } 
+            else { showStatus(result.message, 'error'); }
+        }
+
+        // ===== EMPLOYEES & ROLES =====
+        async function loadEmployeesAndRoles() {
+            await loadEmployees();
+            await loadRoles();
+        }
+
+        async function loadEmployees() {
+            const pendingContainer = document.getElementById('pendingEmployeesList');
+            const activeContainer = document.getElementById('activeEmployeesList');
+            try {
+                const employees = await Backend.getStaffList();
+                const roles = await Backend.getRoles(currentUser.id);
+
+                const pending = employees.filter(e => (e.role || '').toLowerCase() === 'pending');
+                if (pending.length === 0) {
+                    pendingContainer.innerHTML = '<div class="empty-state" style="padding:20px;">No pending requests</div>';
+                } else {
+                    pendingContainer.innerHTML = pending.map(emp => `
+                        <div class="employee-item">
+                            <div class="employee-avatar">👤</div>
+                            <div class="employee-details">
+                                <div class="employee-name">${escapeHtml(emp.username)}</div>
+                                <span class="employee-role pending">pending approval</span>
+                            </div>
+                            <div class="employee-actions">
+                                <button class="emp-action-btn approve" onclick="approveEmployee('${emp.id}')">✅ Approve</button>
+                                <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">✗ Deny</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                const active = employees.filter(e => {
+                    const role = (e.role || '').toLowerCase();
+                    return role !== 'pending' && role !== 'owner' && role !== '';
+                });
+                if (active.length === 0) {
+                    activeContainer.innerHTML = '<div class="empty-state" style="padding:20px;">No active employees</div>';
+                } else {
+                    activeContainer.innerHTML = active.map(emp => {
+                        const roleItems = roles.length > 0
+                            ? roles.map(r => `<div class="role-dropdown-item" onclick="event.stopPropagation(); setEmployeeRoleDirect('${emp.id}', '${escapeHtml(r.name)}')">${escapeHtml(r.name)}</div>`).join('')
+                            : '<div class="role-dropdown-item" style="color:#999;">No custom roles</div>';
+                        return `
+                        <div class="employee-item">
+                            <div class="employee-avatar">👤</div>
+                            <div class="employee-details">
+                                <div class="employee-name">${escapeHtml(emp.username)}</div>
+                                <span class="employee-role ${emp.role}">${emp.role}</span>
+                            </div>
+                            <div class="employee-actions">
+                                <div class="role-assign-wrapper">
+                                    <button class="emp-action-btn assign" onclick="toggleRoleDropdown(event, '${emp.id}')">🎯 Assign Role</button>
+                                    <div class="role-dropdown-menu" id="roleDropdown_${emp.id}">
+                                        ${roleItems}
+                                    </div>
+                                </div>
+                                <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">🗑️ Remove</button>
+                            </div>
+                        </div>
+                    `}).join('');
+                }
+
+                const user = Backend.getCurrentUser();
+                let inviteCode = user ? user.get('invitationCode') : null;
+                if (!inviteCode) {
+                    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+                    if (user) {
+                        user.set('invitationCode', newCode);
+                        await user.save();
+                        inviteCode = newCode;
+                    }
+                }
+                document.getElementById('displayInviteCode').textContent = inviteCode || '-----';
+
+            } catch (error) {
+                pendingContainer.innerHTML = '<div class="empty-state" style="padding:20px;color:#ff3b30;">Error loading employees</div>';
+                activeContainer.innerHTML = '';
+            }
+        }
+
+        function toggleRoleDropdown(event, empId) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(`roleDropdown_${empId}`);
+            if (dropdown) {
+                document.querySelectorAll('.role-dropdown-menu.show').forEach(d => {
+                    if (d !== dropdown) d.classList.remove('show');
+                });
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        async function setEmployeeRoleDirect(employeeId, roleName) {
+            document.querySelectorAll('.role-dropdown-menu.show').forEach(d => d.classList.remove('show'));
+            if (!confirm(`Assign role "${roleName}" to this employee?`)) return;
+            const result = await Backend.assignRoleToEmployee(employeeId, roleName);
+            if (result.success) {
+                showStatus(`Role "${roleName}" assigned!`, 'success');
+                await loadEmployees();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.role-assign-wrapper')) {
+                document.querySelectorAll('.role-dropdown-menu.show').forEach(d => d.classList.remove('show'));
+            }
+        });
+
+        function copyInviteCode() {
+            const code = document.getElementById('displayInviteCode').textContent;
+            if (code === 'Not set' || code === '-----') {
+                showStatus('No invitation code available.', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(code).then(() => {
+                showStatus('✅ Invitation code copied!', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showStatus('✅ Invitation code copied!', 'success');
+            });
+        }
+
+        async function generateInviteCode() {
+            if (!confirm('Generate a new invitation code? The old one will be replaced.')) return;
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            try {
+                const user = Backend.getCurrentUser();
+                if (!user) { showStatus('Please login first', 'error'); return; }
+                user.set('invitationCode', newCode);
+                await user.save();
+                document.getElementById('displayInviteCode').textContent = newCode;
+                showStatus('✅ New invitation code generated!', 'success');
+            } catch (error) {
+                showStatus('Failed to generate code: ' + error.message, 'error');
+            }
+        }
+
+        async function approveEmployee(employeeId) {
+            if (!confirm('Approve this employee?')) return;
+            const result = await Backend.assignRoleToEmployee(employeeId, 'staff');
+            if (result.success) {
+                showStatus('Employee approved!', 'success');
+                await loadEmployees();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        async function removeEmployee(employeeId) {
+            if (!confirm('Remove this employee?')) return;
+            const result = await Backend.removeStaffMember(employeeId);
+            if (result.success) {
+                showStatus('Employee removed', 'success');
+                await loadEmployees();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        async function loadRoles() {
+            const container = document.getElementById('existingRolesList');
+            const roles = await Backend.getRoles(currentUser.id);
+            if (roles.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;">No custom roles created yet.</div>';
+                return;
+            }
+            container.innerHTML = roles.map(role => `
+                <div class="role-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong>${escapeHtml(role.name)}</strong>
+                        <button class="emp-action-btn revoke" onclick="deleteRole('${role.id}')" style="font-size:11px;">🗑️ Delete</button>
+                    </div>
+                    <div style="font-size:11px; color:#666;">Permissions: ${Object.keys(role.permissions).filter(k => role.permissions[k]).join(', ') || 'None'}</div>
+                </div>
+            `).join('');
+        }
+
+        async function createRole() {
+            const name = document.getElementById('newRoleName').value.trim();
+            if (!name) { showStatus('Please enter a role name', 'error'); return; }
+            
+            const checkboxes = document.querySelectorAll('#rolePermissionsGrid input[type="checkbox"]');
+            const permissions = {};
+            checkboxes.forEach(cb => { permissions[cb.value] = cb.checked; });
+
+            const result = await Backend.createRole(currentUser.id, name, permissions);
+            if (result.success) {
+                showStatus(`Role "${name}" created!`, 'success');
+                document.getElementById('newRoleName').value = '';
+                checkboxes.forEach(cb => cb.checked = false);
+                await loadRoles();
+                await loadEmployees();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        async function deleteRole(roleId) {
+            if (!confirm('Delete this role?')) return;
+            const result = await Backend.deleteRole(roleId);
+            if (result.success) {
+                showStatus('Role deleted', 'success');
+                await loadRoles();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        // ===== ORDERS =====
+        async function loadOrders() {
+            const container = document.getElementById('ordersList');
+            const bulkActionsDiv = document.getElementById('orderBulkActions');
+            try {
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                orders.forEach(order => {
+                    if (pickupConfirmMap[order.id] !== undefined) {
+                        order.businessPickupConfirmed = pickupConfirmMap[order.id];
+                    } else {
+                        order.businessPickupConfirmed = false;
+                    }
+                });
+                allOrdersCache = orders;
+                updatePendingDisplay();
+                selectedOrderIds.clear();
+                if (orders.length === 0) {
+                    container.innerHTML = '<div class="empty-state">📦 No orders yet</div>';
+                    bulkActionsDiv.style.display = 'none';
+                    return;
+                }
+                const pendingOrders = orders.filter(o => o.status === 'pending');
+                if (pendingOrders.length > 0) {
+                    bulkActionsDiv.style.display = 'block';
+                } else {
+                    bulkActionsDiv.style.display = 'none';
+                }
+                container.innerHTML = orders.map((order, i) => {
+                    let statusClass = '', statusText = '', actionHtml = '', orderItemClass = '', checkboxHtml = '';
+                    if (order.status === 'pending') {
+                        statusClass = 'status-pending'; statusText = 'pending confirmation'; orderItemClass = 'pending';
+                        checkboxHtml = `<input type="checkbox" class="order-checkbox" data-order-id="${order.id}" onchange="handleOrderCheckbox(this)">`;
+                        const defaultTime = new Date();
+                        defaultTime.setHours(defaultTime.getHours() + 2);
+                        const defaultTimeStr = defaultTime.toISOString().slice(0, 16);
+                        actionHtml = `
+                                <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                                    <input type="datetime-local" id="collectTime_${order.id}" value="${defaultTimeStr}" style="padding:4px 8px; border-radius:8px; border:1px solid #ddd; font-size:11px; font-family:inherit;">
+                                    <button class="action-btn" onclick="event.stopPropagation(); confirmSingleOrder('${order.id}')">✓ Confirm</button>
+                                </div>
+                            `;
+                    } else if (order.status === 'confirmed_by_business') {
+                        if (order.businessPickupConfirmed) {
+                            statusClass = 'status-picked-up'; statusText = 'Picked up - awaiting customer'; orderItemClass = 'picked-up';
+                            actionHtml = `<span class="waiting-text" style="color:#e65100;">⏳ Waiting for customer</span>`;
+                        } else {
+                            statusClass = 'status-waiting'; statusText = 'Awaiting customer pickup'; orderItemClass = 'waiting';
+                            actionHtml = `<span class="waiting-text" style="color:#f57c00;">⏳ Awaiting customer</span>`;
+                        }
+                    } else if (order.status === 'collected_by_customer') {
+                        statusClass = 'status-completed'; statusText = 'completed'; orderItemClass = 'completed';
+                        actionHtml = `<span class="waiting-text" style="color:#007aff;">✅ Payment released</span>`;
+                    } else if (order.status === 'cancelled') {
+                        statusClass = 'status-cancelled'; statusText = 'cancelled'; orderItemClass = 'cancelled';
+                        actionHtml = ``;
+                    } else {
+                        statusClass = 'status-pending'; statusText = order.status;
+                    }
+                    return `
+                            <div class="order-item ${orderItemClass}" style="animation-delay:${i*0.08}s;">
+                                ${checkboxHtml}
+                                <div class="order-content">
+                                    <div class="order-header">
+                                        <span class="order-id">${escapeHtml(order.consumerName)}</span>
+                                        <span class="order-status ${statusClass}">${statusText}</span>
+                                    </div>
+                                    <div class="order-details">
+                                        🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}
+                                        ${order.batchNumber ? `<span style="font-family:monospace; font-size:10px; background:#f0f0f0; padding:2px 6px; border-radius:4px; margin-left:6px;">📦 batch: ${escapeHtml(order.batchNumber)}</span>` : ''}
+                                    </div>
+                                    <div class="order-total">$${(order.totalAmount || 0).toFixed(2)}</div>
+                                    <div class="order-date">${new Date(order.createdAt).toLocaleString()}</div>
+                                </div>
+                                <div class="order-right">${actionHtml}</div>
+                            </div>
+                        `;
+                }).join('');
+                updateOrderSelectionUI();
+                await loadStats();
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Error loading orders</div>';
+                bulkActionsDiv.style.display = 'none';
+            }
+        }
+
+        function handleOrderCheckbox(checkbox) {
+            const orderId = checkbox.getAttribute('data-order-id');
+            if (checkbox.checked) selectedOrderIds.add(orderId);
+            else selectedOrderIds.delete(orderId);
+            updateOrderSelectionUI();
+        }
+
+        function updateOrderSelectionUI() {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const bulkConfirmBtn = document.getElementById('bulkConfirmBtn');
+            const selectedCountEl = document.getElementById('selectedOrdersCount');
+            const count = selectedOrderIds.size;
+            selectedCountEl.textContent = `${count} selected`;
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            const totalPending = checkboxes.length;
+            checkboxes.forEach(cb => {
+                const oid = cb.getAttribute('data-order-id');
+                cb.checked = selectedOrderIds.has(oid);
+            });
+            if (totalPending > 0 && count === totalPending) {
+                selectAllBtn.textContent = '☑ Deselect All';
+            } else {
+                selectAllBtn.textContent = '☐ Select All';
+            }
+            bulkConfirmBtn.disabled = (count === 0);
+        }
+
+        function toggleSelectAllOrders() {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            if (selectedOrderIds.size === checkboxes.length) {
+                selectedOrderIds.clear();
+            } else {
+                checkboxes.forEach(cb => { selectedOrderIds.add(cb.getAttribute('data-order-id')); });
+            }
+            updateOrderSelectionUI();
+        }
+
+        async function confirmSingleOrder(orderId) {
+            const collectTimeInput = document.getElementById(`collectTime_${orderId}`);
+            const collectByTime = collectTimeInput ? collectTimeInput.value : null;
+            if (!collectByTime) { showStatus('Please select a pickup time', 'error'); return; }
+            if (!confirm('Confirm this order? The customer will be notified of the pickup time.')) return;
+            const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
+            if (result.success) {
+                pickupConfirmMap[orderId] = false;
+                savePickupMap(pickupConfirmMap);
+                showStatus('Order confirmed! Waiting for customer to pick up.', 'success');
+                await loadOrders(); await loadStats(); await refreshWallet();
+            } else {
+                showStatus(result.message, 'error');
+            }
+        }
+
+        async function confirmSelectedOrders() {
+            if (selectedOrderIds.size === 0) { showStatus('No orders selected', 'error'); return; }
+            if (!confirm(`Confirm ${selectedOrderIds.size} order(s)?`)) return;
+            const bulkBtn = document.getElementById('bulkConfirmBtn');
+            bulkBtn.disabled = true; bulkBtn.textContent = '⏳ Confirming...';
+            let success = 0, error = 0;
+            const defaultTime = new Date(); defaultTime.setHours(defaultTime.getHours() + 2);
+            const collectByTime = defaultTime.toISOString();
+            for (const orderId of Array.from(selectedOrderIds)) {
+                const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
+                if (result.success) {
+                    pickupConfirmMap[orderId] = false; success++;
+                } else error++;
+            }
+            selectedOrderIds.clear(); savePickupMap(pickupConfirmMap);
+            if (error === 0) showStatus(`✅ ${success} order(s) confirmed!`, 'success');
+            else showStatus(`⚠️ ${success} confirmed, ${error} failed.`, 'error');
+            await loadOrders(); await loadStats(); await refreshWallet();
+            bulkBtn.textContent = '✓ Confirm Selected';
+        }
+
+        // ===== NOTIFICATIONS =====
+        async function loadNotifications() {
+            const container = document.getElementById('notificationsList');
+            try {
+                const notifications = await Backend.getNotifications(currentUser.id);
+                if (notifications.length === 0) { container.innerHTML = '<div class="empty-state">🔔 No notifications</div>'; return; }
+                container.innerHTML = notifications.map(n => `
+                        <div class="notification-item ${!n.read ? 'unread' : ''}" onclick="markRead('${n.id}')">
+                            <div class="notification-message">${escapeHtml(n.message)}</div>
+                            <div class="notification-time">${new Date(n.createdAt).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+            } catch (error) { container.innerHTML = '<div class="empty-state">Error loading notifications</div>'; }
+        }
+
+        async function markRead(notificationId) {
+            await Backend.markNotificationRead(notificationId);
+            await loadNotifications();
+        }
+
+        // ===== STATS =====
+        async function loadStats() {
+            try {
+                const ads = await Backend.getShopAds(businessId);
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                const activeAds = ads.filter(a => a.active).length;
+                const pendingOrders = countPendingOrders(orders);
+                const uniqueCustomers = [...new Set(orders.map(o => o.consumerId))].length;
+                const completedOrders = orders.filter(o => o.status === 'collected_by_customer');
+                const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                document.getElementById('statAds').textContent = activeAds;
+                document.getElementById('statOrders').textContent = pendingOrders;
+                document.getElementById('statCustomers').textContent = uniqueCustomers;
+                document.getElementById('statRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            } catch (error) {}
+        }
+
+        // ===== VERIFICATION =====
+        async function submitVerification() {
+            if (businessRole !== 'owner') { showStatus('Only owners can verify', 'error'); return; }
+            const taxId = document.getElementById('taxId').value.trim();
+            if (!taxId) { showStatus('Enter tax ID', 'error'); return; }
+            const result = await Backend.submitVerification();
+            if (result.success) { showStatus('Business verified!', 'success'); isVerified = true; updateVerificationUI(); localStorage.setItem('businessVerified', 'true'); } 
+            else { showStatus(result.message, 'error'); }
+        }
+
+        // ===== TAB SWITCHING =====
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const tabs = document.querySelectorAll('.tab');
+            const tabMap = { profile: 0, employees: 1, orders: 2, inventory: 3, lookup: 4, verification: 5, notifications: 6, data: 7 };
+            if (tabs[tabMap[tabName]]) tabs[tabMap[tabName]].classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+            updateNavActive(tabName);
+        }
+
+        // ===== INVENTORY =====
+        function computeClaimedFromOrders(adMap, orders) {
+            const claimed = {};
+            for (const order of orders) {
+                if (order.status === 'collected_by_customer' || order.status === 'confirmed_by_business') {
+                    const adId = order.adId;
+                    if (!adId) continue;
+                    const invId = adMap[adId];
+                    if (!invId) continue;
+                    const qty = order.quantity || 1;
+                    if (!claimed[invId]) claimed[invId] = 0;
+                    claimed[invId] += qty;
+                }
+            }
+            return claimed;
+        }
+
+        async function loadInventory() {
+            const tbody = document.getElementById('inventoryBody');
+            try {
+                const items = await Backend.loadInventoryItems(businessId);
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="padding:20px;">No inventory items found. Add your first item above!</td></tr>`;
+                    return;
+                }
+
+                const mapStr = localStorage.getItem('inventoryAdMap');
+                const adMap = mapStr ? JSON.parse(mapStr) : {};
+                const reverseMap = {};
+                for (const [adId, invId] of Object.entries(adMap)) {
+                    reverseMap[invId] = adId;
+                }
+
+                const orders = allOrdersCache.length > 0 ? allOrdersCache : await Backend.getOrdersForBusiness(businessId);
+                const claimedMap = computeClaimedFromOrders(adMap, orders);
+
+                tbody.innerHTML = items.map(item => {
+                    const claimed = claimedMap[item.id] || 0;
+                    const available = Math.max(0, (item.quantity || 0) - claimed);
+                    const isListed = !!reverseMap[item.id];
+
+                    let statusHtml = '';
+                    if (available <= 0) {
+                        statusHtml = `<span class="inv-status-soldout">Sold Out</span>`;
+                    } else {
+                        statusHtml = `<span class="inv-status-stock">In Stock</span>`;
+                    }
+
+                    let priceHtml = '';
+                    if (item.onSale && item.salePrice > 0) {
+                        priceHtml = `<span style="text-decoration:line-through;color:#999;">$${item.originalPrice ? item.originalPrice.toFixed(2) : '0.00'}</span> <span style="color:#34c759;">$${item.salePrice.toFixed(2)}</span>`;
+                    } else {
+                        priceHtml = `$${item.originalPrice ? item.originalPrice.toFixed(2) : '0.00'}`;
+                    }
+
+                    let actionsHtml = '';
+                    if (isListed) {
+                        actionsHtml = `<span class="listed-badge">✅ Listed</span>`;
+                    } else {
+                        actionsHtml = `
+                            <button class="edit-inv-btn" onclick="openEditInventory('${item.id}')">✏️</button>
+                            <button class="export-btn" onclick="exportToAd('${item.id}')">📢 Export</button>
+                            <button class="delete-btn" onclick="deleteInventoryItem('${item.id}')">🗑️</button>
+                        `;
+                    }
+
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(item.name)}</strong></td>
+                            <td>${item.batchNumber ? escapeHtml(item.batchNumber) : 'N/A'}</td>
+                            <td>${item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}</td>
+                            <td>${available}</td>
+                            <td>${priceHtml}</td>
+                            <td>${statusHtml}</td>
+                            <td>
+                                <div class="inv-actions">
+                                    ${actionsHtml}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="padding:20px;color:#ff3b30;">Error loading inventory. Refresh and try again.</td></tr>`;
+            }
+        }
+
+        async function addInventoryItem() {
+            const name = document.getElementById('invName').value.trim();
+            const batch = document.getElementById('invBatch').value.trim();
+            const expiry = document.getElementById('invExpiry').value;
+            const qty = parseInt(document.getElementById('invQty').value) || 0;
+            const price = parseFloat(document.getElementById('invPrice').value) || 0;
+            const salePrice = parseFloat(document.getElementById('invSalePrice').value) || 0;
+            const category = document.getElementById('invCategory').value;
+            const onSale = document.getElementById('invOnSale').checked;
+
+            if (!name) { showStatus('Please enter an item name', 'error'); return; }
+            if (qty <= 0) { showStatus('Quantity must be greater than 0', 'error'); return; }
+
+            const fileInput = document.getElementById('invImageInput');
+            let imageBase64 = null;
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) { showStatus('Image too large (max 5MB)', 'error'); return; }
+                imageBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            let currentItems = await Backend.loadInventoryItems(businessId) || [];
+            currentItems.push({
+                name,
+                batchNumber: batch,
+                expiryDate: expiry || null,
+                quantity: qty,
+                originalPrice: price,
+                salePrice: onSale ? salePrice : 0,
+                category,
+                onSale: onSale,
+                imageBase64: imageBase64,
+                businessId: businessId // Ensure the item is tied to the correct business
+            });
+
+            try {
+                const result = await Backend.saveInventoryItems(currentItems);
+                if (result.success) {
+                    showStatus(`✅ "${name}" added to inventory!`, 'success');
+                    document.getElementById('invName').value = ''; document.getElementById('invBatch').value = '';
+                    document.getElementById('invExpiry').value = ''; document.getElementById('invQty').value = '1';
+                    document.getElementById('invPrice').value = ''; document.getElementById('invSalePrice').value = '';
+                    document.getElementById('invOnSale').checked = false; document.getElementById('invImageInput').value = '';
+                    await loadInventory();
+                } else { showStatus('Failed to add item to inventory', 'error'); }
+            } catch (error) { showStatus('Error adding item to inventory', 'error'); }
+        }
+
+        function openEditInventory(itemId) {
+            Backend.loadInventoryItems(businessId).then(items => {
+                const item = items.find(i => i.id === itemId);
+                if (!item) { showStatus('Item not found', 'error'); return; }
+                document.getElementById('editInvId').value = itemId;
+                document.getElementById('editInvName').value = item.name || '';
+                document.getElementById('editInvBatch').value = item.batchNumber || '';
+                document.getElementById('editInvExpiry').value = item.expiryDate || '';
+                document.getElementById('editInvQty').value = item.quantity || 0;
+                document.getElementById('editInvPrice').value = item.originalPrice || 0;
+                document.getElementById('editInvSalePrice').value = item.salePrice || 0;
+                document.getElementById('editInvCategory').value = item.category || 'other';
+                document.getElementById('editInvOnSale').checked = item.onSale || false;
+                document.getElementById('editInventoryModal').classList.add('show');
+            }).catch(err => { showStatus('Error loading item: ' + err.message, 'error'); });
+        }
+
+        function closeEditInventory() {
+            document.getElementById('editInventoryModal').classList.remove('show');
+        }
+
+        async function saveEditInventory() {
+            const itemId = document.getElementById('editInvId').value;
+            if (!itemId) { showStatus('No item selected', 'error'); return; }
+            const updates = {
+                name: document.getElementById('editInvName').value.trim(),
+                batchNumber: document.getElementById('editInvBatch').value.trim(),
+                expiryDate: document.getElementById('editInvExpiry').value || null,
+                quantity: parseInt(document.getElementById('editInvQty').value) || 0,
+                originalPrice: parseFloat(document.getElementById('editInvPrice').value) || 0,
+                salePrice: parseFloat(document.getElementById('editInvSalePrice').value) || 0,
+                category: document.getElementById('editInvCategory').value,
+                onSale: document.getElementById('editInvOnSale').checked
+            };
+
+            if (!updates.name) { showStatus('Item name is required', 'error'); return; }
+
+            try {
+                const result = await Backend.updateInventoryItem(itemId, updates);
+                if (result.success) {
+                    showStatus('✅ Item updated!', 'success');
+                    closeEditInventory();
+                    await loadInventory();
+                } else {
+                    showStatus(result.message || 'Failed to update item', 'error');
+                }
+            } catch (error) { showStatus('Error updating item: ' + error.message, 'error'); }
+        }
+
+        function exportToAd(itemId) {
+            Backend.loadInventoryItems(businessId).then(items => {
+                const item = items.find(i => i.id === itemId);
+                if (!item) { showStatus('Item not found in inventory', 'error'); return; }
+                const imageData = item.productImage || item.imageBase64 || null;
+                const exportData = {
+                    name: item.name,
+                    price: item.originalPrice || 0,
+                    discount: 0,
+                    batch: item.batchNumber || '',
+                    category: item.category || 'other',
+                    image: imageData,
+                    inventoryId: item.id,
+                    expiryDate: item.expiryDate || null,
+                    quantity: item.quantity || 0,
+                    description: ''
+                };
+                if (item.onSale && item.salePrice > 0 && item.salePrice < item.originalPrice) {
+                    exportData.discount = Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100);
+                }
+                localStorage.setItem('inventoryExportData', JSON.stringify(exportData));
+                window.location.href = `advertise.html?fromInventory=true`;
+            }).catch(err => { showStatus('Error loading inventory item: ' + err.message, 'error'); });
+        }
+
+        async function deleteInventoryItem(itemId) {
+            if (!confirm('Are you sure you want to delete this item from inventory?')) return;
+            try {
+                const result = await Backend.deleteInventoryItem(itemId);
+                if (result.success) { showStatus('Item removed from inventory', 'success'); await loadInventory(); } 
+                else { showStatus(result.message || 'Failed to delete item', 'error'); }
+            } catch (error) { showStatus('Error deleting item', 'error'); }
+        }
+
+        // ===== LOOKUP =====
+        function performLookup() {
+            const input = document.getElementById('lookupInput').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('lookupResults');
+            if (!input) { resultsContainer.innerHTML = '<div class="empty-state">🔍 Enter a name or order ID to search</div>'; return; }
+            if (allOrdersCache.length === 0) { resultsContainer.innerHTML = '<div class="empty-state">📦 No orders loaded yet. Refresh orders first.</div>'; return; }
+            const results = allOrdersCache.filter(order => {
+                const nameMatch = order.consumerName && order.consumerName.toLowerCase().includes(input);
+                const idMatch = order.id && order.id.toLowerCase().includes(input);
+                return nameMatch || idMatch;
+            });
+            if (results.length === 0) { resultsContainer.innerHTML = `<div class="empty-state">🔍 No orders found for "${escapeHtml(input)}"</div>`; return; }
+            resultsContainer.innerHTML = results.map(order => {
+                let statusClass = '', statusText = '';
+                if (order.status === 'pending') { statusClass = 'pending'; statusText = 'pending confirmation'; } 
+                else if (order.status === 'confirmed_by_business') {
+                    if (order.businessPickupConfirmed) { statusClass = 'picked-up'; statusText = 'Picked up - awaiting customer'; } 
+                    else { statusClass = 'waiting'; statusText = 'Awaiting customer pickup'; }
+                } else if (order.status === 'collected_by_customer') { statusClass = 'completed'; statusText = 'completed'; } 
+                else if (order.status === 'cancelled') { statusClass = 'cancelled'; statusText = 'cancelled'; } 
+                else { statusClass = 'pending'; statusText = order.status; }
+                return `<div class="lookup-result-item ${statusClass}" onclick="showOrderDetailModal('${order.id}')"><div class="lookup-result-header"><span class="lookup-customer">👤 ${escapeHtml(order.consumerName)}</span><span class="lookup-status ${statusClass}">${statusText}</span></div><div class="lookup-detail">🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}</div><div class="lookup-detail" style="font-weight:600;color:#34c759;">$${(order.totalAmount || 0).toFixed(2)}</div><div class="lookup-meta">🆔 ${order.id.slice(-8).toUpperCase()} • ${new Date(order.createdAt).toLocaleString()}</div>${order.batchNumber ? `<div class="lookup-meta">📦 batch: ${escapeHtml(order.batchNumber)}</div>` : ''}${order.collectByTime ? `<div class="lookup-meta">⏰ Collect by: ${new Date(order.collectByTime).toLocaleString()}</div>` : ''}<div class="click-hint">👆 tap to view details</div></div>`;
+            }).join('');
+        }
+
+        function showOrderDetailModal(orderId) {
+            const order = allOrdersCache.find(o => o.id === orderId);
+            if (!order) { showStatus('Order not found', 'error'); return; }
+            currentDetailOrderId = orderId;
+            const modal = document.getElementById('orderDetailModal');
+            const body = document.getElementById('orderDetailBody');
+            let statusBadgeClass = '', statusDisplay = '';
+            if (order.status === 'pending') { statusBadgeClass = 'pending'; statusDisplay = '⏳ Pending Confirmation'; } 
+            else if (order.status === 'confirmed_by_business') {
+                if (order.businessPickupConfirmed) { statusBadgeClass = 'picked-up'; statusDisplay = '📦 Picked up - awaiting customer'; } 
+                else { statusBadgeClass = 'waiting'; statusDisplay = '🕒 Awaiting customer pickup'; }
+            } else if (order.status === 'collected_by_customer') { statusBadgeClass = 'completed'; statusDisplay = '🎉 Completed (Payment Released)'; } 
+            else if (order.status === 'cancelled') { statusBadgeClass = 'cancelled'; statusDisplay = '❌ Cancelled'; } 
+            else { statusBadgeClass = 'pending'; statusDisplay = order.status; }
+            let actionButtonsHtml = '', extraMessage = '';
+            if (order.status === 'pending') {
+                extraMessage = `<div class="pending-message">⚠️ This order is pending confirmation.<br>Please confirm it in the <strong>Orders</strong> tab first.</div>`;
+                actionButtonsHtml = ``;
+            } else if (order.status === 'confirmed_by_business' && !order.businessPickupConfirmed) {
+                extraMessage = `<div class="waiting-message">✅ Order is confirmed.<br><strong>Tap "Confirm Pickup"</strong> once the customer has collected the items.</div>`;
+                actionButtonsHtml = `<button class="modal-action-btn cancel-btn" onclick="cancelOrderFromModal()">✗ Cancel Order</button><button class="modal-action-btn pickup-btn" onclick="confirmBusinessPickup()">📦 Confirm Pickup</button>`;
+            } else if (order.status === 'confirmed_by_business' && order.businessPickupConfirmed) {
+                extraMessage = `<div class="picked-up-message">✅ Items picked up by business.<br><strong>Awaiting customer confirmation</strong> to release payment.</div>`;
+                actionButtonsHtml = `<button class="modal-action-btn cancel-btn" onclick="cancelOrderFromModal()">✗ Cancel Order</button>`;
+            } else if (order.status === 'collected_by_customer') {
+                extraMessage = `<div class="completed-message">✅ Order completed. Payment has been released to your wallet.</div>`;
+                actionButtonsHtml = ``;
+            } else if (order.status === 'cancelled') {
+                extraMessage = `<div class="cancelled-message">❌ This order has been cancelled.</div>`;
+                actionButtonsHtml = ``;
+            } else { actionButtonsHtml = ``; }
+            body.innerHTML = `<div class="detail-field"><div class="detail-field-label">Customer</div><div class="detail-field-value">👤 ${escapeHtml(order.consumerName)}</div></div><div class="detail-field"><div class="detail-field-label">Item</div><div class="detail-field-value">🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}</div></div>${order.batchNumber ? `<div class="detail-field"><div class="detail-field-label">Batch Number</div><div class="detail-field-value"><span class="batch-tag">📦 ${escapeHtml(order.batchNumber)}</span></div></div>` : ''}<div class="detail-field"><div class="detail-field-label">Total Amount</div><div class="detail-field-value" style="color:#34c759; font-weight:700;">$${(order.totalAmount || 0).toFixed(2)}</div></div><div class="detail-field"><div class="detail-field-label">Status</div><div class="detail-field-value"><span class="status-badge ${statusBadgeClass}">${statusDisplay}</span></div></div><div class="detail-field"><div class="detail-field-label">Order Placed</div><div class="detail-field-value" style="font-size:13px; color:#666;">${new Date(order.createdAt).toLocaleString()}</div></div>${order.collectByTime ? `<div class="detail-field"><div class="detail-field-label">Collect By</div><div class="detail-field-value" style="font-size:13px; color:#e65100;">${new Date(order.collectByTime).toLocaleString()}</div></div>` : ''}${extraMessage}<div class="order-detail-actions">${actionButtonsHtml}</div>`;
+            modal.classList.add('show');
+        }
+
+        function closeOrderDetailModal() { document.getElementById('orderDetailModal').classList.remove('show'); currentDetailOrderId = null; }
+
+        async function confirmBusinessPickup() {
+            if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
+            if (!confirm('Confirm pickup on business side? This will mark the order as picked up. Customer must then confirm to release payment.')) return;
+            const btn = document.querySelector('.modal-action-btn.pickup-btn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing...'; }
+            try {
+                const Order = Parse.Object.extend("Order");
+                const query = new Parse.Query(Order);
+                const order = await query.get(currentDetailOrderId);
+                order.set("businessPickupConfirmed", true);
+                await order.save();
+                pickupConfirmMap[currentDetailOrderId] = true;
+                savePickupMap(pickupConfirmMap);
+                const cachedOrder = allOrdersCache.find(o => o.id === currentDetailOrderId);
+                if (cachedOrder) { cachedOrder.businessPickupConfirmed = true; }
+                showStatus('✅ Business pickup confirmed. Waiting for customer confirmation.', 'success');
+                closeOrderDetailModal();
+                await loadOrders(); await loadStats(); await refreshWallet();
+                performLookup();
+            } catch (err) { showStatus('Error updating order: ' + err.message, 'error'); } 
+            finally { if (btn) { btn.disabled = false; btn.textContent = '📦 Confirm Pickup'; } }
+        }
+
+        async function cancelOrderFromModal() {
+            if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
+            if (!confirm('Cancel this order? This action cannot be undone.')) return;
+            const btn = document.querySelector('.modal-action-btn.cancel-btn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cancelling...'; }
+            try {
+                const result = await Backend.updateClaimStatus(currentDetailOrderId, 'cancelled');
+                if (result.success) {
+                    delete pickupConfirmMap[currentDetailOrderId];
+                    savePickupMap(pickupConfirmMap);
+                    showStatus('❌ Order cancelled', 'success');
+                    closeOrderDetailModal();
+                    await loadOrders(); await loadStats(); await refreshWallet();
+                    const lookupInput = document.getElementById('lookupInput');
+                    if (lookupInput.value.trim()) performLookup();
+                } else { showStatus(result.message || 'Failed to cancel order', 'error'); }
+            } catch (err) { showStatus('Error cancelling order', 'error'); } 
+            finally { if (btn) { btn.disabled = false; btn.textContent = '✗ Cancel Order'; } }
+        }
+
+        // ===== UTILITY =====
+        function showStatus(message, type) {
+            const status = document.getElementById('statusMessage');
+            status.textContent = message;
+            status.className = `status-message show ${type}`;
+            clearTimeout(status._timer);
+            status._timer = setTimeout(() => status.classList.remove('show'), 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        }
+
+        // ===== EXCEL IMPORT/EXPORT =====
+        function parseExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(new Error('Failed to parse Excel file: ' + error.message));
+                    }
+                };
+                reader.onerror = function() {
+                    reject(new Error('Failed to read file'));
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function downloadExcel(data, filename, sheetName = 'Data') {
+            if (!data || data.length === 0) {
+                showStatus('No data to export', 'error');
+                return;
+            }
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+            const colWidths = [];
+            if (data.length > 0) {
+                const headers = Object.keys(data[0]);
+                headers.forEach((header, idx) => {
+                    let maxLen = header.length;
+                    data.forEach(row => {
+                        const val = String(row[header] || '');
+                        if (val.length > maxLen) maxLen = val.length;
+                    });
+                    colWidths.push({ wch: Math.min(Math.max(maxLen + 2, 10), 30) });
+                });
+                ws['!cols'] = colWidths;
+            }
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showStatus(`✅ Exported ${data.length} records to ${filename}`, 'success');
+        }
+
+        async function exportOrders() {
+            try {
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                if (orders.length === 0) { showStatus('No orders to export', 'error'); return; }
+                const exportData = orders.map(order => ({
+                    'Order ID': order.id,
+                    'Customer': order.consumerName || '',
+                    'Item': order.foodName || '',
+                    'Quantity': order.quantity || 0,
+                    'Total Amount': order.totalAmount || 0,
+                    'Status': order.status || '',
+                    'Batch Number': order.batchNumber || '',
+                    'Created At': new Date(order.createdAt).toLocaleString(),
+                    'Collect By': order.collectByTime ? new Date(order.collectByTime).toLocaleString() : ''
+                }));
+                downloadExcel(exportData, `orders_${new Date().toISOString().split('T')[0]}.xlsx`, 'Orders');
+            } catch (error) { showStatus('Error exporting orders: ' + error.message, 'error'); }
+        }
+
+        async function exportInventory() {
+            try {
+                const items = await Backend.loadInventoryItems(businessId);
+                if (items.length === 0) { showStatus('No inventory items to export', 'error'); return; }
+                const exportData = items.map(item => ({
+                    'Item Name': item.name || '',
+                    'Batch Number': item.batchNumber || '',
+                    'Expiry Date': item.expiryDate || '',
+                    'Quantity': item.quantity || 0,
+                    'Original Price': item.originalPrice || 0,
+                    'Sale Price': item.salePrice || 0,
+                    'Category': item.category || '',
+                    'On Sale': item.onSale ? 'Yes' : 'No'
+                }));
+                downloadExcel(exportData, `inventory_${new Date().toISOString().split('T')[0]}.xlsx`, 'Inventory');
+            } catch (error) { showStatus('Error exporting inventory: ' + error.message, 'error'); }
+        }
+
+        async function exportEmployees() {
+            try {
+                const employees = await Backend.getStaffList();
+                if (employees.length === 0) { showStatus('No employees to export', 'error'); return; }
+                const exportData = employees.map(emp => ({
+                    'Employee ID': emp.id || '',
+                    'Username': emp.username || '',
+                    'Role': emp.role || '',
+                    'Email': emp.email || ''
+                }));
+                downloadExcel(exportData, `employees_${new Date().toISOString().split('T')[0]}.xlsx`, 'Employees');
+            } catch (error) { showStatus('Error exporting employees: ' + error.message, 'error'); }
+        }
+
+        async function exportAllData() {
+            try {
+                showStatus('Preparing all data for export...', 'info');
+                const orders = await Backend.getOrdersForBusiness(businessId);
+                const inventory = await Backend.loadInventoryItems(businessId);
+                const employees = await Backend.getStaffList();
+                const wb = XLSX.utils.book_new();
+                if (orders.length > 0) {
+                    const orderData = orders.map(order => ({
+                        'Order ID': order.id,
+                        'Customer': order.consumerName || '',
+                        'Item': order.foodName || '',
+                        'Quantity': order.quantity || 0,
+                        'Total Amount': order.totalAmount || 0,
+                        'Status': order.status || '',
+                        'Batch Number': order.batchNumber || '',
+                        'Created At': new Date(order.createdAt).toLocaleString()
+                    }));
+                    const ws = XLSX.utils.json_to_sheet(orderData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+                }
+                if (inventory.length > 0) {
+                    const invData = inventory.map(item => ({
+                        'Item Name': item.name || '',
+                        'Batch Number': item.batchNumber || '',
+                        'Expiry Date': item.expiryDate || '',
+                        'Quantity': item.quantity || 0,
+                        'Original Price': item.originalPrice || 0,
+                        'Sale Price': item.salePrice || 0,
+                        'Category': item.category || '',
+                        'On Sale': item.onSale ? 'Yes' : 'No'
+                    }));
+                    const ws = XLSX.utils.json_to_sheet(invData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+                }
+                if (employees.length > 0) {
+                    const empData = employees.map(emp => ({
+                        'Employee ID': emp.id || '',
+                        'Username': emp.username || '',
+                        'Role': emp.role || '',
+                        'Email': emp.email || ''
+                    }));
+                    const ws = XLSX.utils.json_to_sheet(empData);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+                }
+                if (wb.SheetNames.length === 0) { showStatus('No data to export', 'error'); return; }
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `foodsavvi_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showStatus('✅ All data exported successfully!', 'success');
+            } catch (error) { showStatus('Error exporting all data: ' + error.message, 'error'); }
+        }
+
+        async function importInventoryFromExcel() {
+            const fileInput = document.getElementById('inventoryImportFile');
+            const file = fileInput.files[0];
+            if (!file) { showStatus('Please select an Excel file first', 'error'); return; }
+            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+            if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+                showStatus('Please select an Excel file (.xlsx or .xls)', 'error');
+                return;
+            }
+            showStatus('Reading Excel file...', 'info');
+            try {
+                const excelData = await parseExcelFile(file);
+                if (excelData.length === 0) { showStatus('No data found in the Excel file', 'error'); return; }
+                const mappedData = excelData.map(row => {
+                    const getValue = (keys) => {
+                        for (const key of keys) {
+                            if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                                return row[key];
+                            }
+                        }
+                        return '';
+                    };
+                    return {
+                        name: getValue(['Item Name', 'name', 'item name', 'Item', 'product', 'Product']),
+                        batchNumber: getValue(['Batch Number', 'batchNumber', 'batch', 'Batch']),
+                        expiryDate: getValue(['Expiry Date', 'expiryDate', 'expiry', 'Expiry']),
+                        quantity: parseInt(getValue(['Quantity', 'quantity', 'qty', 'Qty'])) || 0,
+                        originalPrice: parseFloat(getValue(['Original Price', 'originalPrice', 'price', 'Price'])) || 0,
+                        salePrice: parseFloat(getValue(['Sale Price', 'salePrice', 'sale', 'Sale'])) || 0,
+                        category: getValue(['Category', 'category', 'cat']),
+                        onSale: (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'yes' || 
+                                (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'true'
+                    };
+                });
+                const validItems = mappedData.filter(item => item.name && item.name.trim() !== '');
+                if (validItems.length === 0) { showStatus('No valid items found. "Item Name" is required.', 'error'); return; }
+                if (!confirm(`Import ${validItems.length} items to inventory?`)) return;
+                showStatus(`Importing ${validItems.length} items...`, 'info');
+                const existing = await Backend.loadInventoryItems(businessId);
+                const merged = [...existing];
+                let addedCount = 0, duplicateCount = 0;
+                for (const item of validItems) {
+                    const exists = merged.some(existingItem => 
+                        existingItem.name === item.name && 
+                        existingItem.batchNumber === item.batchNumber
+                    );
+                    if (!exists) {
+                        merged.push({
+                            name: item.name,
+                            batchNumber: item.batchNumber || '',
+                            expiryDate: item.expiryDate || null,
+                            quantity: item.quantity || 0,
+                            originalPrice: item.originalPrice || 0,
+                            salePrice: item.salePrice || 0,
+                            category: item.category || 'other',
+                            onSale: item.onSale || false,
+                            businessId: businessId
+                        });
+                        addedCount++;
+                    } else { duplicateCount++; }
+                }
+                if (addedCount === 0) { showStatus(`All items already exist in inventory.`, 'info'); return; }
+                const result = await Backend.saveInventoryItems(merged);
+                if (result.success) {
+                    showStatus(`✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`, 'success');
+                    fileInput.value = '';
+                    await loadInventory();
+                } else { showStatus('Failed to import inventory items', 'error'); }
+            } catch (error) { showStatus('Error importing Excel: ' + error.message, 'error'); }
+        }
+
+        function downloadTemplate(type) {
+            if (type === 'inventory') {
+                const data = [{
+                    'Item Name': 'Sample Item',
+                    'Batch Number': 'BATCH-001',
+                    'Expiry Date': '2026-12-31',
+                    'Quantity': '10',
+                    'Original Price': '5.99',
+                    'Sale Price': '3.99',
+                    'Category': 'dairy',
+                    'On Sale': 'Yes'
+                }];
+                downloadExcel(data, 'inventory_template.xlsx', 'Inventory Template');
+                showStatus('✅ Template downloaded!', 'success');
+            } else { showStatus('Unknown template type.', 'error'); }
+        }
+
+        // ===== EXPOSE GLOBALLY =====
+        window.switchTab = switchTab;
+        window.saveProfile = saveProfile;
+        window.loadOrders = loadOrders;
+        window.loadNotifications = loadNotifications;
+        window.refreshWallet = refreshWallet;
+        window.refreshAll = refreshAll;
+        window.toggleSelectAllOrders = toggleSelectAllOrders;
+        window.confirmSelectedOrders = confirmSelectedOrders;
+        window.handleOrderCheckbox = handleOrderCheckbox;
+        window.performLookup = performLookup;
+        window.showOrderDetailModal = showOrderDetailModal;
+        window.closeOrderDetailModal = closeOrderDetailModal;
+        window.confirmBusinessPickup = confirmBusinessPickup;
+        window.cancelOrderFromModal = cancelOrderFromModal;
+        window.copyInviteCode = copyInviteCode;
+        window.generateInviteCode = generateInviteCode;
+        window.loadInventory = loadInventory;
+        window.addInventoryItem = addInventoryItem;
+        window.exportToAd = exportToAd;
+        window.deleteInventoryItem = deleteInventoryItem;
+        window.openEditInventory = openEditInventory;
+        window.closeEditInventory = closeEditInventory;
+        window.saveEditInventory = saveEditInventory;
+        window.loadEmployees = loadEmployees;
+        window.loadRoles = loadRoles;
+        window.approveEmployee = approveEmployee;
+        window.toggleRoleDropdown = toggleRoleDropdown;
+        window.setEmployeeRoleDirect = setEmployeeRoleDirect;
+        window.removeEmployee = removeEmployee;
+        window.createRole = createRole;
+        window.deleteRole = deleteRole;
+        window.loadEmployeesAndRoles = loadEmployeesAndRoles;
+        window.requestWithdraw = requestWithdraw;
+        window.submitVerification = submitVerification;
+        window.confirmSingleOrder = confirmSingleOrder;
+        window.markRead = markRead;
+        window.exportOrders = exportOrders;
+        window.exportInventory = exportInventory;
+        window.exportEmployees = exportEmployees;
+        window.exportAllData = exportAllData;
+        window.importInventoryFromExcel = importInventoryFromExcel;
+        window.downloadTemplate = downloadTemplate;
+    </script>
+</body>
+</html>

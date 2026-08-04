@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>foodsavvi • pending approval</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="shortcut icon" type="image/png" href="assets/icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered:', registration.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'RusticStory';
+            src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
+                 url('./assets/RusticStory-1jDPL.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'RusticStory', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+            padding: 30px 24px;
+            text-align: center;
+            animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background-image: url('assets/icon.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .app-name span { color: #667eea; }
+
+        .status-icon {
+            font-size: 72px;
+            margin: 20px 0;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e65100;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            color: #999;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+            margin-top: 16px;
+        }
+        .logout-btn:hover { background: #f5f5f5; color: #333; }
+
+        .business-name {
+            background: #f8f9fa;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="logo"></div>
+        <div class="app-name">food<span>savvi</span></div>
+        
+        <div class="business-name" id="businessNameDisplay">🏪 loading...</div>
+        
+        <div class="status-icon">⏳</div>
+        <div class="title">Awaiting Approval</div>
+        <div class="subtitle">
+            Your account has been created, but the business owner has not yet approved your membership.<br><br>
+            Please wait for the owner to verify your account. You will be notified as soon as you are approved.
+        </div>
+        
+        <div class="loader"></div>
+        <p style="font-size: 12px; color: #999; margin-bottom: 16px;">Checking for approval status...</p>
+        
+        <button class="logout-btn" onclick="handleLogout()">Logout & Try Again</button>
+    </div>
+
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script src="backend.js"></script>
+
+    <script>
+        let checkInterval = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = Backend.getCurrentUser();
+            const role = localStorage.getItem('userRole');
+            
+            if (!user || role !== 'advertiser') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Show the business name
+            const businessName = user.get('businessName') || 'Your Business';
+            document.getElementById('businessNameDisplay').textContent = `🏪 ${businessName}`;
+
+            // Start polling to check if they have been approved
+            checkInterval = setInterval(checkApprovalStatus, 5000); // Check every 5 seconds
+            await checkApprovalStatus();
+        });
+
+        async function checkApprovalStatus() {
+            try {
+                const user = Backend.getCurrentUser();
+                if (!user) {
+                    clearInterval(checkInterval);
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Force refresh the user object from the server
+                await user.fetch();
+                
+                const businessRole = user.get('businessRole');
+                
+                // If they are no longer 'pending', redirect them to their dashboard
+                if (businessRole && businessRole !== 'pending') {
+                    clearInterval(checkInterval);
+                    window.location.href = 'index-employee.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        }
+
+        function handleLogout() {
+            if (checkInterval) clearInterval(checkInterval);
+            try { Backend.logout().catch(() => {}); } catch (e) {}
+            window.location.href = 'login.html';
+        }
+
+        window.handleLogout = handleLogout;
+    </script>
+</body>
+</html>
