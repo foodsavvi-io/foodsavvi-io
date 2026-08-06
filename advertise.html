@@ -6,7 +6,6 @@
     <title>foodsavvi • ads</title>
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="shortcut icon" type="image/png" href="assets/icon.png">
-    <!-- HTML5 QR Code Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -18,7 +17,6 @@
         }
     </script>
     <style>
-        /* ─── styles unchanged ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -510,7 +508,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ─── BOTTOM NAV: conditional ─── */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -608,7 +605,6 @@
         </div>
 
         <div class="content">
-            <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('create')">📢 post ad</button>
                 <button class="tab" onclick="switchTab('manage')">📋 manage ads</button>
@@ -616,7 +612,6 @@
 
             <!-- CREATE AD TAB -->
             <div id="createTab" class="tab-content active">
-                <!-- Barcode Scanner Section -->
                 <div class="scanner-section">
                     <div class="scanner-header">
                         <span>📷</span>
@@ -634,7 +629,6 @@
                     </button>
                 </div>
 
-                <!-- Image Upload Section -->
                 <div class="image-upload-section">
                     <div class="image-preview" id="imagePreview">
                         <div class="placeholder">📷</div>
@@ -648,7 +642,6 @@
                     </button>
                 </div>
 
-                <!-- Form Card -->
                 <div class="form-card">
                     <div class="form-title" id="formTitle">📢 New Ad Details</div>
                     <input type="hidden" id="editAdId" value="">
@@ -675,7 +668,6 @@
                         </div>
                     </div>
 
-                    <!-- Discount Type + Value -->
                     <div class="discount-type-row">
                         <div class="input-group">
                             <label class="input-label">🎯 Discount Type</label>
@@ -744,7 +736,6 @@
             </div>
         </div>
 
-        <!-- ─── BOTTOM NAV: conditional based on role ─── -->
         <div class="bottom-nav" id="bottomNav">
             <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
             <a href="#" id="navAds" class="nav-item active"><span class="nav-emoji">📢</span><span>ads</span></a>
@@ -772,11 +763,10 @@
         let editAdId = null;
         let fromInventory = false;
         let inventoryData = null;
-        let isEmployee = false;          // flag for employee role
-        let canPostAds = false;          // permission
-        let businessId = null;           // 🔥 FIX: owner's ID for sync
+        let isEmployee = false;
+        let canPostAds = false;
+        let businessId = null;
 
-        // Product database for barcode lookup
         const productDatabase = {
             "8901234567890": { name: "Amul Milk", price: 45, category: "dairy" },
             "8901234567891": { name: "Britannia Bread", price: 35, category: "bakery" },
@@ -798,7 +788,6 @@
             "123456789019": { name: "Frozen Pizza", price: 180, category: "frozen" }
         };
 
-        // ===== PRICE CACHE =====
         function saveAdPrice(adId, price) {
             const map = JSON.parse(localStorage.getItem('adPriceCache') || '{}');
             map[adId] = price;
@@ -810,7 +799,6 @@
             return map[adId];
         }
 
-        // ===== DISCOUNT TYPE HELPERS =====
         function onDiscountTypeChange() {
             const type = document.getElementById('discountType').value;
             const label = document.getElementById('discountLabel');
@@ -836,7 +824,7 @@
         }
 
         // ============================================================
-        //  INIT – with role & permission checks
+        //  INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -846,18 +834,23 @@
                 return;
             }
 
-            // 🔥 FIX: Resolve business ID (owner's ID)
             businessId = user.get('businessId') || user.id;
+            console.log('🔍 Business ID:', businessId);
 
-            // Check if employee (not owner)
             const perms = await Backend.getEmployeePermissions(user.id);
+            console.log('📋 Permissions received:', perms);
+
+            if (perms.isPending) {
+                window.location.href = 'waiting-approval.html';
+                return;
+            }
+
             if (perms.isOwner) {
                 isEmployee = false;
                 canPostAds = true;
             } else {
                 isEmployee = true;
-                // Check permission to post ads
-                canPostAds = perms.can_post_ads || false;
+                canPostAds = perms.can_post_ads === true;
                 if (!canPostAds) {
                     showNotification('You do not have permission to post ads', 'error');
                     setTimeout(() => {
@@ -867,28 +860,21 @@
                 }
             }
 
-            // ---- Set up navigation based on role ----
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'index-employee.html';
-                // Hide Ads and Inventory nav items for employees
                 document.getElementById('navAds').style.display = 'none';
                 document.getElementById('navInventory').style.display = 'none';
-                // Home and Settings remain
                 document.getElementById('navHome').href = 'index-employee.html';
                 document.getElementById('navSettings').href = 'business-profile.html';
             } else {
                 backLink.href = 'index.html';
                 document.getElementById('navHome').href = 'index.html';
                 document.getElementById('navSettings').href = 'business-profile.html?tab=profile';
-                // Show all nav items
                 document.getElementById('navAds').style.display = 'block';
                 document.getElementById('navInventory').style.display = 'block';
             }
-            // Ensure the ads nav item is active (if visible)
-            // For employees it's hidden, but we still keep the page active.
 
-            // ---- Default dates ----
             const today = new Date();
             const nextWeek = new Date();
             nextWeek.setDate(today.getDate() + 7);
@@ -899,10 +885,8 @@
             document.getElementById('batchExpiry').value = nextMonth.toISOString().split('T')[0];
             document.getElementById('quantity').value = 50;
 
-            // Set default discount type
             onDiscountTypeChange();
 
-            // ---- URL params ----
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             const fromInv = urlParams.get('fromInventory');
@@ -972,7 +956,6 @@
                 document.getElementById('offerEnds').value = data.offerEnds;
             }
 
-            // Discount – try to detect
             if (data.discount !== undefined && data.discount !== null) {
                 if (data.discountType === 'fixed' || data.discountType === 'percentage') {
                     document.getElementById('discountType').value = data.discountType;
@@ -984,7 +967,6 @@
                         document.getElementById('discount').value = data.discount;
                     }
                 } else {
-                    // auto-detect
                     if (data.discount > 100) {
                         document.getElementById('discountType').value = 'fixed';
                         onDiscountTypeChange();
@@ -1002,7 +984,9 @@
             }
         }
 
-        // 🔥 FIX: loadAdForEditing uses businessId
+        // ============================================================
+        //  FIXED: loadAdForEditing – price fallback
+        // ============================================================
         async function loadAdForEditing(adId) {
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
@@ -1012,12 +996,16 @@
                     document.getElementById('foodName').value = ad.foodName || '';
                     document.getElementById('description').value = ad.description || '';
 
-                    let price = ad.originalPrice != null ? ad.originalPrice : null;
+                    // ---- FIX: price retrieval ----
+                    let price = ad.originalPrice;
                     if (price == null || price === 0) {
                         const cached = getCachedAdPrice(ad.id);
-                        if (cached != null) price = cached;
+                        if (cached != null && cached > 0) {
+                            price = cached;
+                        }
                     }
-                    document.getElementById('originalPrice').value = price != null ? price : '';
+                    document.getElementById('originalPrice').value = (price > 0) ? price : '';
+
                     document.getElementById('quantity').value = ad.quantityLeft != null ? ad.quantityLeft : 1;
                     document.getElementById('batchNumber').value = ad.batchNumber || '';
                     document.getElementById('category').value = ad.category || 'other';
@@ -1048,6 +1036,7 @@
                     showNotification('Ad not found', 'error');
                 }
             } catch (error) {
+                console.error('Error loading ad:', error);
                 showNotification('Error loading ad for editing', 'error');
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -1267,7 +1256,7 @@
         }
 
         // ============================================================
-        //  SUBMIT AD (with discount type support)
+        //  SUBMIT AD
         // ============================================================
         async function submitAd() {
             const foodName = document.getElementById('foodName').value.trim();
@@ -1279,7 +1268,6 @@
             const batchExpiry = document.getElementById('batchExpiry').value;
             const category = document.getElementById('category').value;
 
-            // --- Discount ---
             const discountType = document.getElementById('discountType').value;
             const discountInput = parseFloat(document.getElementById('discount').value);
             let discountPercent = 0;
@@ -1298,7 +1286,6 @@
                 discountPercent = discountInput;
                 discountValue = discountInput;
             } else {
-                // Fixed amount
                 if (discountInput > originalPrice) {
                     showNotification('Discount cannot exceed original price', 'error');
                     return;
@@ -1312,7 +1299,6 @@
                 }
             }
 
-            // --- Validation ---
             if (!foodName) {
                 showNotification('Please enter food name', 'error');
                 return;
@@ -1408,14 +1394,13 @@
         }
 
         // ============================================================
-        //  LOAD / MANAGE ADS – 🔥 FIXED: uses businessId
+        //  LOAD / MANAGE ADS
         // ============================================================
         async function loadMyAds() {
             try {
                 const currentUser = Backend.getCurrentUser();
                 if (!currentUser) return;
 
-                // 🔥 FIX: Use businessId (owner's ID) to fetch all ads for the business
                 const shopAds = await Backend.getShopAds(businessId);
                 const now = new Date();
 
