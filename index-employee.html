@@ -53,7 +53,7 @@
             background: #f5f7fa;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;          /* start from top */
             justify-content: center;
         }
 
@@ -61,7 +61,7 @@
             width: 100%;
             max-width: 400px;
             background: white;
-            min-height: 100vh;               /* full viewport height */
+            min-height: 100vh;               /* keep full height, but content won't stretch */
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 20px rgba(0,0,0,0.03);
@@ -128,12 +128,13 @@
         .logout-btn:hover { background: rgba(255,59,48,0.4); }
         .logout-btn:active { background: rgba(255,59,48,0.6); }
         
+        /* content no longer stretches – it takes only as much space as its children */
         .content {
-            flex: 1;
-            padding: 20px 20px 0;            /* no bottom padding – gap will be filled by summary */
+            padding: 20px;
+            padding-bottom: 0;               /* no bottom padding */
             display: flex;
             flex-direction: column;
-            overflow-y: auto;                 /* allow scroll if content overflows */
+            flex: 0 1 auto;                  /* don't grow, allow shrink */
         }
         
         /* Quick Actions */
@@ -161,19 +162,16 @@
         .card-title { font-weight: 600; margin-bottom: 4px; }
         .card-desc { font-size: 12px; color: #666; }
 
-        /* Summary Panel – flex:1 to fill remaining space */
+        /* Summary Panel – natural size, no stretching */
         .summary-panel {
-            flex: 1;                         /* takes all leftover space */
             background: linear-gradient(135deg, #e8eaf6, #d1c4e9);
             border-radius: 16px;
             padding: 16px;
             margin-top: 8px;
-            margin-bottom: 0;                /* no bottom gap */
+            margin-bottom: 0;                /* no bottom margin */
             border: 1px solid #d1c4e9;
             animation: slideInRight 0.4s ease;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;                   /* allow shrinking */
+            flex-shrink: 0;                  /* prevent shrinking */
         }
         .summary-panel h3 {
             font-size: 16px;
@@ -183,14 +181,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-shrink: 0;
         }
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            flex: 1;                         /* let grid expand if needed */
-            align-content: start;            /* keep items at top */
         }
         .stat-item {
             background: rgba(255,255,255,0.7);
@@ -215,10 +210,7 @@
             text-align: center;
             color: #6c5f8a;
             font-size: 13px;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 10px 0;
         }
         
         .bottom-nav {
@@ -227,8 +219,8 @@
             padding: 8px 20px;
             display: flex;
             justify-content: space-around;
-            flex-shrink: 0;                  /* prevent shrinking */
-            margin-top: 0;
+            flex-shrink: 0;
+            margin-top: 0;                   /* no extra gap */
         }
         .nav-item {
             text-decoration: none; color: #999; font-size: 12px;
@@ -286,7 +278,7 @@
                 <!-- Dynamic cards injected by renderQuickActions() -->
             </div>
 
-            <!-- Business Overview – flex:1 so it fills the gap -->
+            <!-- Business Overview – natural height, not stretched -->
             <div class="summary-panel" id="summaryPanel">
                 <div class="loading-spinner"></div>
                 <p style="text-align:center; color:#7e6e9e;">loading stats...</p>
@@ -359,8 +351,6 @@
                     </div>
                 `;
             }
-
-            // Orders card removed.
 
             if (html === '') {
                 html = `
