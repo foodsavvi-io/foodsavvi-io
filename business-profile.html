@@ -1495,36 +1495,19 @@
                 </div>
             </div>
 
-            <!-- Data Tab -->
+            <!-- Data Tab – only export, no import, no inventory export -->
             <div class="tab-content" id="dataTab">
                 <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <span>📊 Data Import / Export</span>
+                    <span>📊 Export Data</span>
                 </div>
                 <div class="data-section">
-                    <h4>📤 Export Data</h4>
                     <p>Download your data as Excel (.xlsx) files for analysis or backup.</p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <button class="save-btn" onclick="exportOrders()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Orders</button>
-                        <button class="save-btn" onclick="exportInventory()" style="padding: 12px; font-size: 14px; margin-top: 0;">📦 Export Inventory</button>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <button class="save-btn" onclick="exportEmployees()" style="padding: 12px; font-size: 14px; margin-top: 0;">👥 Export Employees</button>
-                        <button class="save-btn" onclick="exportAllData()" style="padding: 12px; font-size: 14px; margin-top: 0; background: #667eea;">📊 Export All</button>
                     </div>
-                </div>
-                <div class="data-section">
-                    <h4>📥 Import Data</h4>
-                    <p>Upload Excel (.xlsx) files to import data into your database.</p>
-                    <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Import Inventory (Excel)</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="inventoryImportFile" accept=".xlsx,.xls">
-                            <button onclick="importInventoryFromExcel()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit;">Import</button>
-                            <button class="template-btn" onclick="downloadTemplate('inventory')">📄 Template</button>
-                        </div>
-                        <div class="import-help">
-                            Required columns: <strong>Item Name</strong>, <strong>Quantity</strong>. Optional: Batch Number, Expiry Date, Original Price, Sale Price, Category, On Sale
-                        </div>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button class="save-btn" onclick="exportAllData()" style="padding: 12px; font-size: 14px; margin-top: 0; background: #667eea; width: 100%;">📊 Export All</button>
                     </div>
                 </div>
             </div>
@@ -2514,7 +2497,7 @@
             return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
 
-        // ===== EXCEL IMPORT/EXPORT =====
+        // ===== EXCEL EXPORT FUNCTIONS (import removed) =====
         function parseExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -2587,24 +2570,6 @@
                 }));
                 downloadExcel(exportData, `orders_${new Date().toISOString().split('T')[0]}.xlsx`, 'Orders');
             } catch (error) { showStatus('Error exporting orders: ' + error.message, 'error'); }
-        }
-
-        async function exportInventory() {
-            try {
-                const items = await Backend.loadInventoryItems(businessId);
-                if (items.length === 0) { showStatus('No inventory items to export', 'error'); return; }
-                const exportData = items.map(item => ({
-                    'Item Name': item.name || '',
-                    'Batch Number': item.batchNumber || '',
-                    'Expiry Date': item.expiryDate || '',
-                    'Quantity': item.quantity || 0,
-                    'Original Price': item.originalPrice || 0,
-                    'Sale Price': item.salePrice || 0,
-                    'Category': item.category || '',
-                    'On Sale': item.onSale ? 'Yes' : 'No'
-                }));
-                downloadExcel(exportData, `inventory_${new Date().toISOString().split('T')[0]}.xlsx`, 'Inventory');
-            } catch (error) { showStatus('Error exporting inventory: ' + error.message, 'error'); }
         }
 
         async function exportEmployees() {
@@ -2681,100 +2646,6 @@
             } catch (error) { showStatus('Error exporting all data: ' + error.message, 'error'); }
         }
 
-        async function importInventoryFromExcel() {
-            const fileInput = document.getElementById('inventoryImportFile');
-            const file = fileInput.files[0];
-            if (!file) { showStatus('Please select an Excel file first', 'error'); return; }
-            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'application/vnd.ms-excel'
-            ];
-            if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-                showStatus('Please select an Excel file (.xlsx or .xls)', 'error');
-                return;
-            }
-            showStatus('Reading Excel file...', 'info');
-            try {
-                const excelData = await parseExcelFile(file);
-                if (excelData.length === 0) { showStatus('No data found in the Excel file', 'error'); return; }
-                const mappedData = excelData.map(row => {
-                    const getValue = (keys) => {
-                        for (const key of keys) {
-                            if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
-                                return row[key];
-                            }
-                        }
-                        return '';
-                    };
-                    return {
-                        name: getValue(['Item Name', 'name', 'item name', 'Item', 'product', 'Product']),
-                        batchNumber: getValue(['Batch Number', 'batchNumber', 'batch', 'Batch']),
-                        expiryDate: getValue(['Expiry Date', 'expiryDate', 'expiry', 'Expiry']),
-                        quantity: parseInt(getValue(['Quantity', 'quantity', 'qty', 'Qty'])) || 0,
-                        originalPrice: parseFloat(getValue(['Original Price', 'originalPrice', 'price', 'Price'])) ||
-                            0,
-                        salePrice: parseFloat(getValue(['Sale Price', 'salePrice', 'sale', 'Sale'])) || 0,
-                        category: getValue(['Category', 'category', 'cat']),
-                        onSale: (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'yes' ||
-                            (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'true'
-                    };
-                });
-                const validItems = mappedData.filter(item => item.name && item.name.trim() !== '');
-                if (validItems.length === 0) { showStatus('No valid items found. "Item Name" is required.',
-                    'error'); return; }
-                if (!confirm(`Import ${validItems.length} items to inventory?`)) return;
-                showStatus(`Importing ${validItems.length} items...`, 'info');
-                const existing = await Backend.loadInventoryItems(businessId);
-                const merged = [...existing];
-                let addedCount = 0,
-                    duplicateCount = 0;
-                for (const item of validItems) {
-                    const exists = merged.some(existingItem =>
-                        existingItem.name === item.name &&
-                        existingItem.batchNumber === item.batchNumber
-                    );
-                    if (!exists) {
-                        merged.push({
-                            name: item.name,
-                            batchNumber: item.batchNumber || '',
-                            expiryDate: item.expiryDate || null,
-                            quantity: item.quantity || 0,
-                            originalPrice: item.originalPrice || 0,
-                            salePrice: item.salePrice || 0,
-                            category: item.category || 'other',
-                            onSale: item.onSale || false,
-                            businessId: businessId
-                        });
-                        addedCount++;
-                    } else { duplicateCount++; }
-                }
-                if (addedCount === 0) { showStatus(`All items already exist in inventory.`, 'info'); return; }
-                const result = await Backend.saveInventoryItems(merged);
-                if (result.success) {
-                    showStatus(
-                        `✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`,
-                        'success');
-                    fileInput.value = '';
-                } else { showStatus('Failed to import inventory items', 'error'); }
-            } catch (error) { showStatus('Error importing Excel: ' + error.message, 'error'); }
-        }
-
-        function downloadTemplate(type) {
-            if (type === 'inventory') {
-                const data = [{
-                    'Item Name': 'Sample Item',
-                    'Batch Number': 'BATCH-001',
-                    'Expiry Date': '2026-12-31',
-                    'Quantity': '10',
-                    'Original Price': '5.99',
-                    'Sale Price': '3.99',
-                    'Category': 'dairy',
-                    'On Sale': 'Yes'
-                }];
-                downloadExcel(data, 'inventory_template.xlsx', 'Inventory Template');
-                showStatus('✅ Template downloaded!', 'success');
-            } else { showStatus('Unknown template type.', 'error'); }
-        }
-
         // ===== EXPOSE GLOBALLY =====
         window.switchTab = switchTab;
         window.saveProfile = saveProfile;
@@ -2806,12 +2677,8 @@
         window.confirmSingleOrder = confirmSingleOrder;
         window.markRead = markRead;
         window.exportOrders = exportOrders;
-        window.exportInventory = exportInventory;
         window.exportEmployees = exportEmployees;
         window.exportAllData = exportAllData;
-        window.importInventoryFromExcel = importInventoryFromExcel;
-        window.downloadTemplate = downloadTemplate;
     </script>
 </body>
 </html>
-
