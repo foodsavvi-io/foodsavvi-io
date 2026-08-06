@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        <!-- Bottom Nav -->
+        <!-- Bottom Nav – role‑based visibility is set in setupUI() -->
         <div class="bottom-nav" id="bottomNav">
             <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
             <a href="#" id="navAds" class="nav-item" style="display:none;"><span class="nav-emoji">📢</span><span>ads</span></a>
@@ -335,7 +335,7 @@
                 backLink.href = 'index.html';
             }
 
-            // Bottom navigation – show only Home & Settings for employees
+            // Bottom navigation – show all 4 for owners, only Home & Settings for employees
             const navHome = document.getElementById('navHome');
             const navAds = document.getElementById('navAds');
             const navInventory = document.getElementById('navInventory');
@@ -350,6 +350,8 @@
                 // Set Home as active (since we're hiding inventory)
                 navHome.classList.add('active');
                 navInventory.classList.remove('active');
+                // Ensure Settings is not active (it shouldn't be)
+                navSettings.classList.remove('active');
             } else {
                 navHome.href = 'index.html';
                 navAds.href = 'advertise.html';
@@ -359,6 +361,8 @@
                 // Inventory is active
                 navHome.classList.remove('active');
                 navInventory.classList.add('active');
+                navAds.classList.remove('active');
+                navSettings.classList.remove('active');
             }
 
             // Controls visibility based on edit permission
