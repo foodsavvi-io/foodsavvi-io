@@ -6,7 +6,8 @@
     <title>foodsavvi • business settings</title>
     <link rel="icon" type="image/png" href="assets/icon.png" />
     <link rel="shortcut icon" type="image/png" href="assets/icon.png" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -17,7 +18,7 @@
         }
     </script>
     <style>
-        /* ─── STYLES (unchanged) ─── */
+        /* ─── STYLES ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -242,6 +243,7 @@
             flex: 1;
         }
 
+        /* ─── TABS ─── */
         .tabs {
             display: flex;
             gap: 6px;
@@ -267,6 +269,7 @@
             font-family: inherit;
             font-size: 13px;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .tab.active {
@@ -274,12 +277,15 @@
             color: white;
         }
 
+        /* ─── TAB CONTENT – FIX: hide all by default, show only active ─── */
         .tab-content {
-            display: none;
+            display: none !important;
+            /* force hidden */;
         }
 
         .tab-content.active {
-            display: block;
+            display: block !important;
+            /* force visible */;
         }
 
         .form-group {
@@ -413,12 +419,27 @@
             transition: 0.2s;
             font-weight: 600;
         }
-        .emp-action-btn.approve { background: #e8f5e8; color: #2e7d32; }
-        .emp-action-btn.approve:hover { background: #c8e6c9; }
-        .emp-action-btn.revoke { background: #ffebee; color: #c62828; }
-        .emp-action-btn.revoke:hover { background: #ffcdd2; }
-        .emp-action-btn.assign { background: #e3f2fd; color: #0d47a1; }
-        .emp-action-btn.assign:hover { background: #bbdefb; }
+        .emp-action-btn.approve {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .emp-action-btn.approve:hover {
+            background: #c8e6c9;
+        }
+        .emp-action-btn.revoke {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .emp-action-btn.revoke:hover {
+            background: #ffcdd2;
+        }
+        .emp-action-btn.assign {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .emp-action-btn.assign:hover {
+            background: #bbdefb;
+        }
 
         .role-assign-wrapper {
             position: relative;
@@ -434,7 +455,7 @@
             border-radius: 6px;
             min-width: 130px;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             padding: 4px 0;
         }
         .role-dropdown-menu.show {
@@ -1642,10 +1663,7 @@
 
             // --- Hide elements for employees ---
             if (isEmployee) {
-                // Hide verification banner
                 document.getElementById('verificationBanner').style.display = 'none';
-                
-                // Hide tabs and features never shown to employees
                 document.getElementById('employeesTab').style.display = 'none';
                 document.getElementById('verificationTab').style.display = 'none';
                 document.getElementById('dataTab').style.display = 'none';
@@ -1654,7 +1672,6 @@
                 document.querySelector('.stats-grid').style.display = 'none';
                 document.getElementById('roleBanner').style.display = 'none';
 
-                // Profile edit permission
                 const canEditProfile = currentPermissions.can_edit_profile || false;
                 if (canEditProfile) {
                     document.getElementById('saveProfileBtn').style.display = 'block';
@@ -1668,7 +1685,6 @@
                     });
                 }
             } else {
-                // Owner: always editable
                 document.getElementById('saveProfileBtn').style.display = 'block';
                 document.querySelectorAll('#profileTab .form-input').forEach(input => {
                     input.disabled = false;
@@ -1677,7 +1693,7 @@
 
             // --- Permission-based tab visibility ---
             const tabButtons = document.querySelectorAll('.tab');
-            
+
             // profile: always visible (index 0)
             // employees: owner only
             if (!isOwner) {
@@ -1685,7 +1701,7 @@
             } else {
                 tabButtons[1].style.display = 'block';
             }
-            
+
             // orders + lookup: visible if can_view_orders or owner
             const canViewOrders = isOwner || currentPermissions.can_view_orders;
             if (!canViewOrders) {
@@ -1699,7 +1715,7 @@
                 document.getElementById('ordersTab').style.display = 'block';
                 document.getElementById('lookupTab').style.display = 'block';
             }
-            
+
             // verification: owner only
             if (!isOwner) {
                 tabButtons[4].style.display = 'none';
@@ -1708,7 +1724,7 @@
                 tabButtons[4].style.display = 'block';
                 document.getElementById('verificationTab').style.display = 'block';
             }
-            
+
             // notifications: owner only
             if (!isOwner) {
                 tabButtons[5].style.display = 'none';
@@ -1717,7 +1733,7 @@
                 tabButtons[5].style.display = 'block';
                 document.getElementById('notificationsTab').style.display = 'block';
             }
-            
+
             // data: owner only
             if (!isOwner) {
                 tabButtons[6].style.display = 'none';
@@ -1744,7 +1760,8 @@
             // --- Handle tab from URL ---
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
-            if (tabParam && ['profile','employees','orders','lookup','verification','notifications','data'].includes(tabParam)) {
+            if (tabParam && ['profile', 'employees', 'orders', 'lookup', 'verification', 'notifications', 'data'].includes(
+                    tabParam)) {
                 switchTab(tabParam);
             } else {
                 switchTab('profile');
@@ -1770,7 +1787,6 @@
 
         function updateVerificationUI() {
             const banner = document.getElementById('verificationBanner');
-            // Only update if visible (not hidden for employees)
             if (banner.style.display !== 'none') {
                 if (isVerified) {
                     banner.className = 'verification-banner banner-verified';
@@ -1851,14 +1867,16 @@
 
         async function requestWithdraw() {
             const balance = await Backend.getBusinessWalletBalance(businessId);
-            if (balance.available < 5) { showStatus(`Minimum withdrawal $5. Available: $${balance.available.toFixed(2)}`, 'error'); return; }
+            if (balance.available < 5) { showStatus(`Minimum withdrawal $5. Available: $${balance.available.toFixed(2)}`,
+                    'error'); return; }
             const amount = prompt(`Enter amount to withdraw (min $5, max $${balance.available.toFixed(2)})`, '5');
             if (!amount) return;
             const withdrawAmount = parseFloat(amount);
-            if (isNaN(withdrawAmount) || withdrawAmount < 5 || withdrawAmount > balance.available) { showStatus('Invalid amount', 'error'); return; }
+            if (isNaN(withdrawAmount) || withdrawAmount < 5 || withdrawAmount > balance.available) { showStatus(
+                    'Invalid amount', 'error'); return; }
             const result = await Backend.requestWithdrawal(businessId, withdrawAmount);
-            if (result.success) { showStatus(result.message, 'success'); await refreshWallet(); await loadStats(); } 
-            else { showStatus(result.message, 'error'); }
+            if (result.success) { showStatus(result.message, 'success'); await refreshWallet();
+                await loadStats(); } else { showStatus(result.message, 'error'); }
         }
 
         // ===== EMPLOYEES & ROLES =====
@@ -1879,18 +1897,18 @@
                     pendingContainer.innerHTML = '<div class="empty-state" style="padding:20px;">No pending requests</div>';
                 } else {
                     pendingContainer.innerHTML = pending.map(emp => `
-                        <div class="employee-item">
-                            <div class="employee-avatar">👤</div>
-                            <div class="employee-details">
-                                <div class="employee-name">${escapeHtml(emp.username)}</div>
-                                <span class="employee-role pending">pending approval</span>
+                            <div class="employee-item">
+                                <div class="employee-avatar">👤</div>
+                                <div class="employee-details">
+                                    <div class="employee-name">${escapeHtml(emp.username)}</div>
+                                    <span class="employee-role pending">pending approval</span>
+                                </div>
+                                <div class="employee-actions">
+                                    <button class="emp-action-btn approve" onclick="approveEmployee('${emp.id}')">✅ Approve</button>
+                                    <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">✗ Deny</button>
+                                </div>
                             </div>
-                            <div class="employee-actions">
-                                <button class="emp-action-btn approve" onclick="approveEmployee('${emp.id}')">✅ Approve</button>
-                                <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">✗ Deny</button>
-                            </div>
-                        </div>
-                    `).join('');
+                        `).join('');
                 }
 
                 const active = employees.filter(e => {
@@ -1901,27 +1919,30 @@
                     activeContainer.innerHTML = '<div class="empty-state" style="padding:20px;">No active employees</div>';
                 } else {
                     activeContainer.innerHTML = active.map(emp => {
-                        const roleItems = roles.length > 0
-                            ? roles.map(r => `<div class="role-dropdown-item" onclick="event.stopPropagation(); setEmployeeRoleDirect('${emp.id}', '${escapeHtml(r.name)}')">${escapeHtml(r.name)}</div>`).join('')
-                            : '<div class="role-dropdown-item" style="color:#999;">No custom roles</div>';
+                        const roleItems = roles.length > 0 ?
+                            roles.map(r =>
+                                `<div class="role-dropdown-item" onclick="event.stopPropagation(); setEmployeeRoleDirect('${emp.id}', '${escapeHtml(r.name)}')">${escapeHtml(r.name)}</div>`
+                                ).join('') :
+                            '<div class="role-dropdown-item" style="color:#999;">No custom roles</div>';
                         return `
-                        <div class="employee-item">
-                            <div class="employee-avatar">👤</div>
-                            <div class="employee-details">
-                                <div class="employee-name">${escapeHtml(emp.username)}</div>
-                                <span class="employee-role ${emp.role}">${emp.role}</span>
-                            </div>
-                            <div class="employee-actions">
-                                <div class="role-assign-wrapper">
-                                    <button class="emp-action-btn assign" onclick="toggleRoleDropdown(event, '${emp.id}')">🎯 Assign Role</button>
-                                    <div class="role-dropdown-menu" id="roleDropdown_${emp.id}">
-                                        ${roleItems}
-                                    </div>
+                            <div class="employee-item">
+                                <div class="employee-avatar">👤</div>
+                                <div class="employee-details">
+                                    <div class="employee-name">${escapeHtml(emp.username)}</div>
+                                    <span class="employee-role ${emp.role}">${emp.role}</span>
                                 </div>
-                                <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">🗑️ Remove</button>
+                                <div class="employee-actions">
+                                    <div class="role-assign-wrapper">
+                                        <button class="emp-action-btn assign" onclick="toggleRoleDropdown(event, '${emp.id}')">🎯 Assign Role</button>
+                                        <div class="role-dropdown-menu" id="roleDropdown_${emp.id}">
+                                            ${roleItems}
+                                        </div>
+                                    </div>
+                                    <button class="emp-action-btn revoke" onclick="removeEmployee('${emp.id}')">🗑️ Remove</button>
+                                </div>
                             </div>
-                        </div>
-                    `}).join('');
+                        `
+                    }).join('');
                 }
 
                 const user = Backend.getCurrentUser();
@@ -1937,7 +1958,8 @@
                 document.getElementById('displayInviteCode').textContent = inviteCode || '-----';
 
             } catch (error) {
-                pendingContainer.innerHTML = '<div class="empty-state" style="padding:20px;color:#ff3b30;">Error loading employees</div>';
+                pendingContainer.innerHTML =
+                    '<div class="empty-state" style="padding:20px;color:#ff3b30;">Error loading employees</div>';
                 activeContainer.innerHTML = '';
             }
         }
@@ -2035,20 +2057,20 @@
                 return;
             }
             container.innerHTML = roles.map(role => `
-                <div class="role-box">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <strong>${escapeHtml(role.name)}</strong>
-                        <button class="emp-action-btn revoke" onclick="deleteRole('${role.id}')" style="font-size:11px;">🗑️ Delete</button>
+                    <div class="role-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong>${escapeHtml(role.name)}</strong>
+                            <button class="emp-action-btn revoke" onclick="deleteRole('${role.id}')" style="font-size:11px;">🗑️ Delete</button>
+                        </div>
+                        <div style="font-size:11px; color:#666;">Permissions: ${Object.keys(role.permissions).filter(k => role.permissions[k]).join(', ') || 'None'}</div>
                     </div>
-                    <div style="font-size:11px; color:#666;">Permissions: ${Object.keys(role.permissions).filter(k => role.permissions[k]).join(', ') || 'None'}</div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         async function createRole() {
             const name = document.getElementById('newRoleName').value.trim();
             if (!name) { showStatus('Please enter a role name', 'error'); return; }
-            
+
             const checkboxes = document.querySelectorAll('#rolePermissionsGrid input[type="checkbox"]');
             const permissions = {};
             checkboxes.forEach(cb => { permissions[cb.value] = cb.checked; });
@@ -2104,10 +2126,17 @@
                     bulkActionsDiv.style.display = 'none';
                 }
                 container.innerHTML = orders.map((order, i) => {
-                    let statusClass = '', statusText = '', actionHtml = '', orderItemClass = '', checkboxHtml = '';
+                    let statusClass = '',
+                        statusText = '',
+                        actionHtml = '',
+                        orderItemClass = '',
+                        checkboxHtml = '';
                     if (order.status === 'pending') {
-                        statusClass = 'status-pending'; statusText = 'pending confirmation'; orderItemClass = 'pending';
-                        checkboxHtml = `<input type="checkbox" class="order-checkbox" data-order-id="${order.id}" onchange="handleOrderCheckbox(this)">`;
+                        statusClass = 'status-pending';
+                        statusText = 'pending confirmation';
+                        orderItemClass = 'pending';
+                        checkboxHtml =
+                            `<input type="checkbox" class="order-checkbox" data-order-id="${order.id}" onchange="handleOrderCheckbox(this)">`;
                         const defaultTime = new Date();
                         defaultTime.setHours(defaultTime.getHours() + 2);
                         const defaultTimeStr = defaultTime.toISOString().slice(0, 16);
@@ -2119,20 +2148,29 @@
                             `;
                     } else if (order.status === 'confirmed_by_business') {
                         if (order.businessPickupConfirmed) {
-                            statusClass = 'status-picked-up'; statusText = 'Picked up - awaiting customer'; orderItemClass = 'picked-up';
+                            statusClass = 'status-picked-up';
+                            statusText = 'Picked up - awaiting customer';
+                            orderItemClass = 'picked-up';
                             actionHtml = `<span class="waiting-text" style="color:#e65100;">⏳ Waiting for customer</span>`;
                         } else {
-                            statusClass = 'status-waiting'; statusText = 'Awaiting customer pickup'; orderItemClass = 'waiting';
+                            statusClass = 'status-waiting';
+                            statusText = 'Awaiting customer pickup';
+                            orderItemClass = 'waiting';
                             actionHtml = `<span class="waiting-text" style="color:#f57c00;">⏳ Awaiting customer</span>`;
                         }
                     } else if (order.status === 'collected_by_customer') {
-                        statusClass = 'status-completed'; statusText = 'completed'; orderItemClass = 'completed';
+                        statusClass = 'status-completed';
+                        statusText = 'completed';
+                        orderItemClass = 'completed';
                         actionHtml = `<span class="waiting-text" style="color:#007aff;">✅ Payment released</span>`;
                     } else if (order.status === 'cancelled') {
-                        statusClass = 'status-cancelled'; statusText = 'cancelled'; orderItemClass = 'cancelled';
+                        statusClass = 'status-cancelled';
+                        statusText = 'cancelled';
+                        orderItemClass = 'cancelled';
                         actionHtml = ``;
                     } else {
-                        statusClass = 'status-pending'; statusText = order.status;
+                        statusClass = 'status-pending';
+                        statusText = order.status;
                     }
                     return `
                             <div class="order-item ${orderItemClass}" style="animation-delay:${i*0.08}s;">
@@ -2208,7 +2246,9 @@
                 pickupConfirmMap[orderId] = false;
                 savePickupMap(pickupConfirmMap);
                 showStatus('Order confirmed! Waiting for customer to pick up.', 'success');
-                await loadOrders(); await loadStats(); await refreshWallet();
+                await loadOrders();
+                await loadStats();
+                await refreshWallet();
             } else {
                 showStatus(result.message, 'error');
             }
@@ -2218,20 +2258,27 @@
             if (selectedOrderIds.size === 0) { showStatus('No orders selected', 'error'); return; }
             if (!confirm(`Confirm ${selectedOrderIds.size} order(s)?`)) return;
             const bulkBtn = document.getElementById('bulkConfirmBtn');
-            bulkBtn.disabled = true; bulkBtn.textContent = '⏳ Confirming...';
-            let success = 0, error = 0;
-            const defaultTime = new Date(); defaultTime.setHours(defaultTime.getHours() + 2);
+            bulkBtn.disabled = true;
+            bulkBtn.textContent = '⏳ Confirming...';
+            let success = 0,
+                error = 0;
+            const defaultTime = new Date();
+            defaultTime.setHours(defaultTime.getHours() + 2);
             const collectByTime = defaultTime.toISOString();
             for (const orderId of Array.from(selectedOrderIds)) {
                 const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
                 if (result.success) {
-                    pickupConfirmMap[orderId] = false; success++;
+                    pickupConfirmMap[orderId] = false;
+                    success++;
                 } else error++;
             }
-            selectedOrderIds.clear(); savePickupMap(pickupConfirmMap);
+            selectedOrderIds.clear();
+            savePickupMap(pickupConfirmMap);
             if (error === 0) showStatus(`✅ ${success} order(s) confirmed!`, 'success');
             else showStatus(`⚠️ ${success} confirmed, ${error} failed.`, 'error');
-            await loadOrders(); await loadStats(); await refreshWallet();
+            await loadOrders();
+            await loadStats();
+            await refreshWallet();
             bulkBtn.textContent = '✓ Confirm Selected';
         }
 
@@ -2240,7 +2287,8 @@
             const container = document.getElementById('notificationsList');
             try {
                 const notifications = await Backend.getNotifications(currentUser.id);
-                if (notifications.length === 0) { container.innerHTML = '<div class="empty-state">🔔 No notifications</div>'; return; }
+                if (notifications.length === 0) { container.innerHTML =
+                    '<div class="empty-state">🔔 No notifications</div>'; return; }
                 container.innerHTML = notifications.map(n => `
                         <div class="notification-item ${!n.read ? 'unread' : ''}" onclick="markRead('${n.id}')">
                             <div class="notification-message">${escapeHtml(n.message)}</div>
@@ -2278,19 +2326,45 @@
             const taxId = document.getElementById('taxId').value.trim();
             if (!taxId) { showStatus('Enter tax ID', 'error'); return; }
             const result = await Backend.submitVerification();
-            if (result.success) { showStatus('Business verified!', 'success'); isVerified = true; updateVerificationUI(); localStorage.setItem('businessVerified', 'true'); } 
-            else { showStatus(result.message, 'error'); }
+            if (result.success) { showStatus('Business verified!', 'success');
+                isVerified = true;
+                updateVerificationUI();
+                localStorage.setItem('businessVerified', 'true'); } else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING =====
+        // ===== TAB SWITCHING – FIX: always hide all, show only selected =====
         function switchTab(tabName) {
+            // Guard against invalid tab names
+            const validTabs = ['profile', 'employees', 'orders', 'lookup', 'verification', 'notifications', 'data'];
+            if (!validTabs.includes(tabName)) return;
+
             activeTab = tabName;
+
+            // 1. Remove 'active' class from ALL tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+            // 2. Remove 'active' class from ALL tab content panels
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            // 3. Find the corresponding button and content panel
+            const tabMap = {
+                profile: 0,
+                employees: 1,
+                orders: 2,
+                lookup: 3,
+                verification: 4,
+                notifications: 5,
+                data: 6
+            };
             const tabs = document.querySelectorAll('.tab');
-            const tabMap = { profile: 0, employees: 1, orders: 2, lookup: 3, verification: 4, notifications: 5, data: 6 };
-            if (tabs[tabMap[tabName]]) tabs[tabMap[tabName]].classList.add('active');
-            document.getElementById(`${tabName}Tab`).classList.add('active');
+            const targetTab = tabs[tabMap[tabName]];
+            const targetContent = document.getElementById(`${tabName}Tab`);
+
+            // 4. Activate the button and the content
+            if (targetTab) targetTab.classList.add('active');
+            if (targetContent) targetContent.classList.add('active');
+
+            // 5. Update bottom nav
             updateNavActive(tabName);
         }
 
@@ -2298,23 +2372,29 @@
         function performLookup() {
             const input = document.getElementById('lookupInput').value.trim().toLowerCase();
             const resultsContainer = document.getElementById('lookupResults');
-            if (!input) { resultsContainer.innerHTML = '<div class="empty-state">🔍 Enter a name or order ID to search</div>'; return; }
-            if (allOrdersCache.length === 0) { resultsContainer.innerHTML = '<div class="empty-state">📦 No orders loaded yet. Refresh orders first.</div>'; return; }
+            if (!input) { resultsContainer.innerHTML =
+                '<div class="empty-state">🔍 Enter a name or order ID to search</div>'; return; }
+            if (allOrdersCache.length === 0) { resultsContainer.innerHTML =
+                '<div class="empty-state">📦 No orders loaded yet. Refresh orders first.</div>'; return; }
             const results = allOrdersCache.filter(order => {
                 const nameMatch = order.consumerName && order.consumerName.toLowerCase().includes(input);
                 const idMatch = order.id && order.id.toLowerCase().includes(input);
                 return nameMatch || idMatch;
             });
-            if (results.length === 0) { resultsContainer.innerHTML = `<div class="empty-state">🔍 No orders found for "${escapeHtml(input)}"</div>`; return; }
+            if (results.length === 0) { resultsContainer.innerHTML =
+                    `<div class="empty-state">🔍 No orders found for "${escapeHtml(input)}"</div>`; return; }
             resultsContainer.innerHTML = results.map(order => {
-                let statusClass = '', statusText = '';
-                if (order.status === 'pending') { statusClass = 'pending'; statusText = 'pending confirmation'; } 
-                else if (order.status === 'confirmed_by_business') {
-                    if (order.businessPickupConfirmed) { statusClass = 'picked-up'; statusText = 'Picked up - awaiting customer'; } 
-                    else { statusClass = 'waiting'; statusText = 'Awaiting customer pickup'; }
-                } else if (order.status === 'collected_by_customer') { statusClass = 'completed'; statusText = 'completed'; } 
-                else if (order.status === 'cancelled') { statusClass = 'cancelled'; statusText = 'cancelled'; } 
-                else { statusClass = 'pending'; statusText = order.status; }
+                let statusClass = '',
+                    statusText = '';
+                if (order.status === 'pending') { statusClass = 'pending';
+                    statusText = 'pending confirmation'; } else if (order.status === 'confirmed_by_business') {
+                    if (order.businessPickupConfirmed) { statusClass = 'picked-up';
+                        statusText = 'Picked up - awaiting customer'; } else { statusClass = 'waiting';
+                        statusText = 'Awaiting customer pickup'; }
+                } else if (order.status === 'collected_by_customer') { statusClass = 'completed';
+                    statusText = 'completed'; } else if (order.status === 'cancelled') { statusClass = 'cancelled';
+                    statusText = 'cancelled'; } else { statusClass = 'pending';
+                    statusText = order.status; }
                 return `<div class="lookup-result-item ${statusClass}" onclick="showOrderDetailModal('${order.id}')"><div class="lookup-result-header"><span class="lookup-customer">👤 ${escapeHtml(order.consumerName)}</span><span class="lookup-status ${statusClass}">${statusText}</span></div><div class="lookup-detail">🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}</div><div class="lookup-detail" style="font-weight:600;color:#34c759;">$${(order.totalAmount || 0).toFixed(2)}</div><div class="lookup-meta">🆔 ${order.id.slice(-8).toUpperCase()} • ${new Date(order.createdAt).toLocaleString()}</div>${order.batchNumber ? `<div class="lookup-meta">📦 batch: ${escapeHtml(order.batchNumber)}</div>` : ''}${order.collectByTime ? `<div class="lookup-meta">⏰ Collect by: ${new Date(order.collectByTime).toLocaleString()}</div>` : ''}<div class="click-hint">👆 tap to view details</div></div>`;
             }).join('');
         }
@@ -2325,42 +2405,57 @@
             currentDetailOrderId = orderId;
             const modal = document.getElementById('orderDetailModal');
             const body = document.getElementById('orderDetailBody');
-            let statusBadgeClass = '', statusDisplay = '';
-            if (order.status === 'pending') { statusBadgeClass = 'pending'; statusDisplay = '⏳ Pending Confirmation'; } 
-            else if (order.status === 'confirmed_by_business') {
-                if (order.businessPickupConfirmed) { statusBadgeClass = 'picked-up'; statusDisplay = '📦 Picked up - awaiting customer'; } 
-                else { statusBadgeClass = 'waiting'; statusDisplay = '🕒 Awaiting customer pickup'; }
-            } else if (order.status === 'collected_by_customer') { statusBadgeClass = 'completed'; statusDisplay = '🎉 Completed (Payment Released)'; } 
-            else if (order.status === 'cancelled') { statusBadgeClass = 'cancelled'; statusDisplay = '❌ Cancelled'; } 
-            else { statusBadgeClass = 'pending'; statusDisplay = order.status; }
-            let actionButtonsHtml = '', extraMessage = '';
+            let statusBadgeClass = '',
+                statusDisplay = '';
+            if (order.status === 'pending') { statusBadgeClass = 'pending';
+                statusDisplay = '⏳ Pending Confirmation'; } else if (order.status === 'confirmed_by_business') {
+                if (order.businessPickupConfirmed) { statusBadgeClass = 'picked-up';
+                    statusDisplay = '📦 Picked up - awaiting customer'; } else { statusBadgeClass = 'waiting';
+                    statusDisplay = '🕒 Awaiting customer pickup'; }
+            } else if (order.status === 'collected_by_customer') { statusBadgeClass = 'completed';
+                statusDisplay = '🎉 Completed (Payment Released)'; } else if (order.status === 'cancelled') { statusBadgeClass =
+                    'cancelled';
+                statusDisplay = '❌ Cancelled'; } else { statusBadgeClass = 'pending';
+                statusDisplay = order.status; }
+            let actionButtonsHtml = '',
+                extraMessage = '';
             if (order.status === 'pending') {
-                extraMessage = `<div class="pending-message">⚠️ This order is pending confirmation.<br>Please confirm it in the <strong>Orders</strong> tab first.</div>`;
+                extraMessage =
+                    `<div class="pending-message">⚠️ This order is pending confirmation.<br>Please confirm it in the <strong>Orders</strong> tab first.</div>`;
                 actionButtonsHtml = ``;
             } else if (order.status === 'confirmed_by_business' && !order.businessPickupConfirmed) {
-                extraMessage = `<div class="waiting-message">✅ Order is confirmed.<br><strong>Tap "Confirm Pickup"</strong> once the customer has collected the items.</div>`;
-                actionButtonsHtml = `<button class="modal-action-btn cancel-btn" onclick="cancelOrderFromModal()">✗ Cancel Order</button><button class="modal-action-btn pickup-btn" onclick="confirmBusinessPickup()">📦 Confirm Pickup</button>`;
+                extraMessage =
+                    `<div class="waiting-message">✅ Order is confirmed.<br><strong>Tap "Confirm Pickup"</strong> once the customer has collected the items.</div>`;
+                actionButtonsHtml =
+                    `<button class="modal-action-btn cancel-btn" onclick="cancelOrderFromModal()">✗ Cancel Order</button><button class="modal-action-btn pickup-btn" onclick="confirmBusinessPickup()">📦 Confirm Pickup</button>`;
             } else if (order.status === 'confirmed_by_business' && order.businessPickupConfirmed) {
-                extraMessage = `<div class="picked-up-message">✅ Items picked up by business.<br><strong>Awaiting customer confirmation</strong> to release payment.</div>`;
+                extraMessage =
+                    `<div class="picked-up-message">✅ Items picked up by business.<br><strong>Awaiting customer confirmation</strong> to release payment.</div>`;
                 actionButtonsHtml = `<button class="modal-action-btn cancel-btn" onclick="cancelOrderFromModal()">✗ Cancel Order</button>`;
             } else if (order.status === 'collected_by_customer') {
-                extraMessage = `<div class="completed-message">✅ Order completed. Payment has been released to your wallet.</div>`;
+                extraMessage =
+                    `<div class="completed-message">✅ Order completed. Payment has been released to your wallet.</div>`;
                 actionButtonsHtml = ``;
             } else if (order.status === 'cancelled') {
                 extraMessage = `<div class="cancelled-message">❌ This order has been cancelled.</div>`;
                 actionButtonsHtml = ``;
             } else { actionButtonsHtml = ``; }
-            body.innerHTML = `<div class="detail-field"><div class="detail-field-label">Customer</div><div class="detail-field-value">👤 ${escapeHtml(order.consumerName)}</div></div><div class="detail-field"><div class="detail-field-label">Item</div><div class="detail-field-value">🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}</div></div>${order.batchNumber ? `<div class="detail-field"><div class="detail-field-label">Batch Number</div><div class="detail-field-value"><span class="batch-tag">📦 ${escapeHtml(order.batchNumber)}</span></div></div>` : ''}<div class="detail-field"><div class="detail-field-label">Total Amount</div><div class="detail-field-value" style="color:#34c759; font-weight:700;">$${(order.totalAmount || 0).toFixed(2)}</div></div><div class="detail-field"><div class="detail-field-label">Status</div><div class="detail-field-value"><span class="status-badge ${statusBadgeClass}">${statusDisplay}</span></div></div><div class="detail-field"><div class="detail-field-label">Order Placed</div><div class="detail-field-value" style="font-size:13px; color:#666;">${new Date(order.createdAt).toLocaleString()}</div></div>${order.collectByTime ? `<div class="detail-field"><div class="detail-field-label">Collect By</div><div class="detail-field-value" style="font-size:13px; color:#e65100;">${new Date(order.collectByTime).toLocaleString()}</div></div>` : ''}${extraMessage}<div class="order-detail-actions">${actionButtonsHtml}</div>`;
+            body.innerHTML =
+                `<div class="detail-field"><div class="detail-field-label">Customer</div><div class="detail-field-value">👤 ${escapeHtml(order.consumerName)}</div></div><div class="detail-field"><div class="detail-field-label">Item</div><div class="detail-field-value">🍽️ ${escapeHtml(order.foodName)} × ${order.quantity}</div></div>${order.batchNumber ? `<div class="detail-field"><div class="detail-field-label">Batch Number</div><div class="detail-field-value"><span class="batch-tag">📦 ${escapeHtml(order.batchNumber)}</span></div></div>` : ''}<div class="detail-field"><div class="detail-field-label">Total Amount</div><div class="detail-field-value" style="color:#34c759; font-weight:700;">$${(order.totalAmount || 0).toFixed(2)}</div></div><div class="detail-field"><div class="detail-field-label">Status</div><div class="detail-field-value"><span class="status-badge ${statusBadgeClass}">${statusDisplay}</span></div></div><div class="detail-field"><div class="detail-field-label">Order Placed</div><div class="detail-field-value" style="font-size:13px; color:#666;">${new Date(order.createdAt).toLocaleString()}</div></div>${order.collectByTime ? `<div class="detail-field"><div class="detail-field-label">Collect By</div><div class="detail-field-value" style="font-size:13px; color:#e65100;">${new Date(order.collectByTime).toLocaleString()}</div></div>` : ''}${extraMessage}<div class="order-detail-actions">${actionButtonsHtml}</div>`;
             modal.classList.add('show');
         }
 
-        function closeOrderDetailModal() { document.getElementById('orderDetailModal').classList.remove('show'); currentDetailOrderId = null; }
+        function closeOrderDetailModal() { document.getElementById('orderDetailModal').classList.remove('show');
+            currentDetailOrderId = null; }
 
         async function confirmBusinessPickup() {
             if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
-            if (!confirm('Confirm pickup on business side? This will mark the order as picked up. Customer must then confirm to release payment.')) return;
+            if (!confirm(
+                    'Confirm pickup on business side? This will mark the order as picked up. Customer must then confirm to release payment.'
+                    )) return;
             const btn = document.querySelector('.modal-action-btn.pickup-btn');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing...'; }
+            if (btn) { btn.disabled = true;
+                btn.textContent = '⏳ Processing...'; }
             try {
                 const Order = Parse.Object.extend("Order");
                 const query = new Parse.Query(Order);
@@ -2373,17 +2468,21 @@
                 if (cachedOrder) { cachedOrder.businessPickupConfirmed = true; }
                 showStatus('✅ Business pickup confirmed. Waiting for customer confirmation.', 'success');
                 closeOrderDetailModal();
-                await loadOrders(); await loadStats(); await refreshWallet();
+                await loadOrders();
+                await loadStats();
+                await refreshWallet();
                 performLookup();
-            } catch (err) { showStatus('Error updating order: ' + err.message, 'error'); } 
-            finally { if (btn) { btn.disabled = false; btn.textContent = '📦 Confirm Pickup'; } }
+            } catch (err) { showStatus('Error updating order: ' + err.message, 'error'); } finally { if (btn) { btn
+                        .disabled = false;
+                    btn.textContent = '📦 Confirm Pickup'; } }
         }
 
         async function cancelOrderFromModal() {
             if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
             if (!confirm('Cancel this order? This action cannot be undone.')) return;
             const btn = document.querySelector('.modal-action-btn.cancel-btn');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ Cancelling...'; }
+            if (btn) { btn.disabled = true;
+                btn.textContent = '⏳ Cancelling...'; }
             try {
                 const result = await Backend.updateClaimStatus(currentDetailOrderId, 'cancelled');
                 if (result.success) {
@@ -2391,12 +2490,14 @@
                     savePickupMap(pickupConfirmMap);
                     showStatus('❌ Order cancelled', 'success');
                     closeOrderDetailModal();
-                    await loadOrders(); await loadStats(); await refreshWallet();
+                    await loadOrders();
+                    await loadStats();
+                    await refreshWallet();
                     const lookupInput = document.getElementById('lookupInput');
                     if (lookupInput.value.trim()) performLookup();
                 } else { showStatus(result.message || 'Failed to cancel order', 'error'); }
-            } catch (err) { showStatus('Error cancelling order', 'error'); } 
-            finally { if (btn) { btn.disabled = false; btn.textContent = '✗ Cancel Order'; } }
+            } catch (err) { showStatus('Error cancelling order', 'error'); } finally { if (btn) { btn.disabled = false;
+                    btn.textContent = '✗ Cancel Order'; } }
         }
 
         // ===== UTILITY =====
@@ -2413,7 +2514,7 @@
             return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
 
-        // ===== EXCEL IMPORT/EXPORT (unchanged) =====
+        // ===== EXCEL IMPORT/EXPORT =====
         function parseExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -2584,7 +2685,9 @@
             const fileInput = document.getElementById('inventoryImportFile');
             const file = fileInput.files[0];
             if (!file) { showStatus('Please select an Excel file first', 'error'); return; }
-            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel'
+            ];
             if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
                 showStatus('Please select an Excel file (.xlsx or .xls)', 'error');
                 return;
@@ -2607,23 +2710,26 @@
                         batchNumber: getValue(['Batch Number', 'batchNumber', 'batch', 'Batch']),
                         expiryDate: getValue(['Expiry Date', 'expiryDate', 'expiry', 'Expiry']),
                         quantity: parseInt(getValue(['Quantity', 'quantity', 'qty', 'Qty'])) || 0,
-                        originalPrice: parseFloat(getValue(['Original Price', 'originalPrice', 'price', 'Price'])) || 0,
+                        originalPrice: parseFloat(getValue(['Original Price', 'originalPrice', 'price', 'Price'])) ||
+                            0,
                         salePrice: parseFloat(getValue(['Sale Price', 'salePrice', 'sale', 'Sale'])) || 0,
                         category: getValue(['Category', 'category', 'cat']),
-                        onSale: (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'yes' || 
-                                (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'true'
+                        onSale: (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'yes' ||
+                            (getValue(['On Sale', 'onSale', 'on sale'])).toString().toLowerCase() === 'true'
                     };
                 });
                 const validItems = mappedData.filter(item => item.name && item.name.trim() !== '');
-                if (validItems.length === 0) { showStatus('No valid items found. "Item Name" is required.', 'error'); return; }
+                if (validItems.length === 0) { showStatus('No valid items found. "Item Name" is required.',
+                    'error'); return; }
                 if (!confirm(`Import ${validItems.length} items to inventory?`)) return;
                 showStatus(`Importing ${validItems.length} items...`, 'info');
                 const existing = await Backend.loadInventoryItems(businessId);
                 const merged = [...existing];
-                let addedCount = 0, duplicateCount = 0;
+                let addedCount = 0,
+                    duplicateCount = 0;
                 for (const item of validItems) {
-                    const exists = merged.some(existingItem => 
-                        existingItem.name === item.name && 
+                    const exists = merged.some(existingItem =>
+                        existingItem.name === item.name &&
                         existingItem.batchNumber === item.batchNumber
                     );
                     if (!exists) {
@@ -2644,7 +2750,9 @@
                 if (addedCount === 0) { showStatus(`All items already exist in inventory.`, 'info'); return; }
                 const result = await Backend.saveInventoryItems(merged);
                 if (result.success) {
-                    showStatus(`✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`, 'success');
+                    showStatus(
+                        `✅ Imported ${addedCount} items to inventory!${duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : ''}`,
+                        'success');
                     fileInput.value = '';
                 } else { showStatus('Failed to import inventory items', 'error'); }
             } catch (error) { showStatus('Error importing Excel: ' + error.message, 'error'); }
