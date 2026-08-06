@@ -61,11 +61,12 @@
             width: 100%;
             max-width: 400px;
             background: white;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.03);
-            animation: appSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100vh;               /* force full height */
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.03);
+            animation: appSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;            /* prevent scroll on app */
         }
         @keyframes appSlideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -86,6 +87,7 @@
             color: white;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
         .header::before {
             content: '';
@@ -133,10 +135,17 @@
             padding-bottom: 0;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;            /* allow scroll if content overflows */
         }
         
         /* Quick Actions */
-        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+        .quick-actions { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            margin-bottom: 12px; 
+            flex-shrink: 0; 
+        }
         .action-card {
             background: #f8f9fa; border-radius: 16px; padding: 20px;
             text-decoration: none; color: #1a1a1a;
@@ -154,15 +163,19 @@
         .card-title { font-weight: 600; margin-bottom: 4px; }
         .card-desc { font-size: 12px; color: #666; }
 
-        /* Dynamic Summary Panel – no extra bottom margin */
+        /* Summary Panel – fills remaining space */
         .summary-panel {
+            flex: 1;                         /* take all remaining vertical space */
             background: linear-gradient(135deg, #e8eaf6, #d1c4e9);
             border-radius: 16px;
             padding: 16px;
             margin-top: 8px;
-            margin-bottom: 0;          /* remove bottom gap */
+            margin-bottom: 0;
             border: 1px solid #d1c4e9;
             animation: slideInRight 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;                   /* allow flex shrinking */
         }
         .summary-panel h3 {
             font-size: 16px;
@@ -172,11 +185,14 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
+            flex: 1;                         /* let grid expand if needed */
+            align-content: start;            /* keep items at top */
         }
         .stat-item {
             background: rgba(255,255,255,0.7);
@@ -201,6 +217,10 @@
             text-align: center;
             color: #6c5f8a;
             font-size: 13px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .bottom-nav {
@@ -209,8 +229,8 @@
             padding: 8px 20px;
             display: flex;
             justify-content: space-around;
-            z-index: 100;
-            margin-top: 0;             /* no extra margin */
+            flex-shrink: 0;
+            margin-top: 0;
         }
         .nav-item {
             text-decoration: none; color: #999; font-size: 12px;
@@ -268,7 +288,7 @@
                 <!-- Dynamic cards injected by renderQuickActions() -->
             </div>
 
-            <!-- Business Overview (dynamic stats) -->
+            <!-- Business Overview – flex:1 so it fills the gap -->
             <div class="summary-panel" id="summaryPanel">
                 <div class="loading-spinner"></div>
                 <p style="text-align:center; color:#7e6e9e;">loading stats...</p>
@@ -322,7 +342,6 @@
             const container = document.getElementById('quickActions');
             let html = '';
 
-            // Inventory card – always shown if they have read or edit permission
             if (perms.can_read_inventory || perms.can_edit_inventory) {
                 html += `
                     <div class="action-card" onclick="window.location.href='inventory.html'">
@@ -345,7 +364,6 @@
 
             // Orders card removed as requested.
 
-            // Fallback
             if (html === '') {
                 html = `
                     <div class="action-card" onclick="window.location.href='business-profile.html'">
@@ -359,7 +377,6 @@
             container.innerHTML = html;
         }
 
-        // Helper: get the real business ID (owner's ID)
         function getBusinessOwnerId() {
             const user = Backend.getCurrentUser();
             return user.get('businessId') || user.id;
@@ -394,8 +411,6 @@
                     `;
                     hasData = true;
                 }
-
-                // Orders stats removed as requested.
 
                 if (!hasData) {
                     panel.innerHTML = `
