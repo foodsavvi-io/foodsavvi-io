@@ -187,11 +187,11 @@
             </div>
         </div>
 
-        <!-- Bottom Nav – role‑based visibility is set in setupUI() -->
+        <!-- Bottom Nav – both Ads and Inventory hidden by default, shown by JS -->
         <div class="bottom-nav" id="bottomNav">
             <a href="#" id="navHome" class="nav-item"><span class="nav-emoji">🏠</span><span>home</span></a>
             <a href="#" id="navAds" class="nav-item" style="display:none;"><span class="nav-emoji">📢</span><span>ads</span></a>
-            <a href="inventory.html" id="navInventory" class="nav-item active"><span class="nav-emoji">📦</span><span>inventory</span></a>
+            <a href="inventory.html" id="navInventory" class="nav-item" style="display:none;"><span class="nav-emoji">📦</span><span>inventory</span></a>
             <a href="#" id="navSettings" class="nav-item"><span class="nav-emoji">⚙️</span><span>settings</span></a>
         </div>
     </div>
@@ -344,21 +344,23 @@
             if (isEmployee) {
                 navHome.href = 'index-employee.html';
                 navSettings.href = 'business-profile.html';
-                // Hide Ads and Inventory tabs – only Home and Settings remain
+                // Hide Ads and Inventory – they are already hidden by default, but ensure they stay hidden
                 navAds.style.display = 'none';
                 navInventory.style.display = 'none';
-                // Set Home as active (since we're hiding inventory)
+                // Activate Home
                 navHome.classList.add('active');
                 navInventory.classList.remove('active');
-                // Ensure Settings is not active (it shouldn't be)
                 navSettings.classList.remove('active');
+                navAds.classList.remove('active');
             } else {
                 navHome.href = 'index.html';
                 navAds.href = 'advertise.html';
+                navInventory.href = 'inventory.html';
+                navSettings.href = 'business-profile.html?tab=profile';
+                // Show Ads and Inventory
                 navAds.style.display = 'block';
                 navInventory.style.display = 'block';
-                navSettings.href = 'business-profile.html?tab=profile';
-                // Inventory is active
+                // Activate Inventory
                 navHome.classList.remove('active');
                 navInventory.classList.add('active');
                 navAds.classList.remove('active');
@@ -627,11 +629,13 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import ---
+        // --- Excel Import (fixed) ---
         async function importExcel(event) {
             if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
             const file = event.target.files[0];
             if (!file) return;
+            
+            showToast('Reading file...', 'info');
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
@@ -639,6 +643,11 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                     
+                    if (!jsonData || jsonData.length === 0) {
+                        showToast('No data found in file', 'error');
+                        return;
+                    }
+
                     const newItems = jsonData.map(row => ({
                         name: row['Item Name'] || row['name'] || '',
                         batchNumber: row['Batch Number'] || row['batchNumber'] || '',
@@ -649,22 +658,32 @@
                         category: row['Category'] || row['category'] || 'other',
                         onSale: (row['On Sale'] || row['onSale'] || '').toString().toLowerCase() === 'yes',
                         businessId: businessId
-                    })).filter(item => item.name.trim() !== '');
+                    })).filter(item => item.name && item.name.trim() !== '');
 
-                    if (newItems.length === 0) { showToast('No valid items found', 'error'); return; }
+                    if (newItems.length === 0) { showToast('No valid items found. "Item Name" is required.', 'error'); return; }
                     
+                    // Confirm before importing
+                    if (!confirm(`Import ${newItems.length} new item(s)?`)) return;
+
                     const existing = await Backend.loadInventoryItems(businessId);
                     const merged = [...existing, ...newItems];
                     const result = await Backend.saveInventoryItems(merged);
                     if (result.success) {
-                        showToast(`Imported ${newItems.length} items!`, 'success');
+                        showToast(`✅ Imported ${newItems.length} items!`, 'success');
                         await loadInventory();
                     } else {
-                        showToast('Import failed', 'error');
+                        showToast('Import failed: ' + (result.message || 'unknown error'), 'error');
                     }
-                } catch (err) { showToast('Error parsing file', 'error'); }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error parsing file: ' + err.message, 'error');
+                }
+            };
+            reader.onerror = function() {
+                showToast('Failed to read file', 'error');
             };
             reader.readAsArrayBuffer(file);
+            // Reset input so same file can be re-imported
             event.target.value = '';
         }
 
