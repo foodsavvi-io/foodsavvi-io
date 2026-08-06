@@ -61,12 +61,11 @@
             width: 100%;
             max-width: 400px;
             background: white;
-            height: 100vh;               /* force full height */
+            min-height: 100vh;               /* full viewport height */
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 20px rgba(0,0,0,0.03);
             animation: appSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            overflow: hidden;            /* prevent scroll on app */
         }
         @keyframes appSlideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -131,11 +130,10 @@
         
         .content {
             flex: 1;
-            padding: 20px;
-            padding-bottom: 0;
+            padding: 20px 20px 0;            /* no bottom padding – gap will be filled by summary */
             display: flex;
             flex-direction: column;
-            overflow-y: auto;            /* allow scroll if content overflows */
+            overflow-y: auto;                 /* allow scroll if content overflows */
         }
         
         /* Quick Actions */
@@ -163,19 +161,19 @@
         .card-title { font-weight: 600; margin-bottom: 4px; }
         .card-desc { font-size: 12px; color: #666; }
 
-        /* Summary Panel – fills remaining space */
+        /* Summary Panel – flex:1 to fill remaining space */
         .summary-panel {
-            flex: 1;                         /* take all remaining vertical space */
+            flex: 1;                         /* takes all leftover space */
             background: linear-gradient(135deg, #e8eaf6, #d1c4e9);
             border-radius: 16px;
             padding: 16px;
             margin-top: 8px;
-            margin-bottom: 0;
+            margin-bottom: 0;                /* no bottom gap */
             border: 1px solid #d1c4e9;
             animation: slideInRight 0.4s ease;
             display: flex;
             flex-direction: column;
-            min-height: 0;                   /* allow flex shrinking */
+            min-height: 0;                   /* allow shrinking */
         }
         .summary-panel h3 {
             font-size: 16px;
@@ -229,7 +227,7 @@
             padding: 8px 20px;
             display: flex;
             justify-content: space-around;
-            flex-shrink: 0;
+            flex-shrink: 0;                  /* prevent shrinking */
             margin-top: 0;
         }
         .nav-item {
@@ -362,7 +360,7 @@
                 `;
             }
 
-            // Orders card removed as requested.
+            // Orders card removed.
 
             if (html === '') {
                 html = `
