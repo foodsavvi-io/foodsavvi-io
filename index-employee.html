@@ -352,16 +352,6 @@
                 `;
             }
 
-            if (html === '') {
-                html = `
-                    <div class="action-card" onclick="window.location.href='business-profile.html'">
-                        <div class="card-emoji">⚙️</div>
-                        <div class="card-title">settings</div>
-                        <div class="card-desc">view your profile</div>
-                    </div>
-                `;
-            }
-
             container.innerHTML = html;
         }
 
@@ -398,16 +388,6 @@
                         </div>
                     `;
                     hasData = true;
-                }
-
-                if (!hasData) {
-                    panel.innerHTML = `
-                        <div class="no-perms-message">
-                            👋 Welcome! You have access to the business dashboard.<br>
-                            Use the actions above to get started.
-                        </div>
-                    `;
-                    return;
                 }
 
                 panel.innerHTML = `
