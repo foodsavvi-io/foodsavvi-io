@@ -342,15 +342,7 @@
                 `;
             }
 
-            if (perms.can_view_orders) {
-                html += `
-                    <div class="action-card" onclick="window.location.href='business-profile.html?tab=orders'">
-                        <div class="card-emoji">📦</div>
-                        <div class="card-title">orders</div>
-                        <div class="card-desc">incoming requests</div>
-                    </div>
-                `;
-            }
+            // Orders card removed as requested.
 
             // Fallback
             if (html === '') {
@@ -402,17 +394,7 @@
                     hasData = true;
                 }
 
-                if (currentPermissions.can_view_orders) {
-                    const orders = await Backend.getOrdersForBusiness(ownerId);
-                    const pendingOrders = orders.filter(o => o.status === 'confirmed_by_business');
-                    statsHtml += `
-                        <div class="stat-item">
-                            <div class="stat-number">${pendingOrders.length}</div>
-                            <div class="stat-label">Awaiting Pickup</div>
-                        </div>
-                    `;
-                    hasData = true;
-                }
+                // Orders stats removed as requested.
 
                 if (!hasData) {
                     panel.innerHTML = `
