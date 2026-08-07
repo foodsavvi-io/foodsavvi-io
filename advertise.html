@@ -17,6 +17,7 @@
         }
     </script>
     <style>
+        /* ─── styles (unchanged) ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -824,7 +825,7 @@
         }
 
         // ============================================================
-        //  INIT
+        //  INIT – with fixed permission check
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -838,7 +839,10 @@
             console.log('🔍 Business ID:', businessId);
 
             const perms = await Backend.getEmployeePermissions(user.id);
-            console.log('📋 Permissions received:', perms);
+            console.log('📋 Full permissions object:', perms);
+            console.log('📋 can_post_ads value:', perms.can_post_ads);
+            console.log('📋 isOwner:', perms.isOwner);
+            console.log('📋 isPending:', perms.isPending);
 
             if (perms.isPending) {
                 window.location.href = 'waiting-approval.html';
@@ -850,6 +854,7 @@
                 canPostAds = true;
             } else {
                 isEmployee = true;
+                // Strict check: only allow if can_post_ads is exactly true
                 canPostAds = perms.can_post_ads === true;
                 if (!canPostAds) {
                     showNotification('You do not have permission to post ads', 'error');
@@ -860,6 +865,7 @@
                 }
             }
 
+            // ---- Set up navigation based on role ----
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'index-employee.html';
@@ -875,6 +881,7 @@
                 document.getElementById('navInventory').style.display = 'block';
             }
 
+            // ---- Default dates ----
             const today = new Date();
             const nextWeek = new Date();
             nextWeek.setDate(today.getDate() + 7);
@@ -887,6 +894,7 @@
 
             onDiscountTypeChange();
 
+            // ---- URL params ----
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             const fromInv = urlParams.get('fromInventory');
