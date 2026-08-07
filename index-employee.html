@@ -53,19 +53,20 @@
             background: #f5f7fa;
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;          /* start from top */
+            align-items: flex-start;        /* start from top, not center */
             justify-content: center;
+            padding: 0;
         }
 
         .app {
             width: 100%;
             max-width: 400px;
             background: white;
-            min-height: 100vh;               /* keep full height, but content won't stretch */
-            display: flex;
-            flex-direction: column;
             box-shadow: 0 0 20px rgba(0,0,0,0.03);
             animation: appSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;             /* still fill viewport but content won't stretch */
         }
         @keyframes appSlideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -128,13 +129,12 @@
         .logout-btn:hover { background: rgba(255,59,48,0.4); }
         .logout-btn:active { background: rgba(255,59,48,0.6); }
         
-        /* content no longer stretches – it takes only as much space as its children */
         .content {
             padding: 20px;
             padding-bottom: 0;               /* no bottom padding */
             display: flex;
             flex-direction: column;
-            flex: 0 1 auto;                  /* don't grow, allow shrink */
+            flex: 1;                         /* take remaining space but won't stretch children */
         }
         
         /* Quick Actions */
@@ -221,6 +221,7 @@
             justify-content: space-around;
             flex-shrink: 0;
             margin-top: 0;                   /* no extra gap */
+            /* position: static – it flows naturally after content */
         }
         .nav-item {
             text-decoration: none; color: #999; font-size: 12px;
@@ -275,7 +276,7 @@
         
         <div class="content">
             <div class="quick-actions" id="quickActions">
-                <!-- Dynamic cards injected by renderQuickActions() -->
+                <!-- Dynamic cards -->
             </div>
 
             <!-- Business Overview – natural height, not stretched -->
