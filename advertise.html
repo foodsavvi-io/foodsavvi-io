@@ -17,7 +17,7 @@
         }
     </script>
     <style>
-        /* ─── styles (unchanged) ─── */
+        /* ─── styles unchanged ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -825,7 +825,7 @@
         }
 
         // ============================================================
-        //  INIT – with fixed permission check
+        //  INIT – FIXED: proper permission check with logging
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -838,6 +838,7 @@
             businessId = user.get('businessId') || user.id;
             console.log('🔍 Business ID:', businessId);
 
+            // Fetch permissions
             const perms = await Backend.getEmployeePermissions(user.id);
             console.log('📋 Full permissions object:', perms);
             console.log('📋 can_post_ads value:', perms.can_post_ads);
@@ -854,7 +855,7 @@
                 canPostAds = true;
             } else {
                 isEmployee = true;
-                // Strict check: only allow if can_post_ads is exactly true
+                // ✅ Strict check – only allow if can_post_ads is exactly true
                 canPostAds = perms.can_post_ads === true;
                 if (!canPostAds) {
                     showNotification('You do not have permission to post ads', 'error');
@@ -993,7 +994,7 @@
         }
 
         // ============================================================
-        //  FIXED: loadAdForEditing – price fallback
+        //  FIXED: loadAdForEditing – price fallback with cache
         // ============================================================
         async function loadAdForEditing(adId) {
             document.getElementById('loadingOverlay').style.display = 'flex';
@@ -1004,12 +1005,16 @@
                     document.getElementById('foodName').value = ad.foodName || '';
                     document.getElementById('description').value = ad.description || '';
 
-                    // ---- FIX: price retrieval ----
+                    // ---- FIX: price retrieval with cache fallback ----
                     let price = ad.originalPrice;
                     if (price == null || price === 0) {
                         const cached = getCachedAdPrice(ad.id);
                         if (cached != null && cached > 0) {
                             price = cached;
+                            console.log(`✅ Using cached price for ad ${adId}: ${price}`);
+                        } else {
+                            console.warn(`⚠️ No price found for ad ${adId}, falling back to 0`);
+                            price = 0;
                         }
                     }
                     document.getElementById('originalPrice').value = (price > 0) ? price : '';
