@@ -816,53 +816,55 @@
         }
 
         // ============================================================
-        //  PATCHES: override Backend functions to use owner's ID
+        //  SAFE PATCHES: override only necessary functions
         // ============================================================
-        function patchBackendFunctions(ownerId) {
+        function applyPatches(ownerId) {
             // ---- Patch getShopAds to include originalPrice ----
-            const originalGetShopAds = Backend.getShopAds.bind(Backend);
+            const originalGetShopAds = Backend.getShopAds;
             Backend.getShopAds = async function(businessId) {
                 try {
-                    if (!businessId) {
-                        const currentUser = Parse.User.current();
-                        businessId = currentUser?.id;
+                    // Call original with Master Key to get full data
+                    const result = await originalGetShopAds.call(this, businessId);
+                    // If we got an array, ensure each ad has originalPrice
+                    if (Array.isArray(result)) {
+                        // The original might already have originalPrice, but if not, we need to fetch from Parse directly.
+                        // To be safe, we'll fetch fresh from Parse using Master Key.
+                        const Ad = Parse.Object.extend("Advertisement");
+                        const query = new Parse.Query(Ad);
+                        const bid = businessId || this.getCurrentUser()?.id;
+                        query.equalTo("businessId", bid);
+                        query.descending("createdAt");
+                        const ads = await query.find({ useMasterKey: true });
+                        return ads.map(ad => ({
+                            id: ad.id,
+                            foodName: ad.get("foodName"),
+                            discount: ad.get("discount"),
+                            discountType: ad.get("discountType") || 'percentage',
+                            discountValue: ad.get("discountValue"),
+                            offerEnds: ad.get("offerEnds"),
+                            batchExpiryDate: ad.get("batchExpiryDate"),
+                            businessName: ad.get("businessName"),
+                            active: ad.get("active"),
+                            views: ad.get("views"),
+                            claimed: ad.get("claimed"),
+                            batchNumber: ad.get("batchNumber"),
+                            quantityLeft: ad.get("quantityLeft"),
+                            productImage: ad.get("productImage") || null,
+                            originalPrice: ad.get("originalPrice") || 0,
+                            description: ad.get("description") || "",
+                            category: ad.get("category") || "other"
+                        }));
                     }
-                    if (!businessId) return [];
-
-                    const Ad = Parse.Object.extend("Advertisement");
-                    const query = new Parse.Query(Ad);
-                    query.equalTo("businessId", businessId);
-                    query.descending("createdAt");
-
-                    const ads = await query.find({ useMasterKey: true });
-                    return ads.map(ad => ({
-                        id: ad.id,
-                        foodName: ad.get("foodName"),
-                        discount: ad.get("discount"),
-                        discountType: ad.get("discountType") || 'percentage',
-                        discountValue: ad.get("discountValue'),
-                        offerEnds: ad.get("offerEnds"),
-                        batchExpiryDate: ad.get("batchExpiryDate"),
-                        businessName: ad.get("businessName"),
-                        active: ad.get("active"),
-                        views: ad.get("views"),
-                        claimed: ad.get("claimed"),
-                        batchNumber: ad.get("batchNumber"),
-                        quantityLeft: ad.get("quantityLeft"),
-                        productImage: ad.get("productImage") || null,
-                        originalPrice: ad.get("originalPrice") || 0,   // ✅ added
-                        description: ad.get("description") || "",
-                        category: ad.get("category") || "other"
-                    }));
+                    return result;
                 } catch (error) {
-                    console.error('getShopAds error:', error);
+                    console.error('Patched getShopAds error:', error);
                     return [];
                 }
             };
-            console.log('✅ Backend.getShopAds patched to include originalPrice');
+            console.log('✅ getShopAds patched');
 
             // ---- Patch createAd ----
-            const originalCreateAd = Backend.createAd.bind(Backend);
+            const originalCreateAd = Backend.createAd;
             Backend.createAd = async function(adData) {
                 try {
                     const currentUser = Parse.User.current();
@@ -903,7 +905,7 @@
             };
 
             // ---- Patch updateAd ----
-            const originalUpdateAd = Backend.updateAd.bind(Backend);
+            const originalUpdateAd = Backend.updateAd;
             Backend.updateAd = async function(adId, updates) {
                 try {
                     const currentUser = Parse.User.current();
@@ -936,7 +938,7 @@
             };
 
             // ---- Patch deleteAd ----
-            const originalDeleteAd = Backend.deleteAd.bind(Backend);
+            const originalDeleteAd = Backend.deleteAd;
             Backend.deleteAd = async function(adId) {
                 try {
                     const currentUser = Parse.User.current();
@@ -962,110 +964,115 @@
         //  INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = Backend.getCurrentUser();
-            const role = localStorage.getItem('userRole');
-            if (!user || role !== 'advertiser') {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Determine business owner ID
-            businessId = user.get('businessId') || user.id;
-            console.log('🔍 Business ID (owner):', businessId);
-
-            // Apply patches using the owner ID
-            patchBackendFunctions(businessId);
-
-            const perms = await Backend.getEmployeePermissions(user.id);
-            console.log('📋 Permissions:', perms);
-
-            if (perms.isPending) {
-                window.location.href = 'waiting-approval.html';
-                return;
-            }
-
-            if (perms.isOwner) {
-                isEmployee = false;
-                canPostAds = true;
-            } else {
-                isEmployee = true;
-                canPostAds = perms.can_post_ads === true;
-                if (!canPostAds) {
-                    showNotification('You do not have permission to post ads', 'error');
-                    setTimeout(() => window.location.href = 'index-employee.html', 1500);
+            try {
+                const user = Backend.getCurrentUser();
+                const role = localStorage.getItem('userRole');
+                if (!user || role !== 'advertiser') {
+                    window.location.href = 'login.html';
                     return;
                 }
-            }
 
-            // ---- Navigation ----
-            const backLink = document.getElementById('backLink');
-            if (isEmployee) {
-                backLink.href = 'index-employee.html';
-                document.getElementById('navAds').style.display = 'none';
-                document.getElementById('navInventory').style.display = 'none';
-                document.getElementById('navHome').href = 'index-employee.html';
-                document.getElementById('navSettings').href = 'business-profile.html';
-            } else {
-                backLink.href = 'index.html';
-                document.getElementById('navHome').href = 'index.html';
-                document.getElementById('navSettings').href = 'business-profile.html?tab=profile';
-                document.getElementById('navAds').style.display = 'block';
-                document.getElementById('navInventory').style.display = 'block';
-            }
+                // Determine business owner ID
+                businessId = user.get('businessId') || user.id;
+                console.log('🔍 Business ID (owner):', businessId);
 
-            // ---- Default dates ----
-            const today = new Date();
-            const nextWeek = new Date();
-            nextWeek.setDate(today.getDate() + 7);
-            const nextMonth = new Date();
-            nextMonth.setDate(today.getDate() + 30);
-            document.getElementById('offerEnds').value = nextWeek.toISOString().split('T')[0];
-            document.getElementById('batchExpiry').value = nextMonth.toISOString().split('T')[0];
-            document.getElementById('quantity').value = 50;
-            onDiscountTypeChange();
+                // Apply patches using the owner ID
+                applyPatches(businessId);
 
-            // ---- URL params ----
-            const urlParams = new URLSearchParams(window.location.search);
-            const editId = urlParams.get('edit');
-            const fromInv = urlParams.get('fromInventory');
+                const perms = await Backend.getEmployeePermissions(user.id);
+                console.log('📋 Permissions:', perms);
 
-            if (editId) {
-                editMode = true;
-                editAdId = editId;
-                document.getElementById('pageTitle').innerHTML = 'ads';
-                document.getElementById('formTitle').innerHTML = '✏️ Edit Ad';
-                document.getElementById('submitBtn').innerHTML = '💾 Save Changes';
-                loadAdForEditing(editId);
-            } else if (fromInv === 'true') {
-                fromInventory = true;
-                const stored = localStorage.getItem('inventoryExportData');
-                if (stored) {
-                    try {
-                        inventoryData = JSON.parse(stored);
-                        populateFromInventory(inventoryData);
-                        localStorage.removeItem('inventoryExportData');
-                        document.getElementById('pageTitle').innerHTML = 'ads';
-                        document.getElementById('formTitle').innerHTML = '📦 From Inventory';
-                        document.getElementById('submitBtn').innerHTML = '📢 Post Ad';
-                        showNotification('Loaded from inventory!', 'success');
-                    } catch (e) {
-                        showNotification('Error loading inventory data', 'error');
-                    }
-                } else {
-                    showNotification('No inventory data found', 'error');
+                if (perms.isPending) {
+                    window.location.href = 'waiting-approval.html';
+                    return;
                 }
-            }
 
-            const tabParam = urlParams.get('tab');
-            if (tabParam === 'manage') {
-                switchTab('manage');
-            } else {
-                loadMyAds();
+                if (perms.isOwner) {
+                    isEmployee = false;
+                    canPostAds = true;
+                } else {
+                    isEmployee = true;
+                    canPostAds = perms.can_post_ads === true;
+                    if (!canPostAds) {
+                        showNotification('You do not have permission to post ads', 'error');
+                        setTimeout(() => window.location.href = 'index-employee.html', 1500);
+                        return;
+                    }
+                }
+
+                // ---- Navigation ----
+                const backLink = document.getElementById('backLink');
+                if (isEmployee) {
+                    backLink.href = 'index-employee.html';
+                    document.getElementById('navAds').style.display = 'none';
+                    document.getElementById('navInventory').style.display = 'none';
+                    document.getElementById('navHome').href = 'index-employee.html';
+                    document.getElementById('navSettings').href = 'business-profile.html';
+                } else {
+                    backLink.href = 'index.html';
+                    document.getElementById('navHome').href = 'index.html';
+                    document.getElementById('navSettings').href = 'business-profile.html?tab=profile';
+                    document.getElementById('navAds').style.display = 'block';
+                    document.getElementById('navInventory').style.display = 'block';
+                }
+
+                // ---- Default dates ----
+                const today = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(today.getDate() + 7);
+                const nextMonth = new Date();
+                nextMonth.setDate(today.getDate() + 30);
+                document.getElementById('offerEnds').value = nextWeek.toISOString().split('T')[0];
+                document.getElementById('batchExpiry').value = nextMonth.toISOString().split('T')[0];
+                document.getElementById('quantity').value = 50;
+                onDiscountTypeChange();
+
+                // ---- URL params ----
+                const urlParams = new URLSearchParams(window.location.search);
+                const editId = urlParams.get('edit');
+                const fromInv = urlParams.get('fromInventory');
+
+                if (editId) {
+                    editMode = true;
+                    editAdId = editId;
+                    document.getElementById('pageTitle').innerHTML = 'ads';
+                    document.getElementById('formTitle').innerHTML = '✏️ Edit Ad';
+                    document.getElementById('submitBtn').innerHTML = '💾 Save Changes';
+                    loadAdForEditing(editId);
+                } else if (fromInv === 'true') {
+                    fromInventory = true;
+                    const stored = localStorage.getItem('inventoryExportData');
+                    if (stored) {
+                        try {
+                            inventoryData = JSON.parse(stored);
+                            populateFromInventory(inventoryData);
+                            localStorage.removeItem('inventoryExportData');
+                            document.getElementById('pageTitle').innerHTML = 'ads';
+                            document.getElementById('formTitle').innerHTML = '📦 From Inventory';
+                            document.getElementById('submitBtn').innerHTML = '📢 Post Ad';
+                            showNotification('Loaded from inventory!', 'success');
+                        } catch (e) {
+                            showNotification('Error loading inventory data', 'error');
+                        }
+                    } else {
+                        showNotification('No inventory data found', 'error');
+                    }
+                }
+
+                const tabParam = urlParams.get('tab');
+                if (tabParam === 'manage') {
+                    switchTab('manage');
+                } else {
+                    loadMyAds();
+                }
+            } catch (e) {
+                console.error('Init error:', e);
+                showNotification('Error loading page', 'error');
             }
         });
 
         // ============================================================
-        //  FORM HELPERS
+        //  FORM HELPERS (unchanged)
         // ============================================================
         function populateFromInventory(data) {
             document.getElementById('foodName').value = data.name || '';
@@ -1127,7 +1134,7 @@
                 if (ad) {
                     document.getElementById('foodName').value = ad.foodName || '';
                     document.getElementById('description').value = ad.description || '';
-                    // Now ad.originalPrice is available from the patch
+                    // ad.originalPrice is now available from the patch
                     let price = ad.originalPrice;
                     if (price == null || price === 0) {
                         const cached = getCachedAdPrice(ad.id);
