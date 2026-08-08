@@ -545,7 +545,8 @@ const Backend = {
                 claimed: ad.get("claimed"),
                 batchNumber: ad.get("batchNumber"),
                 quantityLeft: ad.get("quantityLeft"),
-                productImage: ad.get("productImage") || null
+                productImage: ad.get("productImage") || null,
+                originalPrice: ad.get("originalPrice") || 0
             }));
         } catch (error) {
             console.error('getShopAds error:', error);
@@ -757,6 +758,7 @@ const Backend = {
         }
     },
 
+    // ========== 🔥 FIX: getOrdersForBusiness includes businessPickupConfirmed ==========
     async getOrdersForBusiness(businessId) {
         try {
             if (!businessId) {
@@ -781,7 +783,9 @@ const Backend = {
                 totalAmount: o.get("totalAmount"),
                 status: o.get("status"),
                 createdAt: o.get("createdAt"),
-                collectByTime: o.get("collectByTime")
+                collectByTime: o.get("collectByTime"),
+                // ✅ This line ensures the flag is read from the server
+                businessPickupConfirmed: o.get("businessPickupConfirmed") || false
             }));
         } catch (error) {
             console.error('getOrdersForBusiness error:', error);
