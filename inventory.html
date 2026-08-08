@@ -159,7 +159,8 @@
                     <button class="btn btn-success" id="addBtn" onclick="openCreateModal()">+ Add Item</button>
                     <button class="btn btn-secondary" onclick="exportExcel()">⬇ Export</button>
                     <button class="btn btn-secondary" id="importBtn" onclick="handleImportClick()">⬆ Import</button>
-                    <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onchange="handleFileImport(event)">
+                    <!-- ✅ File input now resets itself on click, ensuring onchange always fires -->
+                    <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onclick="this.value=''" onchange="handleFileImport(event)">
                 </div>
             </div>
 
@@ -629,12 +630,13 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- FIXED: Excel Import with reliable handler ---
+        // --- RELIABLE Excel Import ---
         function handleImportClick() {
             if (!canEdit && !isOwner) {
                 showToast('Read-only mode - cannot import', 'error');
                 return;
             }
+            // Click the hidden file input – it will reset its value in the onclick handler
             document.getElementById('excelInput').click();
         }
 
@@ -642,7 +644,7 @@
             const fileInput = event.target;
             const file = fileInput.files[0];
             if (!file) {
-                // No file selected – just reset and return
+                // No file selected (user cancelled) – ensure input is reset
                 fileInput.value = '';
                 return;
             }
@@ -668,7 +670,6 @@
                         
                         if (!jsonData || jsonData.length === 0) {
                             showToast('No data found in file', 'error');
-                            fileInput.value = '';
                             return;
                         }
 
@@ -696,12 +697,10 @@
 
                         if (newItems.length === 0) {
                             showToast('No valid items found. "Item Name" is required.', 'error');
-                            fileInput.value = '';
                             return;
                         }
                         
                         if (!confirm(`Import ${newItems.length} new item(s)?`)) {
-                            fileInput.value = '';
                             return;
                         }
 
