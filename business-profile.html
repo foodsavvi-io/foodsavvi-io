@@ -1441,7 +1441,7 @@
                 </div>
             </div>
 
-            <!-- Orders Tab -->
+            <!-- Orders Tab – FIXED: uses server businessPickupConfirmed -->
             <div class="tab-content" id="ordersTab">
                 <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <span>📦 incoming orders</span>
@@ -1495,7 +1495,7 @@
                 </div>
             </div>
 
-            <!-- Data Tab – only export, no import, no inventory export -->
+            <!-- Data Tab – only export -->
             <div class="tab-content" id="dataTab">
                 <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <span>📊 Export Data</span>
@@ -1547,7 +1547,8 @@
         let isEmployee = false;
         let businessId = null;
 
-        let pickupConfirmMap = loadPickupMap();
+        // ❌ REMOVED: pickupConfirmMap – now using server field businessPickupConfirmed
+
         let businessRole = 'staff';
         let isVerified = false;
         let currentUser = null;
@@ -1557,16 +1558,7 @@
         let currentDetailOrderId = null;
 
         // ===== PERSISTENCE HELPERS =====
-        function loadPickupMap() {
-            try {
-                const raw = localStorage.getItem('businessPickupConfirmMap');
-                return raw ? JSON.parse(raw) : {};
-            } catch (e) { return {}; }
-        }
-
-        function savePickupMap(map) {
-            localStorage.setItem('businessPickupConfirmMap', JSON.stringify(map));
-        }
+        // ❌ REMOVED: loadPickupMap, savePickupMap
 
         function calcPendingFromOrders(orders) {
             let total = 0;
@@ -2078,19 +2070,14 @@
             }
         }
 
-        // ===== ORDERS =====
+        // ===== ORDERS – FIXED: uses server businessPickupConfirmed =====
         async function loadOrders() {
             const container = document.getElementById('ordersList');
             const bulkActionsDiv = document.getElementById('orderBulkActions');
             try {
                 const orders = await Backend.getOrdersForBusiness(businessId);
-                orders.forEach(order => {
-                    if (pickupConfirmMap[order.id] !== undefined) {
-                        order.businessPickupConfirmed = pickupConfirmMap[order.id];
-                    } else {
-                        order.businessPickupConfirmed = false;
-                    }
-                });
+                // ✅ No override – use server field directly
+                // The backend now returns businessPickupConfirmed from the server
                 allOrdersCache = orders;
                 updatePendingDisplay();
                 selectedOrderIds.clear();
@@ -2127,6 +2114,7 @@
                                 </div>
                             `;
                     } else if (order.status === 'confirmed_by_business') {
+                        // ✅ Use server field directly
                         if (order.businessPickupConfirmed) {
                             statusClass = 'status-picked-up';
                             statusText = 'Picked up - awaiting customer';
@@ -2223,8 +2211,7 @@
             if (!confirm('Confirm this order? The customer will be notified of the pickup time.')) return;
             const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
             if (result.success) {
-                pickupConfirmMap[orderId] = false;
-                savePickupMap(pickupConfirmMap);
+                // ✅ No localStorage – the server field will be set when business confirms pickup later
                 showStatus('Order confirmed! Waiting for customer to pick up.', 'success');
                 await loadOrders();
                 await loadStats();
@@ -2248,12 +2235,11 @@
             for (const orderId of Array.from(selectedOrderIds)) {
                 const result = await Backend.confirmOrderByBusiness(orderId, collectByTime);
                 if (result.success) {
-                    pickupConfirmMap[orderId] = false;
+                    // ✅ No localStorage update
                     success++;
                 } else error++;
             }
             selectedOrderIds.clear();
-            savePickupMap(pickupConfirmMap);
             if (error === 0) showStatus(`✅ ${success} order(s) confirmed!`, 'success');
             else showStatus(`⚠️ ${success} confirmed, ${error} failed.`, 'error');
             await loadOrders();
@@ -2312,21 +2298,16 @@
                 localStorage.setItem('businessVerified', 'true'); } else { showStatus(result.message, 'error'); }
         }
 
-        // ===== TAB SWITCHING – FIX: always hide all, show only selected =====
+        // ===== TAB SWITCHING =====
         function switchTab(tabName) {
-            // Guard against invalid tab names
             const validTabs = ['profile', 'employees', 'orders', 'lookup', 'verification', 'notifications', 'data'];
             if (!validTabs.includes(tabName)) return;
 
             activeTab = tabName;
 
-            // 1. Remove 'active' class from ALL tab buttons
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-            // 2. Remove 'active' class from ALL tab content panels
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-            // 3. Find the corresponding button and content panel
             const tabMap = {
                 profile: 0,
                 employees: 1,
@@ -2340,11 +2321,9 @@
             const targetTab = tabs[tabMap[tabName]];
             const targetContent = document.getElementById(`${tabName}Tab`);
 
-            // 4. Activate the button and the content
             if (targetTab) targetTab.classList.add('active');
             if (targetContent) targetContent.classList.add('active');
 
-            // 5. Update bottom nav
             updateNavActive(tabName);
         }
 
@@ -2428,6 +2407,7 @@
         function closeOrderDetailModal() { document.getElementById('orderDetailModal').classList.remove('show');
             currentDetailOrderId = null; }
 
+        // ===== FIXED: confirmBusinessPickup – uses server field =====
         async function confirmBusinessPickup() {
             if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
             if (!confirm(
@@ -2442,8 +2422,7 @@
                 const order = await query.get(currentDetailOrderId);
                 order.set("businessPickupConfirmed", true);
                 await order.save();
-                pickupConfirmMap[currentDetailOrderId] = true;
-                savePickupMap(pickupConfirmMap);
+                // ✅ No localStorage – the server now holds the flag
                 const cachedOrder = allOrdersCache.find(o => o.id === currentDetailOrderId);
                 if (cachedOrder) { cachedOrder.businessPickupConfirmed = true; }
                 showStatus('✅ Business pickup confirmed. Waiting for customer confirmation.', 'success');
@@ -2457,6 +2436,7 @@
                     btn.textContent = '📦 Confirm Pickup'; } }
         }
 
+        // ===== FIXED: cancelOrderFromModal – no localStorage =====
         async function cancelOrderFromModal() {
             if (!currentDetailOrderId) { showStatus('No order selected', 'error'); return; }
             if (!confirm('Cancel this order? This action cannot be undone.')) return;
@@ -2466,8 +2446,7 @@
             try {
                 const result = await Backend.updateClaimStatus(currentDetailOrderId, 'cancelled');
                 if (result.success) {
-                    delete pickupConfirmMap[currentDetailOrderId];
-                    savePickupMap(pickupConfirmMap);
+                    // ✅ No localStorage cleanup – status is on the server
                     showStatus('❌ Order cancelled', 'success');
                     closeOrderDetailModal();
                     await loadOrders();
@@ -2494,7 +2473,7 @@
             return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
 
-        // ===== EXCEL EXPORT FUNCTIONS (import removed) =====
+        // ===== EXCEL EXPORT FUNCTIONS =====
         function parseExcelFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -2583,66 +2562,6 @@
             } catch (error) { showStatus('Error exporting employees: ' + error.message, 'error'); }
         }
 
-        async function exportAllData() {
-            try {
-                showStatus('Preparing all data for export...', 'info');
-                const orders = await Backend.getOrdersForBusiness(businessId);
-                const inventory = await Backend.loadInventoryItems(businessId);
-                const employees = await Backend.getStaffList(businessId);
-                const wb = XLSX.utils.book_new();
-                if (orders.length > 0) {
-                    const orderData = orders.map(order => ({
-                        'Order ID': order.id,
-                        'Customer': order.consumerName || '',
-                        'Item': order.foodName || '',
-                        'Quantity': order.quantity || 0,
-                        'Total Amount': order.totalAmount || 0,
-                        'Status': order.status || '',
-                        'Batch Number': order.batchNumber || '',
-                        'Created At': new Date(order.createdAt).toLocaleString()
-                    }));
-                    const ws = XLSX.utils.json_to_sheet(orderData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-                }
-                if (inventory.length > 0) {
-                    const invData = inventory.map(item => ({
-                        'Item Name': item.name || '',
-                        'Batch Number': item.batchNumber || '',
-                        'Expiry Date': item.expiryDate || '',
-                        'Quantity': item.quantity || 0,
-                        'Original Price': item.originalPrice || 0,
-                        'Sale Price': item.salePrice || 0,
-                        'Category': item.category || '',
-                        'On Sale': item.onSale ? 'Yes' : 'No'
-                    }));
-                    const ws = XLSX.utils.json_to_sheet(invData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
-                }
-                if (employees.length > 0) {
-                    const empData = employees.map(emp => ({
-                        'Employee ID': emp.id || '',
-                        'Username': emp.username || '',
-                        'Role': emp.role || '',
-                        'Email': emp.email || ''
-                    }));
-                    const ws = XLSX.utils.json_to_sheet(empData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-                }
-                if (wb.SheetNames.length === 0) { showStatus('No data to export', 'error'); return; }
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `foodsavvi_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showStatus('✅ All data exported successfully!', 'success');
-            } catch (error) { showStatus('Error exporting all data: ' + error.message, 'error'); }
-        }
-
         // ===== EXPOSE GLOBALLY =====
         window.switchTab = switchTab;
         window.saveProfile = saveProfile;
@@ -2678,5 +2597,3 @@
     </script>
 </body>
 </html>
-
-
