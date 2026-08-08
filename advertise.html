@@ -7,15 +7,6 @@
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="shortcut icon" type="image/png" href="assets/icon.png">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('SW registered:', registration.scope))
-                    .catch(err => console.log('SW registration failed:', err));
-            });
-        }
-    </script>
     <style>
         /* ─── styles unchanged ─── */
         @font-face {
@@ -825,7 +816,60 @@
         }
 
         // ============================================================
-        //  INIT – FIXED: proper permission check with logging
+        //  PATCH: override Backend.createAd to check owner verification
+        // ============================================================
+        function patchCreateAd(ownerId) {
+            const originalCreateAd = Backend.createAd.bind(Backend);
+            Backend.createAd = async function(adData) {
+                try {
+                    const currentUser = Parse.User.current();
+                    if (!currentUser) {
+                        return { success: false, message: "Please login first" };
+                    }
+
+                    // Use the captured ownerId
+                    const ownerQuery = new Parse.Query(Parse.User);
+                    const owner = await ownerQuery.get(ownerId, { useMasterKey: true });
+                    console.log('🔍 Owner verification status:', owner.get('businessVerified'));
+                    if (!owner.get('businessVerified')) {
+                        return { success: false, message: "Business must be verified to post ads" };
+                    }
+
+                    // Proceed with original logic using owner's data
+                    const Ad = Parse.Object.extend("Advertisement");
+                    const ad = new Ad();
+                    ad.set("foodName", adData.foodName);
+                    ad.set("discount", parseFloat(adData.discount));
+                    ad.set("offerEnds", new Date(adData.offerEnds));
+                    ad.set("batchExpiryDate", new Date(adData.batchExpiryDate));
+                    ad.set("businessName", owner.get('businessName') || currentUser.get('businessName'));
+                    ad.set("businessId", ownerId);
+                    ad.set("description", adData.description || "");
+                    ad.set("originalPrice", parseFloat(adData.originalPrice) || 0);
+                    ad.set("category", adData.category || "other");
+                    ad.set("active", true);
+                    ad.set("views", 0);
+                    ad.set("claimed", 0);
+                    ad.set("batchNumber", adData.batchNumber || "");
+                    ad.set("quantityLeft", parseInt(adData.quantityLeft) || 0);
+                    ad.set("initialQuantity", parseInt(adData.quantityLeft) || 0);
+
+                    if (adData.imageBase64) {
+                        ad.set("productImage", adData.imageBase64);
+                    }
+
+                    await ad.save();
+                    return { success: true, ad: ad, adId: ad.id };
+                } catch (error) {
+                    console.error('createAd error:', error);
+                    return { success: false, message: error.message };
+                }
+            };
+            console.log('✅ Backend.createAd patched with ownerId:', ownerId);
+        }
+
+        // ============================================================
+        //  INIT – with permission check and patch
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -835,10 +879,13 @@
                 return;
             }
 
+            // Determine business owner ID
             businessId = user.get('businessId') || user.id;
-            console.log('🔍 Business ID:', businessId);
+            console.log('🔍 Business ID (owner):', businessId);
 
-            // Fetch permissions
+            // Patch Backend.createAd using the owner ID
+            patchCreateAd(businessId);
+
             const perms = await Backend.getEmployeePermissions(user.id);
             console.log('📋 Full permissions object:', perms);
             console.log('📋 can_post_ads value:', perms.can_post_ads);
@@ -855,7 +902,6 @@
                 canPostAds = true;
             } else {
                 isEmployee = true;
-                // ✅ Strict check – only allow if can_post_ads is exactly true
                 canPostAds = perms.can_post_ads === true;
                 if (!canPostAds) {
                     showNotification('You do not have permission to post ads', 'error');
