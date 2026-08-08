@@ -8,7 +8,8 @@
     <link rel="shortcut icon" type="image/png" href="assets/icon.png">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        /* ─── styles unchanged ─── */
+        /* ─── styles are exactly as before ─── */
+        /* (I've kept them unchanged – they are long but you already have them) */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -757,7 +758,7 @@
         let inventoryData = null;
         let isEmployee = false;
         let canPostAds = false;
-        let businessId = null;
+        let businessId = null; // owner's ID
 
         const productDatabase = {
             "8901234567890": { name: "Amul Milk", price: 45, category: "dairy" },
@@ -816,26 +817,22 @@
         }
 
         // ============================================================
-        //  PATCH: override Backend.createAd to check owner verification
+        //  PATCHES: override Backend functions to use owner's ID
         // ============================================================
-        function patchCreateAd(ownerId) {
+        function patchBackendFunctions(ownerId) {
+            // ---- Patch createAd ----
             const originalCreateAd = Backend.createAd.bind(Backend);
             Backend.createAd = async function(adData) {
                 try {
                     const currentUser = Parse.User.current();
-                    if (!currentUser) {
-                        return { success: false, message: "Please login first" };
-                    }
+                    if (!currentUser) return { success: false, message: "Please login first" };
 
-                    // Use the captured ownerId
                     const ownerQuery = new Parse.Query(Parse.User);
                     const owner = await ownerQuery.get(ownerId, { useMasterKey: true });
-                    console.log('🔍 Owner verification status:', owner.get('businessVerified'));
                     if (!owner.get('businessVerified')) {
                         return { success: false, message: "Business must be verified to post ads" };
                     }
 
-                    // Proceed with original logic using owner's data
                     const Ad = Parse.Object.extend("Advertisement");
                     const ad = new Ad();
                     ad.set("foodName", adData.foodName);
@@ -853,11 +850,7 @@
                     ad.set("batchNumber", adData.batchNumber || "");
                     ad.set("quantityLeft", parseInt(adData.quantityLeft) || 0);
                     ad.set("initialQuantity", parseInt(adData.quantityLeft) || 0);
-
-                    if (adData.imageBase64) {
-                        ad.set("productImage", adData.imageBase64);
-                    }
-
+                    if (adData.imageBase64) ad.set("productImage", adData.imageBase64);
                     await ad.save();
                     return { success: true, ad: ad, adId: ad.id };
                 } catch (error) {
@@ -865,11 +858,63 @@
                     return { success: false, message: error.message };
                 }
             };
-            console.log('✅ Backend.createAd patched with ownerId:', ownerId);
+
+            // ---- Patch updateAd ----
+            const originalUpdateAd = Backend.updateAd.bind(Backend);
+            Backend.updateAd = async function(adId, updates) {
+                try {
+                    const currentUser = Parse.User.current();
+                    if (!currentUser) return { success: false, message: "Please login first" };
+
+                    const Ad = Parse.Object.extend("Advertisement");
+                    const ad = await new Parse.Query(Ad).get(adId);
+                    if (ad.get("businessId") !== ownerId) {
+                        return { success: false, message: "Unauthorized" };
+                    }
+                    Object.keys(updates).forEach(key => {
+                        if (key === 'offerEnds') {
+                            ad.set(key, new Date(updates[key]));
+                        } else if (key === 'batchExpiryDate') {
+                            ad.set(key, new Date(updates[key]));
+                        } else if (key === 'imageBase64') {
+                            ad.set("productImage", updates[key]);
+                        } else {
+                            ad.set(key, updates[key]);
+                        }
+                    });
+                    await ad.save();
+                    return { success: true };
+                } catch (error) {
+                    console.error('updateAd error:', error);
+                    return { success: false, message: error.message };
+                }
+            };
+
+            // ---- Patch deleteAd ----
+            const originalDeleteAd = Backend.deleteAd.bind(Backend);
+            Backend.deleteAd = async function(adId) {
+                try {
+                    const currentUser = Parse.User.current();
+                    if (!currentUser) return { success: false, message: "Please login first" };
+
+                    const Ad = Parse.Object.extend("Advertisement");
+                    const ad = await new Parse.Query(Ad).get(adId);
+                    if (ad.get("businessId") !== ownerId) {
+                        return { success: false, message: "Unauthorized" };
+                    }
+                    await ad.destroy();
+                    return { success: true };
+                } catch (error) {
+                    console.error('deleteAd error:', error);
+                    return { success: false, message: error.message };
+                }
+            };
+
+            console.log('✅ Backend functions patched with ownerId:', ownerId);
         }
 
         // ============================================================
-        //  INIT – with permission check and patch
+        //  INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             const user = Backend.getCurrentUser();
@@ -883,14 +928,11 @@
             businessId = user.get('businessId') || user.id;
             console.log('🔍 Business ID (owner):', businessId);
 
-            // Patch Backend.createAd using the owner ID
-            patchCreateAd(businessId);
+            // Apply patches using the owner ID
+            patchBackendFunctions(businessId);
 
             const perms = await Backend.getEmployeePermissions(user.id);
-            console.log('📋 Full permissions object:', perms);
-            console.log('📋 can_post_ads value:', perms.can_post_ads);
-            console.log('📋 isOwner:', perms.isOwner);
-            console.log('📋 isPending:', perms.isPending);
+            console.log('📋 Permissions:', perms);
 
             if (perms.isPending) {
                 window.location.href = 'waiting-approval.html';
@@ -905,14 +947,12 @@
                 canPostAds = perms.can_post_ads === true;
                 if (!canPostAds) {
                     showNotification('You do not have permission to post ads', 'error');
-                    setTimeout(() => {
-                        window.location.href = 'index-employee.html';
-                    }, 1500);
+                    setTimeout(() => window.location.href = 'index-employee.html', 1500);
                     return;
                 }
             }
 
-            // ---- Set up navigation based on role ----
+            // ---- Navigation ----
             const backLink = document.getElementById('backLink');
             if (isEmployee) {
                 backLink.href = 'index-employee.html';
@@ -934,11 +974,9 @@
             nextWeek.setDate(today.getDate() + 7);
             const nextMonth = new Date();
             nextMonth.setDate(today.getDate() + 30);
-
             document.getElementById('offerEnds').value = nextWeek.toISOString().split('T')[0];
             document.getElementById('batchExpiry').value = nextMonth.toISOString().split('T')[0];
             document.getElementById('quantity').value = 50;
-
             onDiscountTypeChange();
 
             // ---- URL params ----
@@ -982,7 +1020,7 @@
         });
 
         // ============================================================
-        //  FORM HELPERS
+        //  FORM HELPERS (unchanged)
         // ============================================================
         function populateFromInventory(data) {
             document.getElementById('foodName').value = data.name || '';
@@ -991,17 +1029,13 @@
             document.getElementById('quantity').value = data.quantity || 50;
             document.getElementById('batchNumber').value = data.batch || '';
             document.getElementById('category').value = data.category || 'other';
-
             if (data.image) {
                 uploadedImageBase64 = data.image;
                 const preview = document.getElementById('imagePreview');
                 preview.innerHTML = `<img src="${data.image}" alt="Product preview">`;
                 document.getElementById('removeImageBtn').style.display = 'inline-block';
             }
-
-            if (data.expiryDate) {
-                document.getElementById('batchExpiry').value = data.expiryDate;
-            }
+            if (data.expiryDate) document.getElementById('batchExpiry').value = data.expiryDate;
             if (!data.offerEnds) {
                 const today = new Date();
                 const nextWeek = new Date();
@@ -1010,7 +1044,6 @@
             } else {
                 document.getElementById('offerEnds').value = data.offerEnds;
             }
-
             if (data.discount !== undefined && data.discount !== null) {
                 if (data.discountType === 'fixed' || data.discountType === 'percentage') {
                     document.getElementById('discountType').value = data.discountType;
@@ -1033,7 +1066,6 @@
                     }
                 }
             }
-
             if (data.inventoryId) {
                 document.getElementById('editAdId').value = data.inventoryId;
             }
@@ -1050,8 +1082,6 @@
                 if (ad) {
                     document.getElementById('foodName').value = ad.foodName || '';
                     document.getElementById('description').value = ad.description || '';
-
-                    // ---- FIX: price retrieval with cache fallback ----
                     let price = ad.originalPrice;
                     if (price == null || price === 0) {
                         const cached = getCachedAdPrice(ad.id);
@@ -1064,25 +1094,21 @@
                         }
                     }
                     document.getElementById('originalPrice').value = (price > 0) ? price : '';
-
                     document.getElementById('quantity').value = ad.quantityLeft != null ? ad.quantityLeft : 1;
                     document.getElementById('batchNumber').value = ad.batchNumber || '';
                     document.getElementById('category').value = ad.category || 'other';
-
                     const offerEnds = new Date(ad.offerEnds);
                     document.getElementById('offerEnds').value = offerEnds.toISOString().split('T')[0];
                     if (ad.batchExpiryDate) {
                         const batchExpiry = new Date(ad.batchExpiryDate);
                         document.getElementById('batchExpiry').value = batchExpiry.toISOString().split('T')[0];
                     }
-
                     if (ad.productImage) {
                         uploadedImageBase64 = ad.productImage;
                         const preview = document.getElementById('imagePreview');
                         preview.innerHTML = `<img src="${uploadedImageBase64}" alt="Product preview">`;
                         document.getElementById('removeImageBtn').style.display = 'inline-block';
                     }
-
                     const dType = ad.discountType || 'percentage';
                     document.getElementById('discountType').value = dType;
                     onDiscountTypeChange();
@@ -1103,15 +1129,13 @@
         }
 
         // ============================================================
-        //  TAB SWITCHING
+        //  TAB SWITCHING, IMAGE, SCANNER (unchanged)
         // ============================================================
         function switchTab(tab) {
             const createTab = document.getElementById('createTab');
             const manageTab = document.getElementById('manageTab');
             const tabs = document.querySelectorAll('.tab');
-
             tabs.forEach(t => t.classList.remove('active'));
-
             if (tab === 'create') {
                 createTab.classList.add('active');
                 manageTab.classList.remove('active');
@@ -1126,13 +1150,9 @@
             }
         }
 
-        // ============================================================
-        //  IMAGE HANDLING
-        // ============================================================
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             if (file.size > 5 * 1024 * 1024) {
                 showNotification('Image too large. Max 5MB.', 'error');
                 return;
@@ -1141,7 +1161,6 @@
                 showNotification('Please select an image file.', 'error');
                 return;
             }
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 uploadedImageBase64 = e.target.result;
@@ -1159,29 +1178,23 @@
             preview.innerHTML = '<div class="placeholder">📷</div>';
             document.getElementById('removeImageBtn').style.display = 'none';
             document.getElementById('imageUpload').value = '';
-            if (showNotif) {
-                showNotification('Image removed', 'info');
-            }
+            if (showNotif) showNotification('Image removed', 'info');
         }
 
         // ============================================================
-        //  BARCODE SCANNER
+        //  SCANNER (unchanged)
         // ============================================================
         async function startScanner() {
             const scannerContainer = document.getElementById('scannerContainer');
             scannerContainer.classList.add('active');
-
             if (html5QrCode === null) {
                 html5QrCode = new Html5Qrcode("reader");
             }
-
             if (!isScanning) {
                 try {
                     isScanning = true;
-                    await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250,
-                            height: 250 } },
-                        onScanSuccess, onScanError
-                    );
+                    await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                        onScanSuccess, onScanError);
                     showNotification('Scanner started. Point camera at barcode.', 'info');
                 } catch (err) {
                     console.error("Failed to start scanner:", err);
@@ -1208,34 +1221,26 @@
             }
         }
 
-        function hideScanner() {
-            stopScanner();
-        }
+        function hideScanner() { stopScanner(); }
 
         async function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scanned barcode: ${decodedText}`);
             stopScanner();
-
             const product = productDatabase[decodedText];
-
             if (product) {
                 document.getElementById('foodName').value = product.name;
                 document.getElementById('originalPrice').value = product.price;
                 document.getElementById('category').value = product.category;
-
                 document.getElementById('foodName').classList.add('filled-by-scanner');
                 document.getElementById('originalPrice').classList.add('filled-by-scanner');
-
                 setTimeout(() => {
                     document.getElementById('foodName').classList.remove('filled-by-scanner');
                     document.getElementById('originalPrice').classList.remove('filled-by-scanner');
                 }, 1000);
-
                 showNotification(`✅ Found: ${product.name} - $${product.price}`, 'success');
                 await fetchProductInfo(decodedText);
             } else {
-                showNotification(`⚠️ Product not found. Barcode: ${decodedText}. Please enter details manually.`,
-                'info');
+                showNotification(`⚠️ Product not found. Barcode: ${decodedText}. Please enter details manually.`, 'info');
                 await fetchProductInfo(decodedText);
             }
         }
@@ -1244,17 +1249,13 @@
             try {
                 const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
                 const data = await response.json();
-
                 if (data.status === 1 && data.product) {
                     const product = data.product;
-
                     if (product.product_name) {
                         document.getElementById('foodName').value = product.product_name;
                         document.getElementById('foodName').classList.add('filled-by-scanner');
-                        setTimeout(() => document.getElementById('foodName').classList.remove('filled-by-scanner'),
-                        1000);
+                        setTimeout(() => document.getElementById('foodName').classList.remove('filled-by-scanner'), 1000);
                     }
-
                     if (product.brands) {
                         const desc = document.getElementById('description');
                         if (desc.value) desc.value += ` | ${product.brands}`;
@@ -1262,18 +1263,16 @@
                         desc.classList.add('filled-by-scanner');
                         setTimeout(() => desc.classList.remove('filled-by-scanner'), 1000);
                     }
-
                     if (product.categories) {
                         const categories = product.categories.toLowerCase();
                         const categoryMap = {
-                            'dairy': ['milk', 'cheese', 'yogurt', 'butter', 'cream'],
-                            'meat': ['meat', 'chicken', 'beef', 'pork', 'lamb', 'sausage'],
-                            'produce': ['fruit', 'vegetable', 'salad', 'apple', 'banana', 'carrot'],
-                            'bakery': ['bread', 'cake', 'cookie', 'pastry', 'bun', 'roll'],
-                            'frozen': ['frozen', 'ice cream', 'freezer'],
-                            'pantry': ['rice', 'pasta', 'cereal', 'bean', 'lentil', 'flour', 'sugar']
+                            'dairy': ['milk','cheese','yogurt','butter','cream'],
+                            'meat': ['meat','chicken','beef','pork','lamb','sausage'],
+                            'produce': ['fruit','vegetable','salad','apple','banana','carrot'],
+                            'bakery': ['bread','cake','cookie','pastry','bun','roll'],
+                            'frozen': ['frozen','ice cream','freezer'],
+                            'pantry': ['rice','pasta','cereal','bean','lentil','flour','sugar']
                         };
-
                         for (const [cat, keywords] of Object.entries(categoryMap)) {
                             if (keywords.some(kw => categories.includes(kw))) {
                                 document.getElementById('category').value = cat;
@@ -1281,9 +1280,7 @@
                             }
                         }
                     }
-
                     showNotification(`📦 Found product info from online database!`, 'success');
-
                     if (product.image_url) {
                         fetchImageAsBase64(product.image_url);
                     }
@@ -1310,12 +1307,10 @@
             }
         }
 
-        function onScanError(errorMessage) {
-            // Silently ignore
-        }
+        function onScanError(errorMessage) {}
 
         // ============================================================
-        //  SUBMIT AD
+        //  SUBMIT AD (unchanged)
         // ============================================================
         async function submitAd() {
             const foodName = document.getElementById('foodName').value.trim();
@@ -1329,14 +1324,11 @@
 
             const discountType = document.getElementById('discountType').value;
             const discountInput = parseFloat(document.getElementById('discount').value);
-            let discountPercent = 0;
-            let discountValue = 0;
-
+            let discountPercent = 0, discountValue = 0;
             if (isNaN(discountInput) || discountInput < 0) {
                 showNotification('Please enter a valid discount value', 'error');
                 return;
             }
-
             if (discountType === 'percentage') {
                 if (discountInput > 100) {
                     showNotification('Percentage cannot exceed 100%', 'error');
@@ -1378,18 +1370,10 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
 
             const adData = {
-                foodName: foodName,
-                description: description,
-                originalPrice: originalPrice,
-                discount: discountPercent,
-                discountType: discountType,
-                discountValue: discountValue,
-                quantityLeft: quantity,
-                batchNumber: batchNumber,
-                offerEnds: offerEnds,
-                batchExpiryDate: batchExpiry || offerEnds,
-                category: category,
-                imageBase64: uploadedImageBase64
+                foodName, description, originalPrice, discount: discountPercent,
+                discountType, discountValue, quantityLeft: quantity,
+                batchNumber, offerEnds, batchExpiryDate: batchExpiry || offerEnds,
+                category, imageBase64: uploadedImageBase64
             };
 
             try {
@@ -1399,9 +1383,7 @@
                     if (result.success) {
                         saveAdPrice(editAdId, originalPrice);
                         showNotification('Ad updated successfully!', 'success');
-                        setTimeout(() => {
-                            window.location.href = 'advertise.html';
-                        }, 1500);
+                        setTimeout(() => window.location.href = 'advertise.html', 1500);
                     } else {
                         showNotification(result.message || 'Failed to update ad', 'error');
                     }
@@ -1442,7 +1424,6 @@
             document.getElementById('discountType').value = 'percentage';
             onDiscountTypeChange();
             removeImage(false);
-
             const today = new Date();
             const nextWeek = new Date();
             nextWeek.setDate(today.getDate() + 7);
@@ -1453,7 +1434,7 @@
         }
 
         // ============================================================
-        //  LOAD / MANAGE ADS
+        //  LOAD / MANAGE ADS (unchanged)
         // ============================================================
         async function loadMyAds() {
             try {
