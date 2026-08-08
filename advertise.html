@@ -8,8 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="assets/icon.png">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        /* ─── styles are exactly as before ─── */
-        /* (I've kept them unchanged – they are long but you already have them) */
+        /* ─── styles unchanged ─── */
         @font-face {
             font-family: 'RusticStory';
             src: url('./assets/RusticStory-R9vKM.ttf') format('truetype'),
@@ -820,6 +819,48 @@
         //  PATCHES: override Backend functions to use owner's ID
         // ============================================================
         function patchBackendFunctions(ownerId) {
+            // ---- Patch getShopAds to include originalPrice ----
+            const originalGetShopAds = Backend.getShopAds.bind(Backend);
+            Backend.getShopAds = async function(businessId) {
+                try {
+                    if (!businessId) {
+                        const currentUser = Parse.User.current();
+                        businessId = currentUser?.id;
+                    }
+                    if (!businessId) return [];
+
+                    const Ad = Parse.Object.extend("Advertisement");
+                    const query = new Parse.Query(Ad);
+                    query.equalTo("businessId", businessId);
+                    query.descending("createdAt");
+
+                    const ads = await query.find({ useMasterKey: true });
+                    return ads.map(ad => ({
+                        id: ad.id,
+                        foodName: ad.get("foodName"),
+                        discount: ad.get("discount"),
+                        discountType: ad.get("discountType") || 'percentage',
+                        discountValue: ad.get("discountValue'),
+                        offerEnds: ad.get("offerEnds"),
+                        batchExpiryDate: ad.get("batchExpiryDate"),
+                        businessName: ad.get("businessName"),
+                        active: ad.get("active"),
+                        views: ad.get("views"),
+                        claimed: ad.get("claimed"),
+                        batchNumber: ad.get("batchNumber"),
+                        quantityLeft: ad.get("quantityLeft"),
+                        productImage: ad.get("productImage") || null,
+                        originalPrice: ad.get("originalPrice") || 0,   // ✅ added
+                        description: ad.get("description") || "",
+                        category: ad.get("category") || "other"
+                    }));
+                } catch (error) {
+                    console.error('getShopAds error:', error);
+                    return [];
+                }
+            };
+            console.log('✅ Backend.getShopAds patched to include originalPrice');
+
             // ---- Patch createAd ----
             const originalCreateAd = Backend.createAd.bind(Backend);
             Backend.createAd = async function(adData) {
@@ -837,6 +878,8 @@
                     const ad = new Ad();
                     ad.set("foodName", adData.foodName);
                     ad.set("discount", parseFloat(adData.discount));
+                    ad.set("discountType", adData.discountType || 'percentage');
+                    ad.set("discountValue", adData.discountValue || 0);
                     ad.set("offerEnds", new Date(adData.offerEnds));
                     ad.set("batchExpiryDate", new Date(adData.batchExpiryDate));
                     ad.set("businessName", owner.get('businessName') || currentUser.get('businessName'));
@@ -878,6 +921,8 @@
                             ad.set(key, new Date(updates[key]));
                         } else if (key === 'imageBase64') {
                             ad.set("productImage", updates[key]);
+                        } else if (key === 'discountType' || key === 'discountValue') {
+                            ad.set(key, updates[key]);
                         } else {
                             ad.set(key, updates[key]);
                         }
@@ -1020,7 +1065,7 @@
         });
 
         // ============================================================
-        //  FORM HELPERS (unchanged)
+        //  FORM HELPERS
         // ============================================================
         function populateFromInventory(data) {
             document.getElementById('foodName').value = data.name || '';
@@ -1072,7 +1117,7 @@
         }
 
         // ============================================================
-        //  FIXED: loadAdForEditing – price fallback with cache
+        //  loadAdForEditing – now uses patched getShopAds (includes originalPrice)
         // ============================================================
         async function loadAdForEditing(adId) {
             document.getElementById('loadingOverlay').style.display = 'flex';
@@ -1082,6 +1127,7 @@
                 if (ad) {
                     document.getElementById('foodName').value = ad.foodName || '';
                     document.getElementById('description').value = ad.description || '';
+                    // Now ad.originalPrice is available from the patch
                     let price = ad.originalPrice;
                     if (price == null || price === 0) {
                         const cached = getCachedAdPrice(ad.id);
@@ -1094,6 +1140,7 @@
                         }
                     }
                     document.getElementById('originalPrice').value = (price > 0) ? price : '';
+
                     document.getElementById('quantity').value = ad.quantityLeft != null ? ad.quantityLeft : 1;
                     document.getElementById('batchNumber').value = ad.batchNumber || '';
                     document.getElementById('category').value = ad.category || 'other';
@@ -1182,7 +1229,7 @@
         }
 
         // ============================================================
-        //  SCANNER (unchanged)
+        //  SCANNER
         // ============================================================
         async function startScanner() {
             const scannerContainer = document.getElementById('scannerContainer');
@@ -1310,7 +1357,7 @@
         function onScanError(errorMessage) {}
 
         // ============================================================
-        //  SUBMIT AD (unchanged)
+        //  SUBMIT AD
         // ============================================================
         async function submitAd() {
             const foodName = document.getElementById('foodName').value.trim();
@@ -1434,7 +1481,7 @@
         }
 
         // ============================================================
-        //  LOAD / MANAGE ADS (unchanged)
+        //  LOAD / MANAGE ADS
         // ============================================================
         async function loadMyAds() {
             try {
