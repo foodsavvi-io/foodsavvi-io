@@ -158,8 +158,8 @@
                 <div class="control-row">
                     <button class="btn btn-success" id="addBtn" onclick="openCreateModal()">+ Add Item</button>
                     <button class="btn btn-secondary" onclick="exportExcel()">⬇ Export</button>
-                    <button class="btn btn-secondary" id="importBtn" onclick="document.getElementById('excelInput').click()">⬆ Import</button>
-                    <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onchange="importExcel(event)">
+                    <button class="btn btn-secondary" id="importBtn" onclick="handleImportClick()">⬆ Import</button>
+                    <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;" onchange="handleFileImport(event)">
                 </div>
             </div>
 
@@ -629,62 +629,109 @@
             showToast('Exported successfully!', 'success');
         }
 
-        // --- Excel Import (fixed) ---
-        async function importExcel(event) {
-            if (!canEdit && !isOwner) { showToast('Read-only mode - cannot import', 'error'); return; }
-            const file = event.target.files[0];
-            if (!file) return;
-            
+        // --- FIXED: Excel Import with reliable handler ---
+        function handleImportClick() {
+            if (!canEdit && !isOwner) {
+                showToast('Read-only mode - cannot import', 'error');
+                return;
+            }
+            document.getElementById('excelInput').click();
+        }
+
+        async function handleFileImport(event) {
+            const fileInput = event.target;
+            const file = fileInput.files[0];
+            if (!file) {
+                // No file selected – just reset and return
+                fileInput.value = '';
+                return;
+            }
+
+            // Validate file type
+            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+            if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+                showToast('Please select an Excel file (.xlsx or .xls)', 'error');
+                fileInput.value = '';
+                return;
+            }
+
             showToast('Reading file...', 'info');
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                    
-                    if (!jsonData || jsonData.length === 0) {
-                        showToast('No data found in file', 'error');
-                        return;
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
+                        
+                        if (!jsonData || jsonData.length === 0) {
+                            showToast('No data found in file', 'error');
+                            fileInput.value = '';
+                            return;
+                        }
+
+                        const newItems = jsonData.map(row => {
+                            const getValue = (keys) => {
+                                for (const key of keys) {
+                                    if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                                        return row[key];
+                                    }
+                                }
+                                return '';
+                            };
+                            return {
+                                name: getValue(['Item Name', 'name', 'item name', 'Item', 'product', 'Product']),
+                                batchNumber: getValue(['Batch Number', 'batchNumber', 'batch', 'Batch']),
+                                expiryDate: getValue(['Expiry Date', 'expiryDate', 'expiry', 'Expiry']),
+                                quantity: parseInt(getValue(['Quantity', 'quantity', 'qty', 'Qty'])) || 0,
+                                originalPrice: parseFloat(getValue(['Original Price', 'originalPrice', 'price', 'Price'])) || 0,
+                                salePrice: parseFloat(getValue(['Sale Price', 'salePrice', 'sale', 'Sale'])) || 0,
+                                category: getValue(['Category', 'category', 'cat']) || 'other',
+                                onSale: (getValue(['On Sale', 'onSale', 'on sale']) || '').toString().toLowerCase() === 'yes' ||
+                                        (getValue(['On Sale', 'onSale', 'on sale']) || '').toString().toLowerCase() === 'true'
+                            };
+                        }).filter(item => item.name && item.name.trim() !== '');
+
+                        if (newItems.length === 0) {
+                            showToast('No valid items found. "Item Name" is required.', 'error');
+                            fileInput.value = '';
+                            return;
+                        }
+                        
+                        if (!confirm(`Import ${newItems.length} new item(s)?`)) {
+                            fileInput.value = '';
+                            return;
+                        }
+
+                        const existing = await Backend.loadInventoryItems(businessId);
+                        const merged = [...existing, ...newItems];
+                        const result = await Backend.saveInventoryItems(merged);
+                        
+                        if (result.success) {
+                            showToast(`✅ Imported ${newItems.length} items!`, 'success');
+                            await loadInventory();
+                        } else {
+                            showToast('Import failed: ' + (result.message || 'unknown error'), 'error');
+                        }
+                    } catch (err) {
+                        console.error('Import parse error:', err);
+                        showToast('Error parsing file: ' + err.message, 'error');
+                    } finally {
+                        fileInput.value = '';
                     }
-
-                    const newItems = jsonData.map(row => ({
-                        name: row['Item Name'] || row['name'] || '',
-                        batchNumber: row['Batch Number'] || row['batchNumber'] || '',
-                        expiryDate: row['Expiry Date'] || row['expiryDate'] || null,
-                        quantity: parseInt(row['Quantity'] || row['quantity'] || 0) || 0,
-                        originalPrice: parseFloat(row['Original Price'] || row['originalPrice'] || 0) || 0,
-                        salePrice: parseFloat(row['Sale Price'] || row['salePrice'] || 0) || 0,
-                        category: row['Category'] || row['category'] || 'other',
-                        onSale: (row['On Sale'] || row['onSale'] || '').toString().toLowerCase() === 'yes',
-                        businessId: businessId
-                    })).filter(item => item.name && item.name.trim() !== '');
-
-                    if (newItems.length === 0) { showToast('No valid items found. "Item Name" is required.', 'error'); return; }
-                    
-                    // Confirm before importing
-                    if (!confirm(`Import ${newItems.length} new item(s)?`)) return;
-
-                    const existing = await Backend.loadInventoryItems(businessId);
-                    const merged = [...existing, ...newItems];
-                    const result = await Backend.saveInventoryItems(merged);
-                    if (result.success) {
-                        showToast(`✅ Imported ${newItems.length} items!`, 'success');
-                        await loadInventory();
-                    } else {
-                        showToast('Import failed: ' + (result.message || 'unknown error'), 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showToast('Error parsing file: ' + err.message, 'error');
-                }
-            };
-            reader.onerror = function() {
-                showToast('Failed to read file', 'error');
-            };
-            reader.readAsArrayBuffer(file);
-            // Reset input so same file can be re-imported
-            event.target.value = '';
+                };
+                reader.onerror = function() {
+                    showToast('Failed to read file', 'error');
+                    fileInput.value = '';
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (err) {
+                console.error('Import error:', err);
+                showToast('Error reading file: ' + err.message, 'error');
+                fileInput.value = '';
+            }
         }
 
         // --- Toast Helper ---
@@ -700,6 +747,19 @@
             if (!str) return '';
             return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
         }
+
+        // Expose functions globally
+        window.openCreateModal = openCreateModal;
+        window.openEditModal = openEditModal;
+        window.closeModal = closeModal;
+        window.saveItem = saveItem;
+        window.deleteItem = deleteItem;
+        window.exportToAds = exportToAds;
+        window.exportExcel = exportExcel;
+        window.handleImportClick = handleImportClick;
+        window.handleFileImport = handleFileImport;
+        window.loadInventory = loadInventory;
+        window.showToast = showToast;
     </script>
 </body>
 </html>
